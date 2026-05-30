@@ -100,11 +100,11 @@ weight and **BLUFOR (WEST) / OPFOR (EAST)** variants:
 | **Weapons Emplacement** | 2× MG + 1× AT | 4× MG + 2× AT + watchtower |
 | **Checkpoint** | chicane + overwatch MG + guard tower | twin towers, 2× MG + 1× AT, hardened chicane |
 
-**AI cost is flat per weight — every LIGHT position = 4 AI, every HEAVY = 8 AI** — charged
-against the engineer's personal AI budget. Guns are crewed first; remaining slots are filled
-with **garrison riflemen** holding the position, so it both costs and contains exactly that
-many AI. HEAVY is gated behind the side's Barracks upgrade; limits are 2 positions per
-engineer and 1 per town, within 250 m of a friendly town centre.
+**AI cost is cheap — one soldier per crewable weapon, no garrison.** A position costs only
+its gun count: light **AA/Arty = 2**, light **Emplacement = 3**, light **Checkpoint = 1**;
+heavy **4 / 4 / 6 / 3**. That crew comes out of the engineer's personal AI budget. HEAVY is
+gated behind the side's Barracks upgrade; limits are 2 positions per engineer and 1 per town,
+within 250 m of a friendly town centre — so you can dot cheap fortifications across the map.
 
 > Note: stock Arma 2 OA has no static *bullet*-AA for the US side, so the WEST AA battery
 > uses Stinger (rocket) pods; OPFOR gets a true rocket + bullet mix (ZU-23 + Igla).

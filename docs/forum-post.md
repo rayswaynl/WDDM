@@ -33,15 +33,15 @@ revetment boxes, and a deep wire + hedgehog obstacle belt out front.
 
 ## The balance bit (important)
 The crew comes out of the **builder's own AI budget** — the same pool as your recruited squad —
-so it's a real trade-off, not free stuff:
+but it's kept **cheap: one soldier per gun, no extra garrison**. So a position only costs its
+gun count:
 
-- **Light position = 4 AI**
-- **Heavy position = 8 AI**
+- **Light:** AA/Arty 2 · Emplacement 3 · Checkpoint 1 AI
+- **Heavy:** AA/Arty 4 · Emplacement 6 · Checkpoint 3 AI
 
-Guns get manned first, then the rest of that budget is filled with **garrison riflemen** holding
-the position. Limits keep it sane: **max 2 positions per engineer, 1 per town, friendly towns
-only, within 250 m of the town centre**, and Heavy needs the Barracks upgrade. Two heavies =
-your entire AI budget, so you're choosing between a fortress and a field army.
+That means you can dot **single-soldier-manned** positions around the map without gutting your
+squad. Limits keep it sane: **max 2 positions per engineer, 1 per town, friendly towns only,
+within 250 m of the town centre**, and Heavy needs the Barracks upgrade.
 
 ## Why it's good for the game
 - Gives **engineers** a real job beyond repair/salvage, and a reason to push forward.

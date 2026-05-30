@@ -222,10 +222,9 @@
       </details>
 
       <div class="hint" style="margin-top:14px">
-        <b>AI cost</b> is flat per weight: every <b>LIGHT</b> position = <b>4 AI</b>, every <b>HEAVY</b> = <b>8 AI</b>,
-        charged against the engineer's personal AI budget. In game the guns are crewed first and any remaining
-        slots are filled with garrison riflemen, so the position both costs and contains exactly that many AI.
-        (Custom templates without <code>_LIGHT_</code>/<code>_HEAVY_</code> in the name fall back to 1 AI per gun.)
+        <b>AI cost</b> = one soldier per crewable weapon (no garrison) — cheap, single-soldier-manned positions.
+        It's charged against the engineer's personal AI budget when the position is deployed, so the count here
+        is exactly what each position will cost (e.g. a 1-gun checkpoint = 1 AI, a 6-gun heavy emplacement = 6).
       </div>
     </div>
   </div>
@@ -615,15 +614,10 @@ function syncUI(){
   $('inspector').style.display=o?'block':'none'; $('noSel').style.display=o?'none':'block';
   $('selName').textContent=o?o.cls:'no selection';
   if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; }
-  // crew estimate — flat per WEIGHT: LIGHT = 4 AI, HEAVY = 8 AI (gun crews + garrison).
-  // Custom templates (no _LIGHT_/_HEAVY_ in the name) fall back to 1 AI per gun.
+  // crew estimate — cheap, single soldier per gun: AI cost == weapon count (no garrison).
   const wpns=objs.filter(x=>IS_WPN(x.cls)).length;
-  const tpl=$('tplName').value;
-  let ai, note;
-  if(/_HEAVY_/.test(tpl)){ ai=8; note='(heavy)'; }
-  else if(/_LIGHT_/.test(tpl)){ ai=4; note='(light)'; }
-  else { ai=objs.reduce((s,x)=>s+CREW_OF(x.cls),0); note='(per gun)'; }
-  $('cWpn').textContent=wpns; $('cAI').textContent=ai; $('cAInote').textContent=note;
+  const ai=objs.reduce((s,x)=>s+CREW_OF(x.cls),0);
+  $('cWpn').textContent=wpns; $('cAI').textContent=ai; $('cAInote').textContent='(1 / gun)';
   buildOut();
 }
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('input',()=>{ const o=objs.find(x=>x.id===sel); if(!o)return;
