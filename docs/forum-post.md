@@ -57,4 +57,4 @@ nothing to install:
 ▶ **https://rayswaynl.github.io/WDDM/**
 
 The overview below shows all 16 layouts (4 types × Light/Heavy × BLUFOR/OPFOR). Keen to hear
-what people think on the loadouts and the 4/8 AI cost before we lock it in.
+what people think on the loadouts and the AI costs before we lock it in.
