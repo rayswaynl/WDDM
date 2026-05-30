@@ -164,10 +164,9 @@ rows.forEach(([label,a,b])=>{
   for(let i=a;i<b;i++){
     const [grp,side,key,name,objs,doc]=P[i];
     const guns=objs.filter(o=>ISW(o[0])).length;
-    const ai=key.includes('_h_')?8:4;          // flat: LIGHT 4 · HEAVY 8
     const sideTxt=side=='w'?'WEST':'EAST';
     const tile=document.createElement('div');tile.className='tile';
-    tile.innerHTML=`<div class="cap"><span class="nm"><span class="side-${side}">${sideTxt}</span> · ${name}</span><span class="crew">⚔ ${guns} · AI ${ai}</span></div>
+    tile.innerHTML=`<div class="cap"><span class="nm"><span class="side-${side}">${sideTxt}</span> · ${name}</span><span class="crew">⚔ ${guns} · ${guns} AI</span></div>
       <canvas width="380" height="230"></canvas><div class="doc">${doc}</div>`;
     grid.appendChild(tile);
     tileRender(tile.querySelector('canvas'), objs);
