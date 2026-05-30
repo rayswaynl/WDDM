@@ -305,120 +305,122 @@ const PRESETS = {
     ['Land_HBarrier_large',[-9.5,2.5,0],90],['Land_HBarrier_large',[5,13,0],180],['Land_HBarrier_large',[-6,13,0],180]
   ]},
   // ===== AA BATTERY =====
-  aa_light_west: { name:'⚔ AA Battery · LIGHT · WEST (2× Stinger)', tpl:'WFBE_NEURODEF_AABATTERY_LIGHT_WEST', w:6, d:6, objs:[
-    ['Stinger_Pod_US_EP1',[-4,4,0],0],['Stinger_Pod_US_EP1',[4,4,0],0],
-    ['USLaunchersBox_EP1',[-4,1,0],0],['USLaunchersBox_EP1',[4,1,0],0],
-    ['Land_fort_bagfence_long',[-8,3,0],90],['Land_fort_bagfence_long',[8,3,0],90],
-    ['Land_fort_bagfence_long',[-4,-3,0],0],['Land_fort_bagfence_long',[4,-3,0],0],
-    ['Land_CamoNetVar_NATO',[0,4,0],0]
+  // ===== AA BATTERY =====  (NATO dispersed+concealed / WarPac massed+belted)
+  aa_light_west: { name:'⚔ AA · LIGHT · WEST — NATO dispersed Stinger', tpl:'WFBE_NEURODEF_AABATTERY_LIGHT_WEST', w:6, d:6, objs:[
+    ['Stinger_Pod_US_EP1',[-6,5,0],340],['Stinger_Pod_US_EP1',[6,5,0],20],
+    ['Land_fort_bagfence_round',[-6,5,0],0],['Land_fort_bagfence_round',[6,5,0],0],
+    ['USLaunchersBox_EP1',[-6,1,0],0],['USLaunchersBox_EP1',[6,1,0],0],
+    ['Land_CamoNetVar_NATO',[0,5,0],0],
+    ['Land_Razorwire',[-5,-3,0],0],['Land_Razorwire',[5,-3,0],0]
   ]},
-  aa_light_east: { name:'⚔ AA Battery · LIGHT · EAST (ZU-23 + Igla)', tpl:'WFBE_NEURODEF_AABATTERY_LIGHT_EAST', w:6, d:6, objs:[
-    ['ZU23_TK_EP1',[-5,4,0],0],['Igla_AA_pod_TK_EP1',[5,4,0],0],
-    ['TKVehicleBox_EP1',[-5,1,0],0],['TKVehicleBox_EP1',[5,1,0],0],
-    ['Land_fort_bagfence_long',[-9,3,0],90],['Land_fort_bagfence_long',[9,3,0],90],
-    ['Land_fort_bagfence_long',[-4,-6,0],0],['Land_fort_bagfence_long',[4,-6,0],0]
-  ]},
-  aa_heavy_west: { name:'⚔ AA Battery · HEAVY · WEST (4× Stinger)', tpl:'WFBE_NEURODEF_AABATTERY_HEAVY_WEST', w:8, d:8, objs:[
-    ['Stinger_Pod_US_EP1',[-6,5,0],0],['Stinger_Pod_US_EP1',[-2,6,0],0],['Stinger_Pod_US_EP1',[2,6,0],0],['Stinger_Pod_US_EP1',[6,5,0],0],
-    ['USLaunchersBox_EP1',[-4,1,0],0],['USLaunchersBox_EP1',[4,1,0],0],
-    ['Land_HBarrier_large',[-10,3,0],90],['Land_HBarrier_large',[10,3,0],90],
-    ['Land_HBarrier_large',[-5,-4,0],0],['Land_HBarrier_large',[5,-4,0],0],
-    ['Land_CamoNetVar_NATO',[0,5,0],0]
-  ]},
-  aa_heavy_east: { name:'⚔ AA Battery · HEAVY · EAST (2× ZU-23 + 2× Igla)', tpl:'WFBE_NEURODEF_AABATTERY_HEAVY_EAST', w:8, d:8, objs:[
-    ['ZU23_TK_EP1',[-7,5,0],0],['ZU23_TK_EP1',[7,5,0],0],['Igla_AA_pod_TK_EP1',[-3,6,0],0],['Igla_AA_pod_TK_EP1',[3,6,0],0],
+  aa_light_east: { name:'⚔ AA · LIGHT · EAST — WarPac ZU-23 + Igla belt', tpl:'WFBE_NEURODEF_AABATTERY_LIGHT_EAST', w:6, d:6, objs:[
+    ['ZU23_TK_EP1',[-4,4,0],0],['Igla_AA_pod_TK_EP1',[4,5,0],0],
     ['TKVehicleBox_EP1',[-4,1,0],0],['TKVehicleBox_EP1',[4,1,0],0],
-    ['Land_HBarrier_large',[-11,3,0],90],['Land_HBarrier_large',[11,3,0],90],
-    ['Land_HBarrier_large',[-5,-4,0],0],['Land_HBarrier_large',[5,-4,0],0]
+    ['Land_HBarrier_large',[-8,3,0],90],['Land_HBarrier_large',[8,3,0],90],['Land_HBarrier_large',[0,8,0],0],
+    ['Land_Razorwire',[-4,-3,0],0],['Land_Razorwire',[4,-3,0],0],['Hedgehog',[0,-3,0],0]
   ]},
-  // ===== ARTILLERY BATTERY =====
-  arty_light_west: { name:'⚔ Artillery · LIGHT · WEST (2× M119)', tpl:'WFBE_NEURODEF_ARTYBATTERY_LIGHT_WEST', w:8, d:8, objs:[
-    ['M119_US_EP1',[-5,3,0],0],['M119_US_EP1',[5,3,0],0],
-    ['USBasicAmmunitionBox_EP1',[-5,-1,0],0],['USBasicAmmunitionBox_EP1',[5,-1,0],0],
-    ['Land_HBarrier_large',[-11,2,0],90],['Land_HBarrier_large',[-11,8,0],90],
-    ['Land_HBarrier_large',[11,2,0],90],['Land_HBarrier_large',[11,8,0],90],
-    ['Land_HBarrier_large',[-6,-5,0],0],['Land_HBarrier_large',[0,-5,0],0],['Land_HBarrier_large',[6,-5,0],0]
+  aa_heavy_west: { name:'⚔ AA · HEAVY · WEST — NATO Stinger fan, dual camo', tpl:'WFBE_NEURODEF_AABATTERY_HEAVY_WEST', w:8, d:8, objs:[
+    ['Stinger_Pod_US_EP1',[-8,6,0],330],['Stinger_Pod_US_EP1',[-3,8,0],350],['Stinger_Pod_US_EP1',[3,8,0],10],['Stinger_Pod_US_EP1',[8,6,0],30],
+    ['Land_fort_bagfence_round',[-8,6,0],0],['Land_fort_bagfence_round',[8,6,0],0],
+    ['USLaunchersBox_EP1',[-5,2,0],0],['USLaunchersBox_EP1',[5,2,0],0],
+    ['Land_CamoNetVar_NATO',[-5,7,0],0],['Land_CamoNetVar_NATO',[5,7,0],0],
+    ['Land_Razorwire',[-4,-3,0],0],['Land_Razorwire',[4,-3,0],0]
   ]},
-  arty_light_east: { name:'⚔ Artillery · LIGHT · EAST (2× D-30)', tpl:'WFBE_NEURODEF_ARTYBATTERY_LIGHT_EAST', w:8, d:8, objs:[
-    ['D30_TK_EP1',[-5,3,0],0],['D30_TK_EP1',[5,3,0],0],
-    ['TKBasicAmmunitionBox_EP1',[-5,-1,0],0],['TKBasicAmmunitionBox_EP1',[5,-1,0],0],
-    ['Land_HBarrier_large',[-11,2,0],90],['Land_HBarrier_large',[-11,8,0],90],
-    ['Land_HBarrier_large',[11,2,0],90],['Land_HBarrier_large',[11,8,0],90],
-    ['Land_HBarrier_large',[-6,-5,0],0],['Land_HBarrier_large',[0,-5,0],0],['Land_HBarrier_large',[6,-5,0],0]
+  aa_heavy_east: { name:'⚔ AA · HEAVY · EAST — WarPac AA belt, walled box', tpl:'WFBE_NEURODEF_AABATTERY_HEAVY_EAST', w:8, d:8, objs:[
+    ['ZU23_TK_EP1',[-7,5,0],350],['ZU23_TK_EP1',[7,5,0],10],['Igla_AA_pod_TK_EP1',[-3,7,0],0],['Igla_AA_pod_TK_EP1',[3,7,0],0],
+    ['TKVehicleBox_EP1',[-5,2,0],0],['TKVehicleBox_EP1',[5,2,0],0],
+    ['Land_HBarrier_large',[-11,4,0],90],['Land_HBarrier_large',[11,4,0],90],
+    ['Land_HBarrier_large',[-6,-2,0],0],['Land_HBarrier_large',[0,-2,0],0],['Land_HBarrier_large',[6,-2,0],0],
+    ['Hedgehog',[-3,-5,0],0],['Hedgehog',[3,-5,0],0],['Land_Razorwire',[0,-6,0],0]
   ]},
-  arty_heavy_west: { name:'⚔ Artillery · HEAVY · WEST (4× M119)', tpl:'WFBE_NEURODEF_ARTYBATTERY_HEAVY_WEST', w:10, d:10, objs:[
-    ['M119_US_EP1',[-9,4,0],0],['M119_US_EP1',[-3,4,0],0],['M119_US_EP1',[3,4,0],0],['M119_US_EP1',[9,4,0],0],
-    ['USBasicAmmunitionBox_EP1',[-6,0,0],0],['USBasicAmmunitionBox_EP1',[6,0,0],0],
-    ['Land_HBarrier_large',[-14,3,0],90],['Land_HBarrier_large',[14,3,0],90],
-    ['Land_HBarrier_large',[-9,-3,0],0],['Land_HBarrier_large',[-3,-3,0],0],['Land_HBarrier_large',[3,-3,0],0],['Land_HBarrier_large',[9,-3,0],0]
+  // ===== ARTILLERY BATTERY =====  (NATO dispersed counterbattery / WarPac massed arc)
+  arty_light_west: { name:'⚔ Arty · LIGHT · WEST — NATO dispersed M119, camo', tpl:'WFBE_NEURODEF_ARTYBATTERY_LIGHT_WEST', w:8, d:8, objs:[
+    ['M119_US_EP1',[-6,3,0],0],['M119_US_EP1',[6,3,0],0],
+    ['USBasicAmmunitionBox_EP1',[-6,-1,0],0],['USBasicAmmunitionBox_EP1',[6,-1,0],0],
+    ['Land_CamoNetVar_NATO',[-6,3,0],0],['Land_CamoNetVar_NATO',[6,3,0],0],
+    ['Land_fort_bagfence_long',[-9,3,0],90],['Land_fort_bagfence_long',[9,3,0],90],
+    ['Land_fort_bagfence_long',[-6,-3,0],0],['Land_fort_bagfence_long',[6,-3,0],0]
   ]},
-  arty_heavy_east: { name:'⚔ Artillery · HEAVY · EAST (4× D-30)', tpl:'WFBE_NEURODEF_ARTYBATTERY_HEAVY_EAST', w:10, d:10, objs:[
-    ['D30_TK_EP1',[-9,4,0],0],['D30_TK_EP1',[-3,4,0],0],['D30_TK_EP1',[3,4,0],0],['D30_TK_EP1',[9,4,0],0],
+  arty_light_east: { name:'⚔ Arty · LIGHT · EAST — WarPac massed D-30, boxed', tpl:'WFBE_NEURODEF_ARTYBATTERY_LIGHT_EAST', w:8, d:8, objs:[
+    ['D30_TK_EP1',[-4,3,0],0],['D30_TK_EP1',[4,3,0],0],
+    ['TKBasicAmmunitionBox_EP1',[-4,-1,0],0],['TKBasicAmmunitionBox_EP1',[4,-1,0],0],
+    ['Land_HBarrier_large',[-8,2,0],90],['Land_HBarrier_large',[-8,8,0],90],['Land_HBarrier_large',[8,2,0],90],['Land_HBarrier_large',[8,8,0],90],
+    ['Land_HBarrier_large',[-3,-3,0],0],['Land_HBarrier_large',[3,-3,0],0],['Land_HBarrier_large',[0,9,0],0]
+  ]},
+  arty_heavy_west: { name:'⚔ Arty · HEAVY · WEST — NATO gun line in depth', tpl:'WFBE_NEURODEF_ARTYBATTERY_HEAVY_WEST', w:10, d:10, objs:[
+    ['M119_US_EP1',[-10,4,0],0],['M119_US_EP1',[-3,5,0],0],['M119_US_EP1',[3,5,0],0],['M119_US_EP1',[10,4,0],0],
+    ['USBasicAmmunitionBox_EP1',[-7,0,0],0],['USBasicAmmunitionBox_EP1',[0,0,0],0],['USBasicAmmunitionBox_EP1',[7,0,0],0],
+    ['Land_CamoNetVar_NATO',[-7,4,0],0],['Land_CamoNetVar_NATO',[7,4,0],0],
+    ['Land_fort_bagfence_long',[-13,3,0],90],['Land_fort_bagfence_long',[13,3,0],90],
+    ['Land_fort_bagfence_long',[-6,-3,0],0],['Land_fort_bagfence_long',[6,-3,0],0]
+  ]},
+  arty_heavy_east: { name:'⚔ Arty · HEAVY · EAST — WarPac battery arc, revetted', tpl:'WFBE_NEURODEF_ARTYBATTERY_HEAVY_EAST', w:10, d:10, objs:[
+    ['D30_TK_EP1',[-9,4,0],10],['D30_TK_EP1',[-3,5,0],3],['D30_TK_EP1',[3,5,0],357],['D30_TK_EP1',[9,4,0],350],
     ['TKBasicAmmunitionBox_EP1',[-6,0,0],0],['TKBasicAmmunitionBox_EP1',[6,0,0],0],
-    ['Land_HBarrier_large',[-14,3,0],90],['Land_HBarrier_large',[14,3,0],90],
-    ['Land_HBarrier_large',[-9,-3,0],0],['Land_HBarrier_large',[-3,-3,0],0],['Land_HBarrier_large',[3,-3,0],0],['Land_HBarrier_large',[9,-3,0],0]
+    ['Land_HBarrier_large',[-13,3,0],90],['Land_HBarrier_large',[13,3,0],90],
+    ['Land_HBarrier_large',[-9,-2,0],0],['Land_HBarrier_large',[-3,-2,0],0],['Land_HBarrier_large',[3,-2,0],0],['Land_HBarrier_large',[9,-2,0],0],['Land_HBarrier_large',[0,9,0],0]
   ]},
-  // ===== WEAPONS EMPLACEMENT =====
-  emp_light_west: { name:'⚔ Emplacement · LIGHT · WEST (2× M2 + TOW)', tpl:'WFBE_NEURODEF_EMPLACEMENT_LIGHT_WEST', w:8, d:6, objs:[
-    ['M2StaticMG',[-5,3,0],0],['M2StaticMG',[5,3,0],0],['TOW_TriPod_US_EP1',[0,4,0],0],
-    ['USBasicAmmunitionBox_EP1',[0,0,0],0],
-    ['Land_fort_bagfence_corner',[-7,2,0],270],['Land_fort_bagfence_long',[-7,-2,0],0],
-    ['Land_fort_bagfence_long',[-2,-4,0],90],['Land_fort_bagfence_long',[2,-4,0],90],
-    ['Land_fort_bagfence_long',[7,-2,0],0],['Land_fort_bagfence_corner',[7,2,0],180]
+  // ===== WEAPONS EMPLACEMENT =====  (NATO ATGM standoff / WarPac strongpoint)
+  emp_light_west: { name:'⚔ Emplacement · LIGHT · WEST — NATO TOW overwatch', tpl:'WFBE_NEURODEF_EMPLACEMENT_LIGHT_WEST', w:8, d:6, objs:[
+    ['M2StaticMG',[-6,2,0],330],['M2StaticMG',[6,2,0],30],['TOW_TriPod_US_EP1',[0,6,0],0],
+    ['Land_CamoNetVar_NATO',[0,6,0],0],['USBasicAmmunitionBox_EP1',[0,3,0],0],
+    ['Land_fort_bagfence_corner',[-8,1,0],270],['Land_fort_bagfence_long',[-8,-3,0],0],
+    ['Land_fort_bagfence_long',[8,-3,0],0],['Land_fort_bagfence_corner',[8,1,0],180],['Land_Razorwire',[0,-5,0],0]
   ]},
-  emp_light_east: { name:'⚔ Emplacement · LIGHT · EAST (2× DShKM + Metis)', tpl:'WFBE_NEURODEF_EMPLACEMENT_LIGHT_EAST', w:8, d:6, objs:[
-    ['DSHKM_TK_INS_EP1',[-5,3,0],0],['DSHKM_TK_INS_EP1',[5,3,0],0],['Metis_TK_EP1',[0,4,0],0],
+  emp_light_east: { name:'⚔ Emplacement · LIGHT · EAST — WarPac DShKM + SPG-9', tpl:'WFBE_NEURODEF_EMPLACEMENT_LIGHT_EAST', w:8, d:6, objs:[
+    ['DSHKM_TK_INS_EP1',[-4,4,0],0],['DSHKM_TK_INS_EP1',[4,4,0],0],['SPG9_TK_INS_EP1',[0,3,0],0],
     ['TKBasicAmmunitionBox_EP1',[0,0,0],0],
-    ['Land_fort_bagfence_corner',[-7,2,0],270],['Land_fort_bagfence_long',[-7,-2,0],0],
-    ['Land_fort_bagfence_long',[-2,-4,0],90],['Land_fort_bagfence_long',[2,-4,0],90],
-    ['Land_fort_bagfence_long',[7,-2,0],0],['Land_fort_bagfence_corner',[7,2,0],180]
+    ['Land_fort_bagfence_long',[-7,2,0],90],['Land_fort_bagfence_long',[7,2,0],90],
+    ['Land_fort_bagfence_long',[-3,-2,0],0],['Land_fort_bagfence_long',[3,-2,0],0],
+    ['Land_Razorwire',[-4,-4,0],0],['Land_Razorwire',[4,-4,0],0],['Hedgehog',[0,-4,0],0]
   ]},
-  emp_heavy_west: { name:'⚔ Emplacement · HEAVY · WEST (4× M2 + 2× TOW)', tpl:'WFBE_NEURODEF_EMPLACEMENT_HEAVY_WEST', w:10, d:8, objs:[
-    ['M2StaticMG',[-8,3,0],0],['M2StaticMG',[-3,4,0],0],['M2StaticMG',[3,4,0],0],['M2StaticMG',[8,3,0],0],
-    ['TOW_TriPod_US_EP1',[-5,5,0],0],['TOW_TriPod_US_EP1',[5,5,0],0],
-    ['USBasicAmmunitionBox_EP1',[0,0,0],0],['Land_fort_watchtower_EP1',[0,5,0],0],
-    ['Land_fort_bagfence_corner',[-10,2,0],270],['Land_fort_bagfence_long',[-10,-2,0],0],
-    ['Land_fort_bagfence_long',[-4,-5,0],90],['Land_fort_bagfence_long',[4,-5,0],90],
-    ['Land_fort_bagfence_long',[10,-2,0],0],['Land_fort_bagfence_corner',[10,2,0],180]
+  emp_heavy_west: { name:'⚔ Emplacement · HEAVY · WEST — NATO AT screen (flank TOW)', tpl:'WFBE_NEURODEF_EMPLACEMENT_HEAVY_WEST', w:10, d:8, objs:[
+    ['M2StaticMG',[-9,2,0],340],['M2StaticMG',[-3,4,0],355],['M2StaticMG',[3,4,0],5],['M2StaticMG',[9,2,0],20],
+    ['TOW_TriPod_US_EP1',[-7,6,0],330],['TOW_TriPod_US_EP1',[7,6,0],30],
+    ['Land_CamoNetVar_NATO',[-7,6,0],0],['Land_CamoNetVar_NATO',[7,6,0],0],['Land_fort_watchtower_EP1',[0,7,0],0],
+    ['USBasicAmmunitionBox_EP1',[-4,0,0],0],['USBasicAmmunitionBox_EP1',[4,0,0],0],
+    ['Land_fort_bagfence_long',[-10,-2,0],0],['Land_fort_bagfence_long',[10,-2,0],0],
+    ['Land_Razorwire',[-5,-5,0],0],['Land_Razorwire',[5,-5,0],0]
   ]},
-  emp_heavy_east: { name:'⚔ Emplacement · HEAVY · EAST (4× DShKM + 2× Metis)', tpl:'WFBE_NEURODEF_EMPLACEMENT_HEAVY_EAST', w:10, d:8, objs:[
-    ['DSHKM_TK_INS_EP1',[-8,3,0],0],['DSHKM_TK_INS_EP1',[-3,4,0],0],['DSHKM_TK_INS_EP1',[3,4,0],0],['DSHKM_TK_INS_EP1',[8,3,0],0],
-    ['Metis_TK_EP1',[-5,5,0],0],['Metis_TK_EP1',[5,5,0],0],
-    ['TKBasicAmmunitionBox_EP1',[0,0,0],0],['Land_fort_watchtower_EP1',[0,5,0],0],
-    ['Land_fort_bagfence_corner',[-10,2,0],270],['Land_fort_bagfence_long',[-10,-2,0],0],
-    ['Land_fort_bagfence_long',[-4,-5,0],90],['Land_fort_bagfence_long',[4,-5,0],90],
-    ['Land_fort_bagfence_long',[10,-2,0],0],['Land_fort_bagfence_corner',[10,2,0],180]
+  emp_heavy_east: { name:'⚔ Emplacement · HEAVY · EAST — WarPac strongpoint, belt', tpl:'WFBE_NEURODEF_EMPLACEMENT_HEAVY_EAST', w:10, d:8, objs:[
+    ['DSHKM_TK_INS_EP1',[-7,5,0],350],['DSHKM_TK_INS_EP1',[-2,5,0],0],['DSHKM_TK_INS_EP1',[2,5,0],0],['DSHKM_TK_INS_EP1',[7,5,0],10],
+    ['Metis_TK_EP1',[-4,2,0],0],['Metis_TK_EP1',[4,2,0],0],['Land_fort_watchtower_EP1',[0,6,0],0],
+    ['TKBasicAmmunitionBox_EP1',[0,0,0],0],
+    ['Land_HBarrier_large',[-10,3,0],90],['Land_HBarrier_large',[10,3,0],90],
+    ['Land_fort_bagfence_long',[-5,-2,0],0],['Land_fort_bagfence_long',[5,-2,0],0],
+    ['Hedgehog',[-6,-5,0],0],['Hedgehog',[0,-5,0],0],['Hedgehog',[6,-5,0],0],
+    ['Land_Razorwire',[-3,-6,0],0],['Land_Razorwire',[3,-6,0],0]
   ]},
-  // ===== CHECKPOINT =====
-  cp_light_west: { name:'⚔ Checkpoint · LIGHT · WEST (chicane + M2)', tpl:'WFBE_NEURODEF_CHECKPOINT_LIGHT_WEST', w:10, d:8, objs:[
+  // ===== CHECKPOINT =====  (NATO serpentine VCP / WarPac concrete border post)
+  cp_light_west: { name:'⚔ Checkpoint · LIGHT · WEST — NATO VCP serpentine', tpl:'WFBE_NEURODEF_CHECKPOINT_LIGHT_WEST', w:10, d:8, objs:[
     ['Land_CncBlock_Stripes',[-4,7,0],0],['Land_CncBlock_Stripes',[-2,7,0],0],['Land_CncBlock_Stripes',[0,7,0],0],
-    ['Land_CncBlock_Stripes',[4,1,0],0],['Land_CncBlock_Stripes',[2,1,0],0],['Land_CncBlock_Stripes',[0,1,0],0],
-    ['RoadCone_L_EP1',[2,10,0],0],['RoadCone_L_EP1',[-4,4,0],0],
-    ['Land_fort_watchtower_EP1',[6,3,0],270],['M2StaticMG',[6,8,0],300],
-    ['Land_HBarrier_large',[-7,4,0],90],['Land_HBarrier_large',[8,-1,0],90]
+    ['Land_CncBlock_Stripes',[4,2,0],0],['Land_CncBlock_Stripes',[2,2,0],0],['Land_CncBlock_Stripes',[0,2,0],0],
+    ['RoadCone_L_EP1',[1,9,0],0],['RoadCone_L_EP1',[-3,5,0],0],['RoadCone_L_EP1',[3,0,0],0],
+    ['Land_fort_watchtower_EP1',[6,4,0],270],['M2StaticMG',[6,5,0],270],['Land_fort_bagfence_round',[6,5,0],0],
+    ['Land_HBarrier_large',[-7,4,0],90]
   ]},
-  cp_light_east: { name:'⚔ Checkpoint · LIGHT · EAST (chicane + DShKM)', tpl:'WFBE_NEURODEF_CHECKPOINT_LIGHT_EAST', w:10, d:8, objs:[
+  cp_light_east: { name:'⚔ Checkpoint · LIGHT · EAST — WarPac border post', tpl:'WFBE_NEURODEF_CHECKPOINT_LIGHT_EAST', w:10, d:8, objs:[
     ['Land_CncBlock_Stripes',[-4,7,0],0],['Land_CncBlock_Stripes',[-2,7,0],0],['Land_CncBlock_Stripes',[0,7,0],0],
-    ['Land_CncBlock_Stripes',[4,1,0],0],['Land_CncBlock_Stripes',[2,1,0],0],['Land_CncBlock_Stripes',[0,1,0],0],
-    ['RoadCone_L_EP1',[2,10,0],0],['RoadCone_L_EP1',[-4,4,0],0],
-    ['Land_fort_watchtower_EP1',[6,3,0],270],['DSHKM_TK_INS_EP1',[6,8,0],300],
-    ['Land_HBarrier_large',[-7,4,0],90],['Land_HBarrier_large',[8,-1,0],90]
-  ]},
-  cp_heavy_west: { name:'⚔ Checkpoint · HEAVY · WEST (2 towers, 2× M2 + TOW)', tpl:'WFBE_NEURODEF_CHECKPOINT_HEAVY_WEST', w:12, d:10, objs:[
-    ['Land_CncBlock_Stripes',[-4,8,0],0],['Land_CncBlock_Stripes',[-2,8,0],0],['Land_CncBlock_Stripes',[0,8,0],0],
     ['Land_CncBlock_Stripes',[4,2,0],0],['Land_CncBlock_Stripes',[2,2,0],0],['Land_CncBlock_Stripes',[0,2,0],0],
-    ['RoadCone_L_EP1',[2,11,0],0],['RoadCone_L_EP1',[-4,5,0],0],
-    ['Land_fort_watchtower_EP1',[7,4,0],270],['Land_fort_watchtower_EP1',[-7,4,0],90],
-    ['M2StaticMG',[7,9,0],300],['M2StaticMG',[-7,9,0],60],['TOW_TriPod_US_EP1',[0,-2,0],180],
-    ['Land_HBarrier_large',[-9,5,0],90],['Land_HBarrier_large',[10,0,0],90]
+    ['Land_CncBlock',[-6,4,0],0],['Land_CncBlock',[6,4,0],0],
+    ['Land_fort_watchtower_EP1',[6,5,0],270],['DSHKM_TK_INS_EP1',[6,6,0],270],
+    ['Land_HBarrier_large',[-7,4,0],90],['Land_Razorwire',[0,-2,0],0]
   ]},
-  cp_heavy_east: { name:'⚔ Checkpoint · HEAVY · EAST (2 towers, 2× DShKM + Metis)', tpl:'WFBE_NEURODEF_CHECKPOINT_HEAVY_EAST', w:12, d:10, objs:[
+  cp_heavy_west: { name:'⚔ Checkpoint · HEAVY · WEST — NATO hardened VCP', tpl:'WFBE_NEURODEF_CHECKPOINT_HEAVY_WEST', w:12, d:10, objs:[
     ['Land_CncBlock_Stripes',[-4,8,0],0],['Land_CncBlock_Stripes',[-2,8,0],0],['Land_CncBlock_Stripes',[0,8,0],0],
-    ['Land_CncBlock_Stripes',[4,2,0],0],['Land_CncBlock_Stripes',[2,2,0],0],['Land_CncBlock_Stripes',[0,2,0],0],
-    ['RoadCone_L_EP1',[2,11,0],0],['RoadCone_L_EP1',[-4,5,0],0],
-    ['Land_fort_watchtower_EP1',[7,4,0],270],['Land_fort_watchtower_EP1',[-7,4,0],90],
-    ['DSHKM_TK_INS_EP1',[7,9,0],300],['DSHKM_TK_INS_EP1',[-7,9,0],60],['Metis_TK_EP1',[0,-2,0],180],
-    ['Land_HBarrier_large',[-9,5,0],90],['Land_HBarrier_large',[10,0,0],90]
+    ['Land_CncBlock_Stripes',[4,3,0],0],['Land_CncBlock_Stripes',[2,3,0],0],['Land_CncBlock_Stripes',[0,3,0],0],
+    ['RoadCone_L_EP1',[1,10,0],0],['RoadCone_L_EP1',[3,1,0],0],
+    ['Land_fort_watchtower_EP1',[7,5,0],270],['Land_fort_watchtower_EP1',[-7,5,0],90],
+    ['M2StaticMG',[7,6,0],270],['M2StaticMG',[-7,6,0],90],['TOW_TriPod_US_EP1',[0,-3,0],180],['Land_CamoNetVar_NATO',[0,-3,0],0],
+    ['Land_HBarrier_large',[-9,5,0],90],['Land_HBarrier_large',[10,1,0],90]
+  ]},
+  cp_heavy_east: { name:'⚔ Checkpoint · HEAVY · EAST — WarPac fortified post', tpl:'WFBE_NEURODEF_CHECKPOINT_HEAVY_EAST', w:12, d:10, objs:[
+    ['Land_CncBlock_Stripes',[-4,8,0],0],['Land_CncBlock_Stripes',[-2,8,0],0],['Land_CncBlock_Stripes',[0,8,0],0],
+    ['Land_CncBlock_Stripes',[4,3,0],0],['Land_CncBlock_Stripes',[2,3,0],0],['Land_CncBlock_Stripes',[0,3,0],0],
+    ['Land_CncBlock',[-7,6,0],0],['Land_CncBlock',[7,6,0],0],
+    ['Land_fort_watchtower_EP1',[7,5,0],270],['Land_fort_watchtower_EP1',[-7,5,0],90],
+    ['DSHKM_TK_INS_EP1',[7,7,0],270],['DSHKM_TK_INS_EP1',[-7,7,0],90],['Metis_TK_EP1',[0,-3,0],180],
+    ['Hedgehog',[-3,-5,0],0],['Hedgehog',[3,-5,0],0],['Land_Razorwire',[0,-6,0],0],['Land_HBarrier_large',[-9,5,0],90]
   ]},
   blank: { name:'— Blank canvas —', tpl:'WFBE_NEURODEF_CUSTOM_WALLS', w:10, d:10, objs:[] },
 };
