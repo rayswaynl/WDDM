@@ -3,8 +3,8 @@
 **The idea (building on the HQ/Factory walls we already have):** let players actually
 *fortify* the map. Engineers push **light defensive positions** out into friendly towns;
 the **heavy versions** come online late-game (tech-gated) for proper base / strongpoint
-defense. Every position spawns **already manned** with its own AI — gun crews plus a few
-garrison riflemen — so they fight on their own instead of sitting empty.
+defense. Every position spawns **already manned** — one gun crew per weapon — so they
+fight on their own instead of sitting empty.
 
 ## How it works now (walls recap)
 Factories already spawn with pre-built H-barrier walls. Those walls aren't part of the
