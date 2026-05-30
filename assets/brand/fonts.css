@@ -1,0 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap");
+:root {
+  --mw-font-display: "Oswald", system-ui, sans-serif;
+  --mw-font-sans: "Inter", system-ui, sans-serif;
+  --mw-font-mono: "JetBrains Mono", ui-monospace, monospace;
+}

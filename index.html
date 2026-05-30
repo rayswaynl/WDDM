@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WDDM — Warfare Dynamic Defense Manager</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon/favicon-32.png">
+<link rel="icon" href="assets/brand/favicon/favicon.ico">
+<meta name="description" content="Browser-based top-down composition editor for Arma Warfare defense templates — drag-and-drop layout, live SQF export, crew-cost estimator. Offline, single-file, MIT.">
+<meta property="og:title" content="WDDM — Warfare Dynamic Defense Manager">
+<meta property="og:description" content="Visual composition editor for Arma Warfare defense templates. Drag, rotate, export SQF.">
+<meta property="og:image" content="docs/img/banner.png">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gunmetal:#14171B; --steel:#2A2F36; --steel2:#343b44;
+    --olive:#5C6536; --bone:#E7E3D6; --orange:#D9763C; --orange-deep:#B85F2A;
+    --chalk:#F2EFE8; --line:#39414b; --danger:#c0392b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--gunmetal);color:var(--bone);overflow:hidden}
+  h1,h2{font-family:Oswald,Inter,sans-serif;font-weight:600;letter-spacing:.5px;margin:0}
+  /* ---- Brand bar ---- */
+  .brandbar{height:54px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:linear-gradient(90deg,#101317 0%,#171b20 100%);border-bottom:1px solid var(--line);position:relative;z-index:5}
+  .brandbar .mark{width:34px;height:34px;flex:0 0 auto}
+  .brandbar .word{display:flex;flex-direction:column;line-height:1}
+  .brandbar .word .t1{font-family:Oswald,sans-serif;font-weight:600;font-size:19px;letter-spacing:2px;color:var(--bone)}
+  .brandbar .word .t2{font-family:Oswald,sans-serif;font-weight:400;font-size:10px;letter-spacing:6px;color:var(--orange);margin-top:2px}
+  .brandbar .tool{margin-left:8px;padding-left:14px;border-left:1px solid var(--line);font-size:12px;color:#9aa3ad}
+  .brandbar .tool b{color:var(--bone);font-weight:600}
+  .brandbar .spacer{flex:1}
+  .brandbar .chip{font-family:'JetBrains Mono',monospace;font-size:10px;color:#8b939c;border:1px solid var(--line);
+    border-radius:10px;padding:3px 9px;background:#0d1014}
+  .brandbar .chip b{color:var(--olive)}
+  .app{display:grid;grid-template-columns:330px 1fr 350px;height:calc(100% - 54px)}
+  .panel{background:var(--steel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  .panel.right{border-right:none;border-left:1px solid var(--line)}
+  .panel header{padding:11px 14px;border-bottom:1px solid var(--line);background:var(--gunmetal)}
+  .panel header h2{font-size:14px}
+  .panel header .sub{font-size:11px;color:#9aa3ad;margin-top:3px;font-family:'JetBrains Mono',monospace}
+  .scroll{overflow:auto;padding:12px 14px;flex:1;min-height:0}
+  .stage{position:relative;background:radial-gradient(120% 120% at 50% 0%,#11151a 0%,#0b0e12 100%);min-height:0}
+  canvas{display:block;width:100%;height:100%;cursor:crosshair}
+  label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#9aa3ad;margin:10px 0 4px}
+  input,select,textarea,button{font-family:inherit;font-size:13px}
+  input[type=text],input[type=number],select,textarea{
+    width:100%;background:var(--gunmetal);border:1px solid var(--line);color:var(--bone);
+    border-radius:5px;padding:7px 8px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--orange)}
+  textarea{resize:vertical;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;line-height:1.5}
+  button{cursor:pointer;background:var(--steel2);color:var(--bone);border:1px solid var(--line);border-radius:5px;padding:8px 10px}
+  button:hover{border-color:var(--orange)}
+  button.primary{background:var(--orange);border-color:var(--orange);color:#1a1208;font-weight:600}
+  button.primary:hover{background:var(--orange-deep);border-color:var(--orange-deep)}
+  button.danger{border-color:var(--danger);color:#e88}
+  button.danger:hover{background:var(--danger);color:#fff}
+  .row{display:flex;gap:8px}.row>*{flex:1}
+  .btnbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .obj-list{list-style:none;margin:0;padding:0}
+  .obj-list li{padding:7px 8px;border:1px solid var(--line);border-radius:5px;margin-bottom:6px;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:6px;background:var(--gunmetal)}
+  .obj-list li.sel{border-color:var(--orange);background:#1c1a14}
+  .obj-list li .nm{font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .obj-list li .xy{font-size:10px;color:#8b939c;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+  .hint{font-size:11px;color:#8b939c;line-height:1.5;margin-top:8px}
+  .hint code{background:#0d1014;padding:1px 4px;border-radius:3px;color:var(--orange)}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .badge{display:inline-block;font-size:10px;background:var(--olive);color:var(--chalk);padding:1px 6px;border-radius:10px;margin-left:6px}
+  .toolbar{position:absolute;top:10px;left:10px;display:flex;gap:6px;background:rgba(20,23,27,.86);
+    border:1px solid var(--line);border-radius:6px;padding:6px;backdrop-filter:blur(4px);font-size:11px;align-items:center}
+  .toolbar button{padding:5px 8px}
+  .legend{position:absolute;bottom:10px;left:10px;background:rgba(20,23,27,.86);border:1px solid var(--line);
+    border-radius:6px;padding:8px 10px;font-size:11px;color:#9aa3ad;font-family:'JetBrains Mono',monospace;line-height:1.6}
+  .legend b{color:var(--bone)}
+  .swatch{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:middle;margin-right:4px}
+  .crewbox{position:absolute;top:10px;right:10px;background:rgba(20,23,27,.86);border:1px solid var(--line);
+    border-radius:6px;padding:8px 11px;font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.7;color:#9aa3ad}
+  .crewbox b{color:var(--bone)} .crewbox .ai{color:var(--orange)}
+  .divider{height:1px;background:var(--line);margin:14px 0}
+  .copybtn{margin-top:6px}
+  .warn{color:var(--orange)}
+  details{margin-top:8px}
+  summary{cursor:pointer;font-size:12px;color:var(--orange)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--steel2);border-radius:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+
+<!-- ====== Brand bar ====== -->
+<div class="brandbar">
+  <svg class="mark" viewBox="0 0 96 96" aria-label="Miksuu's Warfare">
+    <g fill="none" stroke-width="7" stroke-linecap="square" stroke-linejoin="miter">
+      <polyline points="20,54 48,30 76,54" stroke="#D9763C"/>
+      <polyline points="20,66 48,42 76,66" stroke="#F2EFE8"/>
+      <polyline points="20,78 48,54 76,78" stroke="#5C6536"/>
+    </g>
+  </svg>
+  <div class="word"><span class="t1">WDDM</span><span class="t2">DYNAMIC DEFENSE</span></div>
+  <div class="tool"><b>Warfare Dynamic Defense Manager</b> · composition → SQF</div>
+  <div class="spacer"></div>
+  <div class="chip">coords: <b>modelToWorld</b> · +Y front · +X right</div>
+</div>
+
+<div class="app">
+
+  <!-- LEFT: presets + palette + objects -->
+  <div class="panel">
+    <header>
+      <h2>Build</h2>
+      <div class="sub">presets · palette · placed objects</div>
+    </header>
+    <div class="scroll">
+      <label>Load a demo / preset composition</label>
+      <select id="preset"></select>
+      <button class="primary" id="loadPreset" style="width:100%;margin-top:8px">Load preset →</button>
+
+      <div class="divider"></div>
+
+      <label>Template variable name</label>
+      <input id="tplName" type="text" value="WFBE_NEURODEF_BARRACKS_WALLS">
+
+      <div class="divider"></div>
+
+      <label>Add object — pick a class</label>
+      <select id="palette"></select>
+      <div class="btnbar">
+        <button class="primary" id="addBtn">+ Add to centre</button>
+        <button id="addCustomBtn">+ Custom…</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <label>Placed objects <span class="badge" id="count">0</span></label>
+      <ul class="obj-list" id="objList"></ul>
+
+      <div class="hint">
+        Click an object on the canvas or list to select. Drag the body to move,
+        drag the handle to rotate. Arrow keys nudge (Shift = 1&nbsp;m).
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTRE: canvas -->
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="toolbar">
+      <span>Deploy pad</span>
+      <input id="pW" type="number" step="0.5" value="14" style="width:54px">×
+      <input id="pD" type="number" step="0.5" value="14" style="width:54px">m
+      <span style="margin-left:8px">Facing</span>
+      <input id="parentDir" type="number" step="5" value="0" style="width:54px">°
+      <label style="display:flex;align-items:center;gap:4px;margin:0;text-transform:none;letter-spacing:0">
+        <input id="snap" type="checkbox" checked style="width:auto"> snap
+      </label>
+      <button id="resetView">Reset view</button>
+    </div>
+    <div class="crewbox" id="crewbox">
+      <div>weapons: <b id="cWpn">0</b></div>
+      <div>est. AI crew: <span class="ai" id="cAI">0</span></div>
+    </div>
+    <div class="legend">
+      <div><span class="swatch" style="background:#5C6536"></span><b>Deploy pad</b> at origin [0,0,0]</div>
+      <div><span class="swatch" style="background:#D9763C"></span>+Y = front · +X = right</div>
+      <div>scroll = zoom · right-drag = pan</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: inspector + export -->
+  <div class="panel right">
+    <header>
+      <h2>Inspector & Export</h2>
+      <div class="sub" id="selName">no selection</div>
+    </header>
+    <div class="scroll">
+      <div id="inspector" style="display:none">
+        <label>Classname</label>
+        <input id="iClass" type="text">
+        <div class="grid3">
+          <div><label>X (right)</label><input id="iX" type="number" step="0.25"></div>
+          <div><label>Y (front)</label><input id="iY" type="number" step="0.25"></div>
+          <div><label>Z <span title="ignored" class="warn">⚠</span></label><input id="iZ" type="number" step="0.25"></div>
+        </div>
+        <label>Relative direction (stored value)</label>
+        <input id="iDir" type="number" step="5">
+        <div class="btnbar">
+          <button id="dupBtn">Duplicate</button>
+          <button id="mirrorBtn">Mirror X</button>
+          <button class="danger" id="delBtn">Delete</button>
+        </div>
+        <div class="hint">
+          Z is shown for completeness but <b>CreateDefenseTemplate flattens every object to the ground</b>
+          (<code>_toWorld set [2,0]</code>) — Z has no effect for template-spawned objects.
+        </div>
+      </div>
+      <div id="noSel" class="hint">Select an object to edit its class, position and facing.</div>
+
+      <div class="divider"></div>
+
+      <label>Generated SQF — drop into <code>Server/Init/Init_Defenses.sqf</code></label>
+      <textarea id="out" rows="13" readonly></textarea>
+      <button class="primary copybtn" id="copyBtn" style="width:100%">Copy SQF</button>
+
+      <details>
+        <summary>Import an existing template</summary>
+        <div class="hint">Paste the entries inside the outer <code>[ ... ]</code> and load.</div>
+        <textarea id="importBox" rows="5" placeholder="['Land_HBarrier_large',[8,0,0],90],&#10;['Land_HBarrier_large',[8,10,0],90]"></textarea>
+        <button id="importBtn" style="width:100%;margin-top:6px">Load into editor</button>
+      </details>
+
+      <details>
+        <summary>Save / load project (JSON)</summary>
+        <div class="btnbar">
+          <button id="saveJson">Download .json</button>
+          <button id="loadJson">Load .json</button>
+        </div>
+      </details>
+
+      <div class="hint" style="margin-top:14px">
+        The <b>est. AI crew</b> count is the number of weapon emplacements in this composition — the figure that
+        would be charged against an engineer's personal AI budget when the position is deployed.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================================================================
+   Class catalogue.  style drives the on-canvas texture; cat drives the
+   crew estimate.  size = [width along local X, depth along local Y].
+   =================================================================== */
+const CATALOG = [
+  // --- Walls / H-barriers ---
+  {grp:'Walls (H-barrier)', cls:'Land_HBarrier_large',       size:[5,1.2],  style:'hbarrier'},
+  {grp:'Walls (H-barrier)', cls:'Land_HBarrier5',            size:[5,1.2],  style:'hbarrier'},
+  {grp:'Walls (H-barrier)', cls:'Land_HBarrier3',            size:[3,1.2],  style:'hbarrier'},
+  {grp:'Walls (H-barrier)', cls:'Land_HBarrier_corner',      size:[2,2],    style:'hbarrier'},
+  // --- Sandbags ---
+  {grp:'Sandbags',          cls:'Land_fort_bagfence_long',   size:[5,0.8],  style:'sandbag'},
+  {grp:'Sandbags',          cls:'Land_fort_bagfence_corner', size:[2,2],    style:'sandbag'},
+  {grp:'Sandbags',          cls:'Land_fort_bagfence_round',  size:[1.6,1.6],style:'sandbag'},
+  {grp:'Sandbags',          cls:'Land_BagFenceLong',         size:[2.5,0.7],style:'sandbag'},
+  {grp:'Sandbags',          cls:'Land_BagFenceShort',        size:[1.2,0.7],style:'sandbag'},
+  // --- Fortifications ---
+  {grp:'Fortifications',    cls:'Land_fortified_nest_small_EP1',size:[4,4], style:'nest'},
+  {grp:'Fortifications',    cls:'Land_fortified_nest_small', size:[4,4],    style:'nest'},
+  {grp:'Fortifications',    cls:'Land_fort_watchtower_EP1',  size:[3,3],    style:'tower'},
+  {grp:'Fortifications',    cls:'Land_fort_watchtower',      size:[3,3],    style:'tower'},
+  {grp:'Fortifications',    cls:'Land_CamoNetVar_EAST',      size:[8,8],    style:'camo'},
+  {grp:'Fortifications',    cls:'Land_CamoNetVar_NATO',      size:[8,8],    style:'camo'},
+  // --- Obstacles ---
+  {grp:'Obstacles',        cls:'Land_Razorwire',            size:[8,0.5],  style:'wire'},
+  {grp:'Obstacles',        cls:'Hedgehog',                  size:[1.5,1.5],style:'hedgehog'},
+  {grp:'Obstacles',        cls:'Land_CncBlock_Stripes',     size:[1,1],    style:'cnc'},
+  {grp:'Obstacles',        cls:'Land_CncBlock',             size:[1,1],    style:'cnc'},
+  {grp:'Obstacles',        cls:'RoadCone_L_EP1',            size:[0.5,0.5],style:'cone'},
+  // --- MG / GL (1 crew) ---
+  {grp:'MG / GL',          cls:'M2StaticMG',                size:[1.6,1.6],style:'mg', cat:'mg'},
+  {grp:'MG / GL',          cls:'M2HD_mini_TripodCamo_US',   size:[1.6,1.6],style:'mg', cat:'mg'},
+  {grp:'MG / GL',          cls:'DSHKM_TK_INS_EP1',          size:[1.6,1.6],style:'mg', cat:'mg'},
+  {grp:'MG / GL',          cls:'KORD_high_TK_EP1',          size:[1.6,1.6],style:'mg', cat:'mg'},
+  {grp:'MG / GL',          cls:'MK19_TriPod_US_EP1',        size:[1.8,1.8],style:'gl', cat:'gl'},
+  {grp:'MG / GL',          cls:'AGS_TK_EP1',                size:[1.8,1.8],style:'gl', cat:'gl'},
+  // --- Anti-tank (1 crew) ---
+  {grp:'Anti-tank',        cls:'TOW_TriPod_US_EP1',         size:[2,2],    style:'at', cat:'at'},
+  {grp:'Anti-tank',        cls:'Metis_TK_EP1',              size:[2,2],    style:'at', cat:'at'},
+  {grp:'Anti-tank',        cls:'SPG9_TK_INS_EP1',           size:[2,2],    style:'at', cat:'at'},
+  // --- Anti-air (1 crew) ---
+  {grp:'Anti-air',         cls:'Stinger_Pod_US_EP1',        size:[2,2],    style:'aa', cat:'aa'},
+  {grp:'Anti-air',         cls:'Igla_AA_pod_TK_EP1',        size:[2,2],    style:'aa', cat:'aa'},
+  {grp:'Anti-air',         cls:'ZU23_TK_EP1',               size:[3,2.2],  style:'aa', cat:'aa'},
+  // --- Artillery / mortar (2 crew) ---
+  {grp:'Artillery / mortar',cls:'M119_US_EP1',              size:[4,2.6],  style:'arty', cat:'arty'},
+  {grp:'Artillery / mortar',cls:'D30_TK_EP1',               size:[4,2.6],  style:'arty', cat:'arty'},
+  {grp:'Artillery / mortar',cls:'M252_US_EP1',              size:[1.6,1.6],style:'mortar', cat:'mortar'},
+  {grp:'Artillery / mortar',cls:'2b14_82mm_TK_EP1',         size:[1.6,1.6],style:'mortar', cat:'mortar'},
+  // --- Ammo / logistics ---
+  {grp:'Ammo / logistics', cls:'USLaunchersBox_EP1',        size:[1.4,0.9],style:'ammo'},
+  {grp:'Ammo / logistics', cls:'USBasicAmmunitionBox_EP1',  size:[1.4,0.9],style:'ammo'},
+  {grp:'Ammo / logistics', cls:'TKVehicleBox_EP1',          size:[1.4,0.9],style:'ammo'},
+  {grp:'Ammo / logistics', cls:'TKBasicAmmunitionBox_EP1',  size:[1.4,0.9],style:'ammo'},
+];
+const META   = c => CATALOG.find(o=>o.cls===c) || {};
+const SIZE_OF= c => META(c).size  || [2,2];
+const STYLE  = c => META(c).style || 'box';
+const CAT_OF = c => META(c).cat   || null;       // weapon category or null
+/* In Arma 2 each static weapon fills exactly ONE gunner seat (moveInGunner),
+   so every weapon emplacement = 1 AI against the engineer's budget. */
+const CREW_OF= c => (IS_WPN(c) ? 1 : 0);
+const IS_WPN = c => CAT_OF(c)!==null;
+
+/* ===================================================================
+   Presets — incl. the demo "Larger defense" emplacements.
+   Each: {name, tpl, w, d, objs:[[cls,[x,y,z],dir],...]}
+   =================================================================== */
+const PRESETS = {
+  barracks_walls: { name:'Factory walls — Barracks (real WASP template)', tpl:'WFBE_NEURODEF_BARRACKS_WALLS', w:14, d:14, objs:[
+    ['Land_HBarrier_large',[8,0,0],90],['Land_HBarrier_large',[8,10,0],90],['Land_HBarrier_large',[8,-7.5,0],90],
+    ['Land_HBarrier_large',[5,-11,0],180],['Land_HBarrier_large',[-6,-11,0],180],['Land_HBarrier_large',[-9.5,-7.5,0],90],
+    ['Land_HBarrier_large',[-9.5,2.5,0],90],['Land_HBarrier_large',[5,13,0],180],['Land_HBarrier_large',[-6,13,0],180]
+  ]},
+  // ===== AA BATTERY =====
+  aa_light_west: { name:'⚔ AA Battery · LIGHT · WEST (2× Stinger)', tpl:'WFBE_NEURODEF_AABATTERY_LIGHT_WEST', w:6, d:6, objs:[
+    ['Stinger_Pod_US_EP1',[-4,4,0],0],['Stinger_Pod_US_EP1',[4,4,0],0],
+    ['USLaunchersBox_EP1',[-4,1,0],0],['USLaunchersBox_EP1',[4,1,0],0],
+    ['Land_fort_bagfence_long',[-8,3,0],90],['Land_fort_bagfence_long',[8,3,0],90],
+    ['Land_fort_bagfence_long',[-4,-3,0],0],['Land_fort_bagfence_long',[4,-3,0],0],
+    ['Land_CamoNetVar_NATO',[0,4,0],0]
+  ]},
+  aa_light_east: { name:'⚔ AA Battery · LIGHT · EAST (ZU-23 + Igla)', tpl:'WFBE_NEURODEF_AABATTERY_LIGHT_EAST', w:6, d:6, objs:[
+    ['ZU23_TK_EP1',[-5,4,0],0],['Igla_AA_pod_TK_EP1',[5,4,0],0],
+    ['TKVehicleBox_EP1',[-5,1,0],0],['TKVehicleBox_EP1',[5,1,0],0],
+    ['Land_fort_bagfence_long',[-9,3,0],90],['Land_fort_bagfence_long',[9,3,0],90],
+    ['Land_fort_bagfence_long',[-4,-6,0],0],['Land_fort_bagfence_long',[4,-6,0],0]
+  ]},
+  aa_heavy_west: { name:'⚔ AA Battery · HEAVY · WEST (4× Stinger)', tpl:'WFBE_NEURODEF_AABATTERY_HEAVY_WEST', w:8, d:8, objs:[
+    ['Stinger_Pod_US_EP1',[-6,5,0],0],['Stinger_Pod_US_EP1',[-2,6,0],0],['Stinger_Pod_US_EP1',[2,6,0],0],['Stinger_Pod_US_EP1',[6,5,0],0],
+    ['USLaunchersBox_EP1',[-4,1,0],0],['USLaunchersBox_EP1',[4,1,0],0],
+    ['Land_HBarrier_large',[-10,3,0],90],['Land_HBarrier_large',[10,3,0],90],
+    ['Land_HBarrier_large',[-5,-4,0],0],['Land_HBarrier_large',[5,-4,0],0],
+    ['Land_CamoNetVar_NATO',[0,5,0],0]
+  ]},
+  aa_heavy_east: { name:'⚔ AA Battery · HEAVY · EAST (2× ZU-23 + 2× Igla)', tpl:'WFBE_NEURODEF_AABATTERY_HEAVY_EAST', w:8, d:8, objs:[
+    ['ZU23_TK_EP1',[-7,5,0],0],['ZU23_TK_EP1',[7,5,0],0],['Igla_AA_pod_TK_EP1',[-3,6,0],0],['Igla_AA_pod_TK_EP1',[3,6,0],0],
+    ['TKVehicleBox_EP1',[-4,1,0],0],['TKVehicleBox_EP1',[4,1,0],0],
+    ['Land_HBarrier_large',[-11,3,0],90],['Land_HBarrier_large',[11,3,0],90],
+    ['Land_HBarrier_large',[-5,-4,0],0],['Land_HBarrier_large',[5,-4,0],0]
+  ]},
+  // ===== ARTILLERY BATTERY =====
+  arty_light_west: { name:'⚔ Artillery · LIGHT · WEST (2× M119)', tpl:'WFBE_NEURODEF_ARTYBATTERY_LIGHT_WEST', w:8, d:8, objs:[
+    ['M119_US_EP1',[-5,3,0],0],['M119_US_EP1',[5,3,0],0],
+    ['USBasicAmmunitionBox_EP1',[-5,-1,0],0],['USBasicAmmunitionBox_EP1',[5,-1,0],0],
+    ['Land_HBarrier_large',[-11,2,0],90],['Land_HBarrier_large',[-11,8,0],90],
+    ['Land_HBarrier_large',[11,2,0],90],['Land_HBarrier_large',[11,8,0],90],
+    ['Land_HBarrier_large',[-6,-5,0],0],['Land_HBarrier_large',[0,-5,0],0],['Land_HBarrier_large',[6,-5,0],0]
+  ]},
+  arty_light_east: { name:'⚔ Artillery · LIGHT · EAST (2× D-30)', tpl:'WFBE_NEURODEF_ARTYBATTERY_LIGHT_EAST', w:8, d:8, objs:[
+    ['D30_TK_EP1',[-5,3,0],0],['D30_TK_EP1',[5,3,0],0],
+    ['TKBasicAmmunitionBox_EP1',[-5,-1,0],0],['TKBasicAmmunitionBox_EP1',[5,-1,0],0],
+    ['Land_HBarrier_large',[-11,2,0],90],['Land_HBarrier_large',[-11,8,0],90],
+    ['Land_HBarrier_large',[11,2,0],90],['Land_HBarrier_large',[11,8,0],90],
+    ['Land_HBarrier_large',[-6,-5,0],0],['Land_HBarrier_large',[0,-5,0],0],['Land_HBarrier_large',[6,-5,0],0]
+  ]},
+  arty_heavy_west: { name:'⚔ Artillery · HEAVY · WEST (4× M119)', tpl:'WFBE_NEURODEF_ARTYBATTERY_HEAVY_WEST', w:10, d:10, objs:[
+    ['M119_US_EP1',[-9,4,0],0],['M119_US_EP1',[-3,4,0],0],['M119_US_EP1',[3,4,0],0],['M119_US_EP1',[9,4,0],0],
+    ['USBasicAmmunitionBox_EP1',[-6,0,0],0],['USBasicAmmunitionBox_EP1',[6,0,0],0],
+    ['Land_HBarrier_large',[-14,3,0],90],['Land_HBarrier_large',[14,3,0],90],
+    ['Land_HBarrier_large',[-9,-3,0],0],['Land_HBarrier_large',[-3,-3,0],0],['Land_HBarrier_large',[3,-3,0],0],['Land_HBarrier_large',[9,-3,0],0]
+  ]},
+  arty_heavy_east: { name:'⚔ Artillery · HEAVY · EAST (4× D-30)', tpl:'WFBE_NEURODEF_ARTYBATTERY_HEAVY_EAST', w:10, d:10, objs:[
+    ['D30_TK_EP1',[-9,4,0],0],['D30_TK_EP1',[-3,4,0],0],['D30_TK_EP1',[3,4,0],0],['D30_TK_EP1',[9,4,0],0],
+    ['TKBasicAmmunitionBox_EP1',[-6,0,0],0],['TKBasicAmmunitionBox_EP1',[6,0,0],0],
+    ['Land_HBarrier_large',[-14,3,0],90],['Land_HBarrier_large',[14,3,0],90],
+    ['Land_HBarrier_large',[-9,-3,0],0],['Land_HBarrier_large',[-3,-3,0],0],['Land_HBarrier_large',[3,-3,0],0],['Land_HBarrier_large',[9,-3,0],0]
+  ]},
+  // ===== WEAPONS EMPLACEMENT =====
+  emp_light_west: { name:'⚔ Emplacement · LIGHT · WEST (2× M2 + TOW)', tpl:'WFBE_NEURODEF_EMPLACEMENT_LIGHT_WEST', w:8, d:6, objs:[
+    ['M2StaticMG',[-5,3,0],0],['M2StaticMG',[5,3,0],0],['TOW_TriPod_US_EP1',[0,4,0],0],
+    ['USBasicAmmunitionBox_EP1',[0,0,0],0],
+    ['Land_fort_bagfence_corner',[-7,2,0],270],['Land_fort_bagfence_long',[-7,-2,0],0],
+    ['Land_fort_bagfence_long',[-2,-4,0],90],['Land_fort_bagfence_long',[2,-4,0],90],
+    ['Land_fort_bagfence_long',[7,-2,0],0],['Land_fort_bagfence_corner',[7,2,0],180]
+  ]},
+  emp_light_east: { name:'⚔ Emplacement · LIGHT · EAST (2× DShKM + Metis)', tpl:'WFBE_NEURODEF_EMPLACEMENT_LIGHT_EAST', w:8, d:6, objs:[
+    ['DSHKM_TK_INS_EP1',[-5,3,0],0],['DSHKM_TK_INS_EP1',[5,3,0],0],['Metis_TK_EP1',[0,4,0],0],
+    ['TKBasicAmmunitionBox_EP1',[0,0,0],0],
+    ['Land_fort_bagfence_corner',[-7,2,0],270],['Land_fort_bagfence_long',[-7,-2,0],0],
+    ['Land_fort_bagfence_long',[-2,-4,0],90],['Land_fort_bagfence_long',[2,-4,0],90],
+    ['Land_fort_bagfence_long',[7,-2,0],0],['Land_fort_bagfence_corner',[7,2,0],180]
+  ]},
+  emp_heavy_west: { name:'⚔ Emplacement · HEAVY · WEST (4× M2 + 2× TOW)', tpl:'WFBE_NEURODEF_EMPLACEMENT_HEAVY_WEST', w:10, d:8, objs:[
+    ['M2StaticMG',[-8,3,0],0],['M2StaticMG',[-3,4,0],0],['M2StaticMG',[3,4,0],0],['M2StaticMG',[8,3,0],0],
+    ['TOW_TriPod_US_EP1',[-5,5,0],0],['TOW_TriPod_US_EP1',[5,5,0],0],
+    ['USBasicAmmunitionBox_EP1',[0,0,0],0],['Land_fort_watchtower_EP1',[0,5,0],0],
+    ['Land_fort_bagfence_corner',[-10,2,0],270],['Land_fort_bagfence_long',[-10,-2,0],0],
+    ['Land_fort_bagfence_long',[-4,-5,0],90],['Land_fort_bagfence_long',[4,-5,0],90],
+    ['Land_fort_bagfence_long',[10,-2,0],0],['Land_fort_bagfence_corner',[10,2,0],180]
+  ]},
+  emp_heavy_east: { name:'⚔ Emplacement · HEAVY · EAST (4× DShKM + 2× Metis)', tpl:'WFBE_NEURODEF_EMPLACEMENT_HEAVY_EAST', w:10, d:8, objs:[
+    ['DSHKM_TK_INS_EP1',[-8,3,0],0],['DSHKM_TK_INS_EP1',[-3,4,0],0],['DSHKM_TK_INS_EP1',[3,4,0],0],['DSHKM_TK_INS_EP1',[8,3,0],0],
+    ['Metis_TK_EP1',[-5,5,0],0],['Metis_TK_EP1',[5,5,0],0],
+    ['TKBasicAmmunitionBox_EP1',[0,0,0],0],['Land_fort_watchtower_EP1',[0,5,0],0],
+    ['Land_fort_bagfence_corner',[-10,2,0],270],['Land_fort_bagfence_long',[-10,-2,0],0],
+    ['Land_fort_bagfence_long',[-4,-5,0],90],['Land_fort_bagfence_long',[4,-5,0],90],
+    ['Land_fort_bagfence_long',[10,-2,0],0],['Land_fort_bagfence_corner',[10,2,0],180]
+  ]},
+  // ===== CHECKPOINT =====
+  cp_light_west: { name:'⚔ Checkpoint · LIGHT · WEST (chicane + M2)', tpl:'WFBE_NEURODEF_CHECKPOINT_LIGHT_WEST', w:10, d:8, objs:[
+    ['Land_CncBlock_Stripes',[-4,7,0],0],['Land_CncBlock_Stripes',[-2,7,0],0],['Land_CncBlock_Stripes',[0,7,0],0],
+    ['Land_CncBlock_Stripes',[4,1,0],0],['Land_CncBlock_Stripes',[2,1,0],0],['Land_CncBlock_Stripes',[0,1,0],0],
+    ['RoadCone_L_EP1',[2,10,0],0],['RoadCone_L_EP1',[-4,4,0],0],
+    ['Land_fort_watchtower_EP1',[6,3,0],270],['M2StaticMG',[6,8,0],300],
+    ['Land_HBarrier_large',[-7,4,0],90],['Land_HBarrier_large',[8,-1,0],90]
+  ]},
+  cp_light_east: { name:'⚔ Checkpoint · LIGHT · EAST (chicane + DShKM)', tpl:'WFBE_NEURODEF_CHECKPOINT_LIGHT_EAST', w:10, d:8, objs:[
+    ['Land_CncBlock_Stripes',[-4,7,0],0],['Land_CncBlock_Stripes',[-2,7,0],0],['Land_CncBlock_Stripes',[0,7,0],0],
+    ['Land_CncBlock_Stripes',[4,1,0],0],['Land_CncBlock_Stripes',[2,1,0],0],['Land_CncBlock_Stripes',[0,1,0],0],
+    ['RoadCone_L_EP1',[2,10,0],0],['RoadCone_L_EP1',[-4,4,0],0],
+    ['Land_fort_watchtower_EP1',[6,3,0],270],['DSHKM_TK_INS_EP1',[6,8,0],300],
+    ['Land_HBarrier_large',[-7,4,0],90],['Land_HBarrier_large',[8,-1,0],90]
+  ]},
+  cp_heavy_west: { name:'⚔ Checkpoint · HEAVY · WEST (2 towers, 2× M2 + TOW)', tpl:'WFBE_NEURODEF_CHECKPOINT_HEAVY_WEST', w:12, d:10, objs:[
+    ['Land_CncBlock_Stripes',[-4,8,0],0],['Land_CncBlock_Stripes',[-2,8,0],0],['Land_CncBlock_Stripes',[0,8,0],0],
+    ['Land_CncBlock_Stripes',[4,2,0],0],['Land_CncBlock_Stripes',[2,2,0],0],['Land_CncBlock_Stripes',[0,2,0],0],
+    ['RoadCone_L_EP1',[2,11,0],0],['RoadCone_L_EP1',[-4,5,0],0],
+    ['Land_fort_watchtower_EP1',[7,4,0],270],['Land_fort_watchtower_EP1',[-7,4,0],90],
+    ['M2StaticMG',[7,9,0],300],['M2StaticMG',[-7,9,0],60],['TOW_TriPod_US_EP1',[0,-2,0],180],
+    ['Land_HBarrier_large',[-9,5,0],90],['Land_HBarrier_large',[10,0,0],90]
+  ]},
+  cp_heavy_east: { name:'⚔ Checkpoint · HEAVY · EAST (2 towers, 2× DShKM + Metis)', tpl:'WFBE_NEURODEF_CHECKPOINT_HEAVY_EAST', w:12, d:10, objs:[
+    ['Land_CncBlock_Stripes',[-4,8,0],0],['Land_CncBlock_Stripes',[-2,8,0],0],['Land_CncBlock_Stripes',[0,8,0],0],
+    ['Land_CncBlock_Stripes',[4,2,0],0],['Land_CncBlock_Stripes',[2,2,0],0],['Land_CncBlock_Stripes',[0,2,0],0],
+    ['RoadCone_L_EP1',[2,11,0],0],['RoadCone_L_EP1',[-4,5,0],0],
+    ['Land_fort_watchtower_EP1',[7,4,0],270],['Land_fort_watchtower_EP1',[-7,4,0],90],
+    ['DSHKM_TK_INS_EP1',[7,9,0],300],['DSHKM_TK_INS_EP1',[-7,9,0],60],['Metis_TK_EP1',[0,-2,0],180],
+    ['Land_HBarrier_large',[-9,5,0],90],['Land_HBarrier_large',[10,0,0],90]
+  ]},
+  blank: { name:'— Blank canvas —', tpl:'WFBE_NEURODEF_CUSTOM_WALLS', w:10, d:10, objs:[] },
+};
+
+/* ---------- State ---------- */
+let objs = [], sel = null, nextId = 1;
+const view = {scale:14, panX:0, panY:0};
+let parentDir = 0, parentW = 14, parentD = 14, snap = true;
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+
+/* populate palette */
+(function(){ const s=$('palette'); let last='';
+  CATALOG.forEach(o=>{ if(o.grp!==last){ const og=document.createElement('optgroup'); og.label=o.grp; og.dataset.g=o.grp; s.appendChild(og); last=o.grp; }
+    const op=document.createElement('option'); op.value=o.cls; op.textContent=o.cls+(IS_WPN(o.cls)?'  ⚔':'');
+    [...s.querySelectorAll('optgroup')].find(g=>g.dataset.g===o.grp).appendChild(op); });
+})();
+/* populate presets */
+(function(){ const s=$('preset');
+  Object.keys(PRESETS).forEach(k=>{ const op=document.createElement('option'); op.value=k; op.textContent=PRESETS[k].name; s.appendChild(op); });
+})();
+
+/* ---------- Canvas sizing ---------- */
+function resize(){ const r=cv.parentElement.getBoundingClientRect(); cv.width=r.width*devicePixelRatio; cv.height=r.height*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); draw(); }
+window.addEventListener('resize',resize);
+
+/* ---------- Coord transforms ---------- */
+function cw(){return cv.width/devicePixelRatio} function ch(){return cv.height/devicePixelRatio}
+function w2s(x,y){ return [cw()/2+view.panX+x*view.scale, ch()/2+view.panY - y*view.scale]; }
+function s2w(sx,sy){ return [ (sx-cw()/2-view.panX)/view.scale, -(sy-ch()/2-view.panY)/view.scale ]; }
+function headingOf(o){ return ((parentDir - o.dir)%360+360)%360; }
+function localToWorld(lx,ly,H){ const r=H*Math.PI/180; return [ lx*Math.cos(r)+ly*Math.sin(r), -lx*Math.sin(r)+ly*Math.cos(r) ]; }
+
+/* ---------- Drawing ---------- */
+function draw(){ ctx.clearRect(0,0,cw(),ch()); drawGrid(); drawParent(); objs.forEach(drawObj); }
+function drawGrid(){
+  const step=view.scale, [ox,oy]=w2s(0,0); ctx.lineWidth=1;
+  const left=-Math.ceil((cw()/2+view.panX)/step)-1, right=Math.ceil((cw()/2-view.panX)/step)+1;
+  for(let i=left;i<=right;i++){ const x=ox+i*step; ctx.strokeStyle=(i%5===0)?'#222a32':'#181d23'; ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,ch());ctx.stroke(); }
+  const top=-Math.ceil((ch()/2+view.panY)/step)-1, bot=Math.ceil((ch()/2-view.panY)/step)+1;
+  for(let j=top;j<=bot;j++){ const y=oy+j*step; ctx.strokeStyle=(j%5===0)?'#222a32':'#181d23'; ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cw(),y);ctx.stroke(); }
+  ctx.strokeStyle='#3a444e'; ctx.lineWidth=1.5; ctx.beginPath();ctx.moveTo(0,oy);ctx.lineTo(cw(),oy);ctx.moveTo(ox,0);ctx.lineTo(ox,ch());ctx.stroke();
+}
+function poly(points,fill,stroke,lw){ ctx.beginPath(); points.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill()} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1.5;ctx.stroke()} }
+function rectWorld(cx,cy,w,d,H){ const hw=w/2,hd=d/2; return [[-hw,-hd],[hw,-hd],[hw,hd],[-hw,hd]].map(([lx,ly])=>{ const [wx,wy]=localToWorld(lx,ly,H); return w2s(cx+wx,cy+wy); }); }
+function drawParent(){
+  const pts=rectWorld(0,0,parentW,parentD,((parentDir)%360+360)%360);
+  poly(pts,'rgba(92,101,54,.18)','#5C6536',2);
+  const [fx,fy]=localToWorld(0,parentD/2+2,((parentDir)%360+360)%360), a=w2s(fx,fy), b=w2s(0,0);
+  ctx.strokeStyle='#D9763C';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(b[0],b[1]);ctx.lineTo(a[0],a[1]);ctx.stroke();
+  ctx.fillStyle='#D9763C';ctx.beginPath();ctx.arc(a[0],a[1],4,0,7);ctx.fill();
+  ctx.fillStyle='#E7E3D6';ctx.beginPath();ctx.arc(b[0],b[1],3,0,7);ctx.fill();
+}
+
+/* Run fn() in the object's local metre frame (x=right, y=front). */
+function withLocal(o,H,fn){
+  const c=w2s(o.x,o.y), r=H*Math.PI/180, s=view.scale;
+  const a=s*Math.cos(r), b=s*Math.sin(r), cc=s*Math.sin(r), dd=-s*Math.cos(r);
+  ctx.save(); ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); ctx.transform(a,b,cc,dd,c[0],c[1]);
+  ctx.lineJoin='round'; ctx.lineCap='round'; fn(); ctx.restore();
+}
+/* texture palette */
+const PAL = {
+  wall:{f:'#444e58',s:'#69737d'}, bag:{f:'#5a5436',s:'#7d7448'}, fort:{f:'#3f4750',s:'#67727d'},
+  wpn:{f:'#6f4322',s:'#D9763C'}, aa:{f:'#3c4a55',s:'#7fb0c8'}, arty:{f:'#5a3f22',s:'#e0905a'},
+  ammo:{f:'#4a5230',s:'#8a965a'}, wire:{f:'#2f353c',s:'#9aa3ad'}, box:{f:'#3a444e',s:'#5c6776'}
+};
+function lw(px){ ctx.lineWidth = px/view.scale; }   // px line width inside scaled frame
+function styleColors(style){
+  if(['mg','gl','at'].includes(style)) return PAL.wpn;
+  if(style==='aa') return PAL.aa; if(style==='arty'||style==='mortar') return PAL.arty;
+  if(style==='ammo') return PAL.ammo; if(style==='hbarrier') return PAL.wall;
+  if(style==='sandbag') return PAL.bag; if(['nest','tower','camo','hedgehog'].includes(style)) return PAL.fort;
+  if(style==='wire') return PAL.wire; return PAL.box;
+}
+/* each texture draws within [-w/2..w/2] x [-d/2..d/2], +y = front */
+const TEX = {
+  hbarrier(w,d){ const c=styleColors('hbarrier'); poly([[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2]].map(p=>p),c.f,c.s,0); lw(1.4);ctx.strokeStyle=c.s;
+    ctx.strokeRect(-w/2,-d/2,w,d); const n=Math.max(2,Math.round(w)); lw(.9);ctx.strokeStyle=c.s;
+    for(let i=1;i<n;i++){const x=-w/2+i*w/n; ctx.beginPath();ctx.moveTo(x,-d/2);ctx.lineTo(x,d/2);ctx.stroke();}
+    ctx.beginPath(); for(let i=0;i<n;i++){const x=-w/2+i*w/n; ctx.moveTo(x,-d/2);ctx.lineTo(x+w/n,d/2);} ctx.stroke(); },
+  sandbag(w,d){ const c=styleColors('sandbag'); ctx.fillStyle=c.f; ctx.fillRect(-w/2,-d/2,w,d); lw(1.1);ctx.strokeStyle=c.s;
+    const rows=Math.max(1,Math.round(d/0.4)), cols=Math.max(2,Math.round(w/0.6));
+    for(let ry=0;ry<rows;ry++){ const y=-d/2+(ry+.5)*d/rows; ctx.beginPath();
+      for(let cx2=0;cx2<cols;cx2++){ const x=-w/2+(cx2+ (ry%2?.0:.5))*w/cols; ctx.moveTo(x,y); ctx.arc(x,y,Math.min(d/rows,w/cols)*0.5,0,Math.PI,false);} ctx.stroke(); } },
+  nest(w,d){ const c=styleColors('nest'); poly([[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2]],c.f,c.s,0); lw(1.4);ctx.strokeStyle=c.s;ctx.strokeRect(-w/2,-d/2,w,d);
+    lw(.8); for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(-w/2,i*d/5);ctx.lineTo(w/2,i*d/5);ctx.stroke();}
+    lw(1.2);ctx.strokeStyle=c.s; ctx.strokeRect(-w*0.28,-d*0.28,w*0.56,d*0.56); },
+  tower(w,d){ const c=styleColors('tower'); poly([[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2]],c.f,c.s,0); lw(1.4);ctx.strokeStyle=c.s;ctx.strokeRect(-w/2,-d/2,w,d);
+    lw(1); ctx.beginPath();ctx.moveTo(-w/2,-d/2);ctx.lineTo(w/2,d/2);ctx.moveTo(w/2,-d/2);ctx.lineTo(-w/2,d/2);ctx.stroke();
+    const r=Math.min(w,d)*0.16; ['',''].forEach(()=>{}); [[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],r,0,7);ctx.fillStyle=c.s;ctx.fill();}); },
+  camo(w,d){ const c=styleColors('camo'); ctx.globalAlpha=.5; ctx.fillStyle=c.f; ctx.fillRect(-w/2,-d/2,w,d); ctx.globalAlpha=1; lw(.9);ctx.strokeStyle=c.s;
+    const g=Math.max(2,Math.round(w/2)); ctx.beginPath();
+    for(let i=-g;i<=g;i++){ctx.moveTo(-w/2,i*d/g);ctx.lineTo(w/2,i*d/g+w);} for(let i=-g;i<=g;i++){ctx.moveTo(-w/2,i*d/g);ctx.lineTo(w/2,i*d/g-w);} ctx.save();ctx.beginPath();ctx.rect(-w/2,-d/2,w,d);ctx.clip();ctx.stroke();ctx.restore(); },
+  wire(w,d){ const c=styleColors('wire'); lw(1.3);ctx.strokeStyle=c.s; const n=Math.max(4,Math.round(w/0.6));
+    ctx.beginPath(); for(let i=0;i<=n;i++){const x=-w/2+i*w/n; const y=(i%2?d/2:-d/2); i?ctx.lineTo(x,y):ctx.moveTo(x,y);} ctx.stroke();
+    for(let i=0;i<n;i++){const x=-w/2+(i+.5)*w/n; ctx.beginPath();ctx.arc(x,0,d*0.28,0,7);ctx.stroke();} },
+  hedgehog(w,d){ const c=styleColors('hedgehog'); lw(1.6);ctx.strokeStyle=c.s; ctx.beginPath();
+    ctx.moveTo(-w/2,-d/2);ctx.lineTo(w/2,d/2);ctx.moveTo(w/2,-d/2);ctx.lineTo(-w/2,d/2);ctx.moveTo(0,-d/2);ctx.lineTo(0,d/2);ctx.stroke(); },
+  base(c,w,d){ ctx.fillStyle=c.f; ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.42,0,7);ctx.fill(); lw(1.4);ctx.strokeStyle=c.s;ctx.stroke(); },
+  mg(w,d){ const c=styleColors('mg'); TEX.base(c,w,d); lw(2.4);ctx.strokeStyle=c.s; ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,d*0.7);ctx.stroke(); },
+  gl(w,d){ const c=styleColors('gl'); TEX.base(c,w,d); lw(3);ctx.strokeStyle=c.s; ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,d*0.5);ctx.stroke(); },
+  at(w,d){ const c=styleColors('at'); TEX.base(c,w,d); lw(2);ctx.strokeStyle=c.s; ctx.beginPath();ctx.moveTo(-w*0.2,0);ctx.lineTo(w*0.2,d*0.7);ctx.stroke(); },
+  aa(w,d){ const c=styleColors('aa'); TEX.base(c,w,d); lw(2.2);ctx.strokeStyle=c.s;
+    ctx.beginPath();ctx.moveTo(-w*0.12,0);ctx.lineTo(-w*0.12,d*0.75);ctx.moveTo(w*0.12,0);ctx.lineTo(w*0.12,d*0.75);ctx.stroke();
+    lw(.9); for(let k=1;k<=2;k++){ctx.beginPath();ctx.arc(0,d*0.2,d*0.3*k,-1.0,-2.14,true);ctx.stroke();} },
+  arty(w,d){ const c=styleColors('arty'); ctx.fillStyle=c.f; ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.4,0,7);ctx.fill(); lw(1.4);ctx.strokeStyle=c.s;ctx.stroke();
+    lw(3.2); ctx.beginPath();ctx.moveTo(0,-d*0.1);ctx.lineTo(0,d*0.85);ctx.stroke();
+    lw(1.8); ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-w*0.4,-d*0.5);ctx.moveTo(0,0);ctx.lineTo(w*0.4,-d*0.5);ctx.stroke(); },
+  mortar(w,d){ const c=styleColors('mortar'); ctx.fillStyle=c.f; ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.34,0,7);ctx.fill(); lw(1.2);ctx.strokeStyle=c.s;ctx.stroke();
+    lw(2.6); ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,d*0.55);ctx.stroke(); },
+  ammo(w,d){ const c=styleColors('ammo'); ctx.fillStyle=c.f; ctx.fillRect(-w/2,-d/2,w,d); lw(1.4);ctx.strokeStyle=c.s;ctx.strokeRect(-w/2,-d/2,w,d);
+    lw(1); ctx.beginPath();ctx.moveTo(-w/2,0);ctx.lineTo(w/2,0);ctx.moveTo(-w*0.15,-d/2);ctx.lineTo(-w*0.15,d/2);ctx.moveTo(w*0.15,-d/2);ctx.lineTo(w*0.15,d/2);ctx.stroke(); },
+  box(w,d){ const c=styleColors('box'); ctx.fillStyle=c.f; ctx.fillRect(-w/2,-d/2,w,d); lw(1.4);ctx.strokeStyle=c.s;ctx.strokeRect(-w/2,-d/2,w,d); },
+  cnc(w,d){ const c=styleColors('cnc'); ctx.fillStyle=c.f; ctx.fillRect(-w/2,-d/2,w,d); lw(1.4);ctx.strokeStyle=c.s;ctx.strokeRect(-w/2,-d/2,w,d);
+    lw(1);ctx.strokeStyle=c.s; ctx.beginPath();ctx.moveTo(-w/2,-d/2);ctx.lineTo(w/2,d/2);ctx.moveTo(w/2,-d/2);ctx.lineTo(-w/2,d/2);ctx.stroke(); },
+  cone(w,d){ const c=styleColors('cone'); ctx.fillStyle=c.f; ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.45,0,7);ctx.fill();
+    lw(1.2);ctx.strokeStyle=c.s; ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.45,0,7);ctx.stroke();
+    ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.2,0,7);ctx.stroke(); }
+};
+function drawObj(o){
+  const [w,d]=SIZE_OF(o.cls), H=headingOf(o), isSel=o.id===sel, st=STYLE(o.cls);
+  withLocal(o,H,()=>{ ctx.globalAlpha=isSel?1:0.96; (TEX[st]||TEX.box)(w,d); ctx.globalAlpha=1;
+    if(isSel){ lw(2); ctx.strokeStyle='#D9763C'; ctx.strokeRect(-w/2-0.2,-d/2-0.2,w+0.4,d+0.4); } });
+  // facing tick + rotate handle in screen space
+  const [fx,fy]=localToWorld(0,d/2+0.8,H), c=w2s(o.x,o.y), f=w2s(o.x+fx,o.y+fy);
+  ctx.strokeStyle=isSel?'#F2EFE8':'rgba(231,227,214,.5)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(c[0],c[1]);ctx.lineTo(f[0],f[1]);ctx.stroke();
+  if(isSel){ o._handle=f; ctx.fillStyle='#F2EFE8';ctx.beginPath();ctx.arc(f[0],f[1],5,0,7);ctx.fill(); }
+}
+
+/* ---------- Hit testing ---------- */
+function hitObj(sx,sy){
+  for(let i=objs.length-1;i>=0;i--){ const o=objs[i], [w,d]=SIZE_OF(o.cls), H=headingOf(o);
+    const [wx,wy]=s2w(sx,sy), dx=wx-o.x, dy=wy-o.y, r=H*Math.PI/180;
+    const lx=dx*Math.cos(r)-dy*Math.sin(r), ly=dx*Math.sin(r)+dy*Math.cos(r);
+    if(Math.abs(lx)<=w/2+0.4 && Math.abs(ly)<=d/2+0.4) return o.id;
+  } return null;
+}
+
+/* ---------- Interaction ---------- */
+let drag=null;
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('mousedown',e=>{
+  const rect=cv.getBoundingClientRect(), sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  if(e.button===2){ drag={mode:'pan',sx,sy,px:view.panX,py:view.panY}; return; }
+  const so=objs.find(o=>o.id===sel);
+  if(so&&so._handle){ if(Math.hypot(so._handle[0]-sx,so._handle[1]-sy)<10){ drag={mode:'rotate',id:sel}; return; } }
+  const id=hitObj(sx,sy);
+  if(id){ sel=id; const o=objs.find(x=>x.id===id); const [wx,wy]=s2w(sx,sy); drag={mode:'move',id,ox:wx-o.x,oy:wy-o.y}; syncUI(); draw(); }
+  else { sel=null; syncUI(); draw(); }
+});
+window.addEventListener('mousemove',e=>{
+  if(!drag) return; const rect=cv.getBoundingClientRect(), sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  if(drag.mode==='pan'){ view.panX=drag.px+(sx-drag.sx); view.panY=drag.py+(sy-drag.sy); draw(); return; }
+  const o=objs.find(x=>x.id===drag.id); if(!o) return;
+  if(drag.mode==='move'){ let[wx,wy]=s2w(sx,sy); wx-=drag.ox; wy-=drag.oy; if(snap){wx=Math.round(wx*2)/2;wy=Math.round(wy*2)/2;} o.x=wx;o.y=wy; }
+  else if(drag.mode==='rotate'){ const[wx,wy]=s2w(sx,sy), dx=wx-o.x,dy=wy-o.y; let Hh=(Math.atan2(dx,dy)*180/Math.PI+360)%360; let dir=((parentDir-Hh)%360+360)%360; if(snap)dir=Math.round(dir/5)*5; o.dir=dir%360; }
+  syncUI(); draw();
+});
+window.addEventListener('mouseup',()=>drag=null);
+cv.addEventListener('wheel',e=>{ e.preventDefault(); const f=e.deltaY<0?1.1:1/1.1, rect=cv.getBoundingClientRect(),sx=e.clientX-rect.left,sy=e.clientY-rect.top, [wx,wy]=s2w(sx,sy); view.scale=Math.max(3,Math.min(60,view.scale*f)); const [nsx,nsy]=w2s(wx,wy); view.panX+=sx-nsx; view.panY+=sy-nsy; draw(); },{passive:false});
+window.addEventListener('keydown',e=>{ const o=objs.find(x=>x.id===sel); if(!o) return; const step=e.shiftKey?1:0.25; let used=true;
+  if(e.key==='ArrowUp')o.y+=step; else if(e.key==='ArrowDown')o.y-=step; else if(e.key==='ArrowRight')o.x+=step; else if(e.key==='ArrowLeft')o.x-=step; else if(e.key==='Delete')delObj(); else used=false;
+  if(used){e.preventDefault();syncUI();draw();} });
+
+/* ---------- CRUD ---------- */
+function addObj(cls,x=0,y=0,dir=0){ const o={id:nextId++,cls,x,y,z:0,dir}; objs.push(o); sel=o.id; syncUI(); draw(); return o; }
+function delObj(){ objs=objs.filter(o=>o.id!==sel); sel=null; syncUI(); draw(); }
+$('addBtn').onclick=()=>addObj($('palette').value);
+$('addCustomBtn').onclick=()=>{ const c=prompt('Enter exact Arma classname:'); if(c)addObj(c.trim()); };
+$('delBtn').onclick=delObj;
+$('dupBtn').onclick=()=>{ const o=objs.find(x=>x.id===sel); if(o)addObj(o.cls,o.x+2,o.y,o.dir); };
+$('mirrorBtn').onclick=()=>{ const o=objs.find(x=>x.id===sel); if(o)addObj(o.cls,-o.x,o.y,(360-o.dir)%360); };
+
+/* ---------- Presets ---------- */
+function loadPreset(key){ const p=PRESETS[key]; if(!p)return; $('tplName').value=p.tpl;
+  parentW=p.w; parentD=p.d; $('pW').value=p.w; $('pD').value=p.d; parentDir=0; $('parentDir').value=0;
+  objs=[]; nextId=1; sel=null; p.objs.forEach(e=>objs.push({id:nextId++,cls:e[0],x:e[1][0],y:e[1][1],z:e[1][2],dir:e[2]}));
+  view.scale=14; view.panX=0; view.panY=0; syncUI(); draw(); }
+$('loadPreset').onclick=()=>loadPreset($('preset').value);
+
+/* ---------- Inspector sync + crew estimate ---------- */
+function syncUI(){
+  const ul=$('objList'); ul.innerHTML=''; $('count').textContent=objs.length;
+  objs.forEach(o=>{ const li=document.createElement('li'); if(o.id===sel)li.className='sel';
+    li.innerHTML=`<span class="nm">${o.cls}${IS_WPN(o.cls)?' ⚔':''}</span><span class="xy">[${o.x},${o.y}] ${o.dir}°</span>`;
+    li.onclick=()=>{sel=o.id;syncUI();draw();}; ul.appendChild(li); });
+  const o=objs.find(x=>x.id===sel);
+  $('inspector').style.display=o?'block':'none'; $('noSel').style.display=o?'none':'block';
+  $('selName').textContent=o?o.cls:'no selection';
+  if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; }
+  // crew estimate
+  const wpns=objs.filter(x=>IS_WPN(x.cls)).length, ai=objs.reduce((s,x)=>s+CREW_OF(x.cls),0);
+  $('cWpn').textContent=wpns; $('cAI').textContent=ai;
+  buildOut();
+}
+['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('input',()=>{ const o=objs.find(x=>x.id===sel); if(!o)return;
+  o.cls=$('iClass').value.trim(); o.x=parseFloat($('iX').value)||0; o.y=parseFloat($('iY').value)||0; o.z=parseFloat($('iZ').value)||0; o.dir=((parseFloat($('iDir').value)||0)%360+360)%360; draw(); }));
+['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('change',syncUI));
+
+/* ---------- Toolbar ---------- */
+$('parentDir').addEventListener('input',e=>{parentDir=parseFloat(e.target.value)||0;draw();});
+$('pW').addEventListener('input',e=>{parentW=parseFloat(e.target.value)||2;draw();});
+$('pD').addEventListener('input',e=>{parentD=parseFloat(e.target.value)||2;draw();});
+$('snap').addEventListener('change',e=>snap=e.target.checked);
+$('resetView').onclick=()=>{view.scale=14;view.panX=0;view.panY=0;draw();};
+$('tplName').addEventListener('input',buildOut);
+
+/* ---------- Export ---------- */
+function fmt(n){ return Number.isInteger(n)?String(n):String(parseFloat(n.toFixed(3))); }
+function buildOut(){ const name=$('tplName').value.trim()||'WFBE_NEURODEF_CUSTOM_WALLS';
+  if(!objs.length){ $('out').value=`missionNamespace setVariable ['${name}',[]];`; return; }
+  const lines=objs.map(o=>`    ['${o.cls}',[${fmt(o.x)},${fmt(o.y)},${fmt(o.z)}],${fmt(o.dir)}]`);
+  $('out').value=`missionNamespace setVariable ['${name}',[\n${lines.join(',\n')}\n]];`; }
+$('copyBtn').onclick=()=>{ navigator.clipboard.writeText($('out').value).then(()=>{ $('copyBtn').textContent='Copied ✓'; setTimeout(()=>$('copyBtn').textContent='Copy SQF',1200); }); };
+
+/* ---------- Import ---------- */
+$('importBtn').onclick=()=>{ let raw=$('importBox').value.trim(); if(!raw)return; let inner=raw;
+  if(inner.startsWith('[')&&inner.endsWith(']')){ if(/^\[\s*\[/.test(inner)) inner=inner.slice(1,-1); }
+  inner=inner.replace(/,\s*$/,''); const json='['+inner.replace(/'/g,'"')+']';
+  try{ const arr=JSON.parse(json); objs=[]; nextId=1; sel=null;
+    arr.forEach(e=>{ if(Array.isArray(e)&&e.length>=3){ const [cls,pos,dir]=e; objs.push({id:nextId++,cls,x:+pos[0]||0,y:+pos[1]||0,z:+pos[2]||0,dir:+dir||0}); } });
+    if(!objs.length) throw new Error('empty'); syncUI(); draw();
+  }catch(err){ alert("Could not parse. Paste entries as they appear inside the outer [ ], e.g.\n['Land_HBarrier_large',[8,0,0],90],\n['Land_HBarrier_large',[8,10,0],90]"); } };
+
+/* ---------- Save / load JSON ---------- */
+$('saveJson').onclick=()=>{ const data=JSON.stringify({name:$('tplName').value,parentW,parentD,parentDir,objs},null,2);
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type:'application/json'})); a.download=($('tplName').value||'composition')+'.json'; a.click(); };
+$('loadJson').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
+  inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const r=new FileReader();
+    r.onload=()=>{ try{ const d=JSON.parse(r.result); $('tplName').value=d.name||$('tplName').value; parentW=d.parentW||14; parentD=d.parentD||14; parentDir=d.parentDir||0;
+      $('pW').value=parentW;$('pD').value=parentD;$('parentDir').value=parentDir; objs=(d.objs||[]).map(o=>({...o,id:nextId++})); sel=null; syncUI(); draw();
+    }catch(e){alert('Bad JSON');} }; r.readAsText(f); }; inp.click(); };
+
+/* ---------- Boot ---------- */
+loadPreset('barracks_walls'); resize();
+</script>
+</body>
+</html>

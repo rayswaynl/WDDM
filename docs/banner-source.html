@@ -1,0 +1,58 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;box-sizing:border-box}
+  html,body{width:1280px;height:640px;overflow:hidden}
+  .stage{width:1280px;height:640px;position:relative;
+    background:radial-gradient(120% 130% at 25% 0%,#1b2027 0%,#14171B 55%,#0d1014 100%);
+    font-family:Inter,sans-serif;color:#E7E3D6}
+  /* map grid */
+  .grid{position:absolute;inset:0;opacity:.5;
+    background-image:linear-gradient(#222a32 1px,transparent 1px),linear-gradient(90deg,#222a32 1px,transparent 1px);
+    background-size:48px 48px;background-position:-1px -1px;
+    -webkit-mask-image:radial-gradient(120% 120% at 30% 30%,#000 40%,transparent 85%)}
+  .vignette{position:absolute;inset:0;box-shadow:inset 0 0 240px 60px rgba(0,0,0,.7)}
+  .orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5}
+  .orb.olive{width:420px;height:420px;background:#5C6536;left:-120px;bottom:-160px}
+  .orb.orange{width:360px;height:360px;background:#D9763C;right:-110px;top:-130px;opacity:.42}
+  .wrap{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 92px}
+  .top{display:flex;align-items:center;gap:26px;margin-bottom:30px}
+  .mark{width:104px;height:104px;flex:0 0 auto;filter:drop-shadow(0 6px 18px rgba(0,0,0,.5))}
+  .acro{font-family:Oswald,sans-serif;font-weight:600;font-size:104px;letter-spacing:6px;line-height:.9;color:#F2EFE8}
+  .acro b{color:#D9763C}
+  h1{font-family:Oswald,sans-serif;font-weight:500;font-size:46px;letter-spacing:1px;color:#E7E3D6;margin-bottom:18px}
+  h1 .hl{color:#D9763C}
+  p{font-size:23px;line-height:1.5;color:#aeb4bc;max-width:880px}
+  .tags{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap}
+  .tag{font-family:'JetBrains Mono',monospace;font-size:16px;color:#E7E3D6;border:1px solid #39414b;
+    border-radius:22px;padding:9px 18px;background:rgba(20,23,27,.6)}
+  .tag b{color:#5C6536}
+  .ribbon{position:absolute;right:64px;bottom:48px;font-family:'JetBrains Mono',monospace;font-size:15px;color:#6f7780}
+  .ribbon b{color:#D9763C}
+</style></head>
+<body>
+<div class="stage">
+  <div class="grid"></div>
+  <div class="orb olive"></div><div class="orb orange"></div>
+  <div class="wrap">
+    <div class="top">
+      <svg class="mark" viewBox="0 0 100 100" fill="none" stroke-linecap="square">
+        <polyline points="22,40 50,20 78,40" stroke="#D9763C" stroke-width="11"/>
+        <polyline points="22,58 50,38 78,58" stroke="#F2EFE8" stroke-width="11"/>
+        <polyline points="22,76 50,56 78,76" stroke="#5C6536" stroke-width="11"/>
+      </svg>
+      <div class="acro">W<b>D</b>DM</div>
+    </div>
+    <h1>Warfare <span class="hl">Dynamic Defense</span> Manager</h1>
+    <p>A browser-based, top-down composition editor for Arma Warfare defense templates — lay out walls, sandbags, batteries and emplacements, then export ready-to-paste SQF.</p>
+    <div class="tags">
+      <span class="tag">100% <b>offline</b> · single file</span>
+      <span class="tag">live <b>SQF</b> export</span>
+      <span class="tag">16 battery / emplacement <b>presets</b></span>
+      <span class="tag">crew-cost <b>estimator</b></span>
+    </div>
+  </div>
+  <div class="ribbon">for the <b>Arma Warfare</b> community</div>
+  <div class="vignette"></div>
+</div>
+</body></html>

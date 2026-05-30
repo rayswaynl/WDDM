@@ -1,0 +1,21 @@
+/* Miksuu's Warfare — design tokens (source of truth). Spec §3. */
+:root {
+  /* Core palette */
+  --mw-gunmetal: #14171b;
+  --mw-steel: #2a2f36;
+  --mw-olive: #5c6536;
+  --mw-olive-dark: #474e2a;
+  --mw-bone: #e7e3d6;
+  --mw-orange: #d9763c;
+  --mw-orange-deep: #b85f2a;
+  --mw-chalk: #f2efe8; /* logo/emblem only */
+  --mw-steel-raised: rgba(0, 0, 0, 0.3);
+
+  /* Semantic aliases */
+  --mw-bg: var(--mw-gunmetal);
+  --mw-surface: var(--mw-steel);
+  --mw-text: var(--mw-bone);
+  --mw-accent: var(--mw-orange);
+  --mw-accent-hover: var(--mw-orange-deep);
+  --mw-focus: var(--mw-orange);
+}
