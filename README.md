@@ -23,6 +23,13 @@ drag objects around a top-down canvas and the tool writes the SQF for you.
 
 ![WDDM editor screenshot](docs/img/editor.png)
 
+### Built-in doctrine layouts
+
+All 16 engineer presets at a glance — BLUFOR vs OPFOR, Light & Heavy, laid out to
+Cold War defensive doctrine (NATO dispersed & concealed · Warsaw Pact massed & belted):
+
+![WDDM defense doctrine overview](docs/img/doctrine-overview.png)
+
 - **Drag-and-drop layout** — move objects, drag the handle to rotate, arrow-keys to nudge (Shift = 1 m), 0.5 m grid snap.
 - **Textured top-down icons** — H-barriers, sandbags, fortified nests, camo nets, razor wire, concrete blocks, cones, and distinct silhouettes for MG / AT / AA / artillery weapons.
 - **Live SQF export** — a `missionNamespace setVariable [...]` block updates as you build; one-click copy.

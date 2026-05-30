@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>WDDM — Doctrine Overview</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{--gunmetal:#14171B;--steel:#2A2F36;--olive:#5C6536;--bone:#E7E3D6;--orange:#D9763C;--chalk:#F2EFE8;--line:#39414b;}
+  *{margin:0;box-sizing:border-box}
+  body{width:1680px;background:radial-gradient(130% 120% at 20% 0%,#1b2027 0%,#14171B 55%,#0d1014 100%);
+    font-family:Inter,system-ui,sans-serif;color:var(--bone);padding:0 0 34px}
+  /* header */
+  .hdr{display:flex;align-items:center;gap:20px;padding:26px 40px 22px;border-bottom:1px solid var(--line);
+    background:linear-gradient(90deg,#101317,#171b20)}
+  .hdr .mark{width:60px;height:60px}
+  .hdr .t{display:flex;flex-direction:column;line-height:1.05}
+  .hdr .acro{font-family:Oswald,sans-serif;font-weight:600;font-size:40px;letter-spacing:4px;color:var(--chalk)}
+  .hdr .acro b{color:var(--orange)}
+  .hdr .sub{font-family:Oswald,sans-serif;font-weight:500;font-size:18px;letter-spacing:1px;color:#aeb4bc;margin-top:4px}
+  .hdr .legend{margin-left:auto;text-align:right;font-size:13px;line-height:1.7;color:#9aa3ad;font-family:'JetBrains Mono',monospace}
+  .hdr .legend b{color:var(--bone)} .hdr .legend .o{color:var(--orange)} .hdr .legend .ol{color:var(--olive)}
+  /* doctrine band */
+  .doctrine{display:flex;gap:0;padding:14px 40px 4px;font-size:13.5px;color:#9aa3ad}
+  .doctrine div{flex:1}
+  .doctrine .nato b{color:#7fb0c8} .doctrine .wp b{color:var(--orange)}
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:14px 40px 0}
+  .tile{background:rgba(20,23,27,.55);border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative}
+  .tile .cap{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;border-bottom:1px solid var(--line);
+    background:#0d1014}
+  .tile .cap .nm{font-family:Oswald,sans-serif;font-weight:500;font-size:14px;letter-spacing:.4px}
+  .tile .cap .nm .side-w{color:#7fb0c8} .tile .cap .nm .side-e{color:var(--orange)}
+  .tile .cap .crew{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--olive);white-space:nowrap}
+  .tile canvas{display:block;width:100%;height:230px;background:radial-gradient(120% 120% at 50% 0%,#11151a,#0b0e12)}
+  .tile .doc{padding:7px 11px 9px;font-size:11.5px;color:#8b939c;line-height:1.4;min-height:46px}
+  .row-label{grid-column:1 / -1;font-family:Oswald,sans-serif;font-weight:600;font-size:15px;letter-spacing:2px;
+    color:var(--orange);margin:10px 0 -4px;padding-left:2px;text-transform:uppercase}
+  .foot{padding:22px 40px 0;font-size:12.5px;color:#6f7780;font-family:'JetBrains Mono',monospace}
+  .foot b{color:var(--olive)}
+</style></head>
+<body>
+
+<div class="hdr">
+  <svg class="mark" viewBox="0 0 100 100" fill="none" stroke-linecap="square">
+    <polyline points="22,40 50,20 78,40" stroke="#D9763C" stroke-width="11"/>
+    <polyline points="22,58 50,38 78,58" stroke="#F2EFE8" stroke-width="11"/>
+    <polyline points="22,76 50,56 78,76" stroke="#5C6536" stroke-width="11"/>
+  </svg>
+  <div class="t">
+    <div class="acro">W<b>D</b>DM · DEFENSE DOCTRINE</div>
+    <div class="sub">16 engineer positions · BLUFOR vs OPFOR · Light &amp; Heavy</div>
+  </div>
+  <div class="legend">
+    <div><span class="o">⚔</span> = crewed weapon (1 AI each) · <b>crew</b> from personal budget</div>
+    <div>HEAVY = barracks-tech gated · max 2/engineer · 1/town</div>
+    <div><span class="ol">+Y</span> faces the threat (front) · top-down, north-up</div>
+  </div>
+</div>
+
+<div class="doctrine">
+  <div class="nato"><b>WEST · NATO</b> — dispersed &amp; concealed: guns staggered in depth, camo nets on high-value weapons, flank ATGMs for oblique armor shots, light wire.</div>
+  <div class="wp"><b>EAST · Warsaw Pact</b> — massed &amp; belted: guns clustered in tight arcs, H-barrier revetment boxes, deep frontal obstacle belts (wire + hedgehogs).</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="foot">
+  Rendered from the live WDDM presets — <b>rayswaynl.github.io/WDDM</b> · classnames are Arma 2: Operation Arrowhead assets (Bohemia Interactive).
+</div>
+
+<script>
+/* ---- catalogue (subset: size + style + weapon flag) ---- */
+const CATALOG = [
+  ['Land_HBarrier_large',[5,1.2],'hbarrier'],['Land_HBarrier5',[5,1.2],'hbarrier'],['Land_HBarrier3',[3,1.2],'hbarrier'],['Land_HBarrier_corner',[2,2],'hbarrier'],
+  ['Land_fort_bagfence_long',[5,0.8],'sandbag'],['Land_fort_bagfence_corner',[2,2],'sandbag'],['Land_fort_bagfence_round',[1.6,1.6],'sandbag'],
+  ['Land_fortified_nest_small_EP1',[4,4],'nest'],['Land_fort_watchtower_EP1',[3,3],'tower'],['Land_CamoNetVar_NATO',[8,8],'camo'],['Land_CamoNetVar_EAST',[8,8],'camo'],
+  ['Land_Razorwire',[8,0.5],'wire'],['Hedgehog',[1.5,1.5],'hedgehog'],
+  ['Land_CncBlock_Stripes',[1,1],'cnc'],['Land_CncBlock',[1,1],'cnc'],['RoadCone_L_EP1',[0.5,0.5],'cone'],
+  ['M2StaticMG',[1.6,1.6],'mg',1],['DSHKM_TK_INS_EP1',[1.6,1.6],'mg',1],
+  ['TOW_TriPod_US_EP1',[2,2],'at',1],['Metis_TK_EP1',[2,2],'at',1],['SPG9_TK_INS_EP1',[2,2],'at',1],
+  ['Stinger_Pod_US_EP1',[2,2],'aa',1],['Igla_AA_pod_TK_EP1',[2,2],'aa',1],['ZU23_TK_EP1',[3,2.2],'aa',1],
+  ['M119_US_EP1',[4,2.6],'arty',1],['D30_TK_EP1',[4,2.6],'arty',1],
+  ['USLaunchersBox_EP1',[1.4,0.9],'ammo'],['USBasicAmmunitionBox_EP1',[1.4,0.9],'ammo'],['TKVehicleBox_EP1',[1.4,0.9],'ammo'],['TKBasicAmmunitionBox_EP1',[1.4,0.9],'ammo'],
+];
+const MAP={}; CATALOG.forEach(c=>MAP[c[0]]=c);
+const SIZE=c=>(MAP[c]||[0,[2,2]])[1]||[2,2];
+const STYLE=c=>(MAP[c]||['','','box'])[2]||'box';
+const ISW=c=>!!(MAP[c]||[])[3];
+
+/* ---- 16 doctrine presets [key,name,sideClass,objs,doc] ---- */
+const P=[
+['AABATTERY · LIGHT','w','aa_l_w','AA Battery — Light',[['Stinger_Pod_US_EP1',[-6,5],340],['Stinger_Pod_US_EP1',[6,5],20],['Land_fort_bagfence_round',[-6,5],0],['Land_fort_bagfence_round',[6,5],0],['USLaunchersBox_EP1',[-6,1],0],['USLaunchersBox_EP1',[6,1],0],['Land_CamoNetVar_NATO',[0,5],0],['Land_Razorwire',[-5,-3],0],['Land_Razorwire',[5,-3],0]],'Dispersed Stinger pair under camo, light forward wire.'],
+['AABATTERY · LIGHT','e','aa_l_e','AA Battery — Light',[['ZU23_TK_EP1',[-4,4],0],['Igla_AA_pod_TK_EP1',[4,5],0],['TKVehicleBox_EP1',[-4,1],0],['TKVehicleBox_EP1',[4,1],0],['Land_HBarrier_large',[-8,3],90],['Land_HBarrier_large',[8,3],90],['Land_HBarrier_large',[0,8],0],['Land_Razorwire',[-4,-3],0],['Land_Razorwire',[4,-3],0],['Hedgehog',[0,-3],0]],'ZU-23 + Igla, revetted, frontal obstacle belt.'],
+['AABATTERY · HEAVY','w','aa_h_w','AA Battery — Heavy',[['Stinger_Pod_US_EP1',[-8,6],330],['Stinger_Pod_US_EP1',[-3,8],350],['Stinger_Pod_US_EP1',[3,8],10],['Stinger_Pod_US_EP1',[8,6],30],['Land_fort_bagfence_round',[-8,6],0],['Land_fort_bagfence_round',[8,6],0],['USLaunchersBox_EP1',[-5,2],0],['USLaunchersBox_EP1',[5,2],0],['Land_CamoNetVar_NATO',[-5,7],0],['Land_CamoNetVar_NATO',[5,7],0],['Land_Razorwire',[-4,-3],0],['Land_Razorwire',[4,-3],0]],'4× Stinger in a staggered fan, dual camo.'],
+['AABATTERY · HEAVY','e','aa_h_e','AA Battery — Heavy',[['ZU23_TK_EP1',[-7,5],350],['ZU23_TK_EP1',[7,5],10],['Igla_AA_pod_TK_EP1',[-3,7],0],['Igla_AA_pod_TK_EP1',[3,7],0],['TKVehicleBox_EP1',[-5,2],0],['TKVehicleBox_EP1',[5,2],0],['Land_HBarrier_large',[-11,4],90],['Land_HBarrier_large',[11,4],90],['Land_HBarrier_large',[-6,-2],0],['Land_HBarrier_large',[0,-2],0],['Land_HBarrier_large',[6,-2],0],['Hedgehog',[-3,-5],0],['Hedgehog',[3,-5],0],['Land_Razorwire',[0,-6],0]],'2× ZU-23 + 2× Igla massed, walled, deep belt.'],
+
+['ARTYBATTERY · LIGHT','w','ar_l_w','Artillery — Light',[['M119_US_EP1',[-6,3],0],['M119_US_EP1',[6,3],0],['USBasicAmmunitionBox_EP1',[-6,-1],0],['USBasicAmmunitionBox_EP1',[6,-1],0],['Land_CamoNetVar_NATO',[-6,3],0],['Land_CamoNetVar_NATO',[6,3],0],['Land_fort_bagfence_long',[-9,3],90],['Land_fort_bagfence_long',[9,3],90],['Land_fort_bagfence_long',[-6,-3],0],['Land_fort_bagfence_long',[6,-3],0]],'Wide-spaced M119 under camo (counterbattery survival).'],
+['ARTYBATTERY · LIGHT','e','ar_l_e','Artillery — Light',[['D30_TK_EP1',[-4,3],0],['D30_TK_EP1',[4,3],0],['TKBasicAmmunitionBox_EP1',[-4,-1],0],['TKBasicAmmunitionBox_EP1',[4,-1],0],['Land_HBarrier_large',[-8,2],90],['Land_HBarrier_large',[-8,8],90],['Land_HBarrier_large',[8,2],90],['Land_HBarrier_large',[8,8],90],['Land_HBarrier_large',[-3,-3],0],['Land_HBarrier_large',[3,-3],0],['Land_HBarrier_large',[0,9],0]],'Tight D-30 pair, boxed-in revetment.'],
+['ARTYBATTERY · HEAVY','w','ar_h_w','Artillery — Heavy',[['M119_US_EP1',[-10,4],0],['M119_US_EP1',[-3,5],0],['M119_US_EP1',[3,5],0],['M119_US_EP1',[10,4],0],['USBasicAmmunitionBox_EP1',[-7,0],0],['USBasicAmmunitionBox_EP1',[0,0],0],['USBasicAmmunitionBox_EP1',[7,0],0],['Land_CamoNetVar_NATO',[-7,4],0],['Land_CamoNetVar_NATO',[7,4],0],['Land_fort_bagfence_long',[-13,3],90],['Land_fort_bagfence_long',[13,3],90],['Land_fort_bagfence_long',[-6,-3],0],['Land_fort_bagfence_long',[6,-3],0]],'4× M119 staggered in depth, dispersed ammo.'],
+['ARTYBATTERY · HEAVY','e','ar_h_e','Artillery — Heavy',[['D30_TK_EP1',[-9,4],10],['D30_TK_EP1',[-3,5],3],['D30_TK_EP1',[3,5],357],['D30_TK_EP1',[9,4],350],['TKBasicAmmunitionBox_EP1',[-6,0],0],['TKBasicAmmunitionBox_EP1',[6,0],0],['Land_HBarrier_large',[-13,3],90],['Land_HBarrier_large',[13,3],90],['Land_HBarrier_large',[-9,-2],0],['Land_HBarrier_large',[-3,-2],0],['Land_HBarrier_large',[3,-2],0],['Land_HBarrier_large',[9,-2],0],['Land_HBarrier_large',[0,9],0]],'4× D-30 in a converging arc (massed fires).'],
+
+['EMPLACEMENT · LIGHT','w','em_l_w','Emplacement — Light',[['M2StaticMG',[-6,2],330],['M2StaticMG',[6,2],30],['TOW_TriPod_US_EP1',[0,6],0],['Land_CamoNetVar_NATO',[0,6],0],['USBasicAmmunitionBox_EP1',[0,3],0],['Land_fort_bagfence_corner',[-8,1],270],['Land_fort_bagfence_long',[-8,-3],0],['Land_fort_bagfence_long',[8,-3],0],['Land_fort_bagfence_corner',[8,1],180],['Land_Razorwire',[0,-5],0]],'Concealed TOW at standoff, MGs angled for interlocking fire.'],
+['EMPLACEMENT · LIGHT','e','em_l_e','Emplacement — Light',[['DSHKM_TK_INS_EP1',[-4,4],0],['DSHKM_TK_INS_EP1',[4,4],0],['SPG9_TK_INS_EP1',[0,3],0],['TKBasicAmmunitionBox_EP1',[0,0],0],['Land_fort_bagfence_long',[-7,2],90],['Land_fort_bagfence_long',[7,2],90],['Land_fort_bagfence_long',[-3,-2],0],['Land_fort_bagfence_long',[3,-2],0],['Land_Razorwire',[-4,-4],0],['Land_Razorwire',[4,-4],0],['Hedgehog',[0,-4],0]],'DShKM line + SPG-9 recoilless, dense belt.'],
+['EMPLACEMENT · HEAVY','w','em_h_w','Emplacement — Heavy',[['M2StaticMG',[-9,2],340],['M2StaticMG',[-3,4],355],['M2StaticMG',[3,4],5],['M2StaticMG',[9,2],20],['TOW_TriPod_US_EP1',[-7,6],330],['TOW_TriPod_US_EP1',[7,6],30],['Land_CamoNetVar_NATO',[-7,6],0],['Land_CamoNetVar_NATO',[7,6],0],['Land_fort_watchtower_EP1',[0,7],0],['USBasicAmmunitionBox_EP1',[-4,0],0],['USBasicAmmunitionBox_EP1',[4,0],0],['Land_fort_bagfence_long',[-10,-2],0],['Land_fort_bagfence_long',[10,-2],0],['Land_Razorwire',[-5,-5],0],['Land_Razorwire',[5,-5],0]],'Flank TOWs for enfilade, 4× M2 interlocking, OP tower.'],
+['EMPLACEMENT · HEAVY','e','em_h_e','Emplacement — Heavy',[['DSHKM_TK_INS_EP1',[-7,5],350],['DSHKM_TK_INS_EP1',[-2,5],0],['DSHKM_TK_INS_EP1',[2,5],0],['DSHKM_TK_INS_EP1',[7,5],10],['Metis_TK_EP1',[-4,2],0],['Metis_TK_EP1',[4,2],0],['Land_fort_watchtower_EP1',[0,6],0],['TKBasicAmmunitionBox_EP1',[0,0],0],['Land_HBarrier_large',[-10,3],90],['Land_HBarrier_large',[10,3],90],['Land_fort_bagfence_long',[-5,-2],0],['Land_fort_bagfence_long',[5,-2],0],['Hedgehog',[-6,-5],0],['Hedgehog',[0,-5],0],['Hedgehog',[6,-5],0],['Land_Razorwire',[-3,-6],0],['Land_Razorwire',[3,-6],0]],'4× DShKM in two ranks + 2× Metis ATGM, deep belt.'],
+
+['CHECKPOINT · LIGHT','w','cp_l_w','Checkpoint — Light',[['Land_CncBlock_Stripes',[-4,7],0],['Land_CncBlock_Stripes',[-2,7],0],['Land_CncBlock_Stripes',[0,7],0],['Land_CncBlock_Stripes',[4,2],0],['Land_CncBlock_Stripes',[2,2],0],['Land_CncBlock_Stripes',[0,2],0],['RoadCone_L_EP1',[1,9],0],['RoadCone_L_EP1',[-3,5],0],['RoadCone_L_EP1',[3,0],0],['Land_fort_watchtower_EP1',[6,4],270],['M2StaticMG',[6,5],270],['Land_fort_bagfence_round',[6,5],0],['Land_HBarrier_large',[-7,4],90]],'Serpentine VCP, cones, single sandbagged overwatch.'],
+['CHECKPOINT · LIGHT','e','cp_l_e','Checkpoint — Light',[['Land_CncBlock_Stripes',[-4,7],0],['Land_CncBlock_Stripes',[-2,7],0],['Land_CncBlock_Stripes',[0,7],0],['Land_CncBlock_Stripes',[4,2],0],['Land_CncBlock_Stripes',[2,2],0],['Land_CncBlock_Stripes',[0,2],0],['Land_CncBlock',[-6,4],0],['Land_CncBlock',[6,4],0],['Land_fort_watchtower_EP1',[6,5],270],['DSHKM_TK_INS_EP1',[6,6],270],['Land_HBarrier_large',[-7,4],90],['Land_Razorwire',[0,-2],0]],'Blocky concrete border post, DShKM overwatch, wire.'],
+['CHECKPOINT · HEAVY','w','cp_h_w','Checkpoint — Heavy',[['Land_CncBlock_Stripes',[-4,8],0],['Land_CncBlock_Stripes',[-2,8],0],['Land_CncBlock_Stripes',[0,8],0],['Land_CncBlock_Stripes',[4,3],0],['Land_CncBlock_Stripes',[2,3],0],['Land_CncBlock_Stripes',[0,3],0],['RoadCone_L_EP1',[1,10],0],['RoadCone_L_EP1',[3,1],0],['Land_fort_watchtower_EP1',[7,5],270],['Land_fort_watchtower_EP1',[-7,5],90],['M2StaticMG',[7,6],270],['M2StaticMG',[-7,6],90],['TOW_TriPod_US_EP1',[0,-3],180],['Land_CamoNetVar_NATO',[0,-3],0],['Land_HBarrier_large',[-9,5],90],['Land_HBarrier_large',[10,1],90]],'Twin OP towers, dual M2, concealed TOW road-block.'],
+['CHECKPOINT · HEAVY','e','cp_h_e','Checkpoint — Heavy',[['Land_CncBlock_Stripes',[-4,8],0],['Land_CncBlock_Stripes',[-2,8],0],['Land_CncBlock_Stripes',[0,8],0],['Land_CncBlock_Stripes',[4,3],0],['Land_CncBlock_Stripes',[2,3],0],['Land_CncBlock_Stripes',[0,3],0],['Land_CncBlock',[-7,6],0],['Land_CncBlock',[7,6],0],['Land_fort_watchtower_EP1',[7,5],270],['Land_fort_watchtower_EP1',[-7,5],90],['DSHKM_TK_INS_EP1',[7,7],270],['DSHKM_TK_INS_EP1',[-7,7],90],['Metis_TK_EP1',[0,-3],180],['Hedgehog',[-3,-5],0],['Hedgehog',[3,-5],0],['Land_Razorwire',[0,-6],0],['Land_HBarrier_large',[-9,5],90]],'Max concrete, twin towers, dual DShKM, Metis, belt.'],
+];
+
+/* ---- texture renderer (matches the editor) ---- */
+const PAL={wall:['#444e58','#69737d'],bag:['#5a5436','#7d7448'],fort:['#3f4750','#67727d'],wpn:['#6f4322','#D9763C'],aa:['#3c4a55','#7fb0c8'],arty:['#5a3f22','#e0905a'],ammo:['#4a5230','#8a965a'],wire:['#2f353c','#9aa3ad'],box:['#3a444e','#5c6776']};
+function col(st){if(['mg','at'].includes(st))return PAL.wpn;if(st=='aa')return PAL.aa;if(st=='arty')return PAL.arty;if(st=='ammo')return PAL.ammo;if(st=='hbarrier'||st=='cnc')return PAL.wall;if(st=='sandbag')return PAL.bag;if(['nest','tower','camo','hedgehog'].includes(st))return PAL.fort;if(st=='wire')return PAL.wire;if(st=='cone')return PAL.wpn;return PAL.box;}
+
+function tileRender(cv, objs){
+  const ctx=cv.getContext('2d'), W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  // bounds of composition (metres)
+  let minx=-6,maxx=6,miny=-6,maxy=8;
+  objs.forEach(o=>{const[w,d]=SIZE(o[0]);const x=o[1][0],y=o[1][1];minx=Math.min(minx,x-w);maxx=Math.max(maxx,x+w);miny=Math.min(miny,y-d);maxy=Math.max(maxy,y+d);});
+  const padM=2; minx-=padM;maxx+=padM;miny-=padM;maxy+=padM;
+  const sx=W/(maxx-minx), sy=H/(maxy-miny), s=Math.min(sx,sy)*0.92;
+  const cx=W/2-((minx+maxx)/2)*s, cy=H/2+((miny+maxy)/2)*s;
+  const w2s=(x,y)=>[cx+x*s, cy-y*s];
+  // grid
+  ctx.lineWidth=1;
+  for(let gx=Math.ceil(minx);gx<=maxx;gx++){const[a]=w2s(gx,0);ctx.strokeStyle=(gx%5==0)?'#222a32':'#181d23';ctx.beginPath();ctx.moveTo(a,0);ctx.lineTo(a,H);ctx.stroke();}
+  for(let gy=Math.ceil(miny);gy<=maxy;gy++){const[,b]=w2s(0,gy);ctx.strokeStyle=(gy%5==0)?'#222a32':'#181d23';ctx.beginPath();ctx.moveTo(0,b);ctx.lineTo(W,b);ctx.stroke();}
+  // front arrow (+Y)
+  const[ax,ay]=w2s(0,maxy-1),[bx,by]=w2s(0,miny+0.5);
+  ctx.strokeStyle='rgba(217,118,60,.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(ax,ay);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(217,118,60,.7)';ctx.beginPath();ctx.arc(ax,ay,3,0,7);ctx.fill();
+  // objects
+  function lw(px){ctx.lineWidth=px/s;}
+  objs.forEach(o=>{
+    const cls=o[0],[w,d]=SIZE(cls),st=STYLE(cls),dir=o[2]||0;
+    const c=w2s(o[1][0],o[1][1]),r=dir*Math.PI/180;
+    ctx.save();ctx.translate(c[0],c[1]);ctx.scale(s,-s);ctx.rotate(-r);ctx.lineJoin='round';ctx.lineCap='round';
+    const[f,st2]=col(st);
+    if(['mg','at','aa','arty'].includes(st)){ // weapon: filled disc + barrel
+      ctx.fillStyle=f;ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.42,0,7);ctx.fill();lw(1.6);ctx.strokeStyle=st2;ctx.stroke();
+      lw(st=='arty'?3.2:2.4);ctx.strokeStyle=st2;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,d*0.7);ctx.stroke();
+      if(st=='aa'){lw(.9);for(let k=1;k<=2;k++){ctx.beginPath();ctx.arc(0,d*0.2,d*0.3*k,-1.0,-2.14,true);ctx.stroke();}}
+    } else if(st=='camo'){ctx.globalAlpha=.45;ctx.fillStyle=f;ctx.fillRect(-w/2,-d/2,w,d);ctx.globalAlpha=1;lw(.9);ctx.strokeStyle=st2;
+      ctx.save();ctx.beginPath();ctx.rect(-w/2,-d/2,w,d);ctx.clip();const g=Math.max(2,Math.round(w/2));ctx.beginPath();for(let i=-g;i<=g;i++){ctx.moveTo(-w/2,i*d/g);ctx.lineTo(w/2,i*d/g+w);ctx.moveTo(-w/2,i*d/g);ctx.lineTo(w/2,i*d/g-w);}ctx.stroke();ctx.restore();
+    } else if(st=='wire'){lw(1.3);ctx.strokeStyle=st2;const n=Math.max(4,Math.round(w/0.6));ctx.beginPath();for(let i=0;i<=n;i++){const x=-w/2+i*w/n,y=(i%2?d/2:-d/2);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();for(let i=0;i<n;i++){const x=-w/2+(i+.5)*w/n;ctx.beginPath();ctx.arc(x,0,d*0.28,0,7);ctx.stroke();}
+    } else if(st=='hedgehog'){lw(1.6);ctx.strokeStyle=st2;ctx.beginPath();ctx.moveTo(-w/2,-d/2);ctx.lineTo(w/2,d/2);ctx.moveTo(w/2,-d/2);ctx.lineTo(-w/2,d/2);ctx.moveTo(0,-d/2);ctx.lineTo(0,d/2);ctx.stroke();
+    } else if(st=='cone'){ctx.fillStyle=f;ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.45,0,7);ctx.fill();lw(1.2);ctx.strokeStyle=st2;ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.45,0,7);ctx.stroke();
+    } else if(st=='cnc'){ctx.fillStyle=f;ctx.fillRect(-w/2,-d/2,w,d);lw(1.4);ctx.strokeStyle=st2;ctx.strokeRect(-w/2,-d/2,w,d);lw(1);ctx.beginPath();ctx.moveTo(-w/2,-d/2);ctx.lineTo(w/2,d/2);ctx.moveTo(w/2,-d/2);ctx.lineTo(-w/2,d/2);ctx.stroke();
+    } else if(st=='tower'||st=='nest'){ctx.fillStyle=f;ctx.fillRect(-w/2,-d/2,w,d);lw(1.4);ctx.strokeStyle=st2;ctx.strokeRect(-w/2,-d/2,w,d);lw(1);ctx.beginPath();ctx.moveTo(-w/2,-d/2);ctx.lineTo(w/2,d/2);ctx.moveTo(w/2,-d/2);ctx.lineTo(-w/2,d/2);ctx.stroke();
+    } else if(st=='hbarrier'){ctx.fillStyle=f;ctx.fillRect(-w/2,-d/2,w,d);lw(1.4);ctx.strokeStyle=st2;ctx.strokeRect(-w/2,-d/2,w,d);const n=Math.max(2,Math.round(w));lw(.8);for(let i=1;i<n;i++){const x=-w/2+i*w/n;ctx.beginPath();ctx.moveTo(x,-d/2);ctx.lineTo(x,d/2);ctx.stroke();}
+    } else if(st=='sandbag'){ctx.fillStyle=f;ctx.fillRect(-w/2,-d/2,w,d);lw(1);ctx.strokeStyle=st2;const rows=Math.max(1,Math.round(d/0.4)),cols=Math.max(2,Math.round(w/0.6));for(let ry=0;ry<rows;ry++){const y=-d/2+(ry+.5)*d/rows;ctx.beginPath();for(let cc=0;cc<cols;cc++){const x=-w/2+(cc+(ry%2?0:.5))*w/cols;ctx.moveTo(x,y);ctx.arc(x,y,Math.min(d/rows,w/cols)*0.5,0,Math.PI,false);}ctx.stroke();}
+    } else if(st=='ammo'){ctx.fillStyle=f;ctx.fillRect(-w/2,-d/2,w,d);lw(1.4);ctx.strokeStyle=st2;ctx.strokeRect(-w/2,-d/2,w,d);lw(1);ctx.beginPath();ctx.moveTo(-w/2,0);ctx.lineTo(w/2,0);ctx.stroke();
+    } else {ctx.fillStyle=f;ctx.fillRect(-w/2,-d/2,w,d);lw(1.4);ctx.strokeStyle=st2;ctx.strokeRect(-w/2,-d/2,w,d);}
+    ctx.restore();
+  });
+}
+
+/* ---- build grid ---- */
+const grid=document.getElementById('grid');
+const rows=[['ANTI-AIR BATTERY',0,4],['ARTILLERY BATTERY',4,8],['WEAPONS EMPLACEMENT',8,12],['CHECKPOINT',12,16]];
+rows.forEach(([label,a,b])=>{
+  const rl=document.createElement('div');rl.className='row-label';rl.textContent=label;grid.appendChild(rl);
+  for(let i=a;i<b;i++){
+    const [grp,side,key,name,objs,doc]=P[i];
+    const crew=objs.filter(o=>ISW(o[0])).length;
+    const sideTxt=side=='w'?'WEST':'EAST';
+    const tile=document.createElement('div');tile.className='tile';
+    tile.innerHTML=`<div class="cap"><span class="nm"><span class="side-${side}">${sideTxt}</span> · ${name}</span><span class="crew">⚔ ${crew} crew</span></div>
+      <canvas width="380" height="230"></canvas><div class="doc">${doc}</div>`;
+    grid.appendChild(tile);
+    tileRender(tile.querySelector('canvas'), objs);
+  }
+});
+</script>
+</body></html>
