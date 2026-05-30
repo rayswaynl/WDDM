@@ -49,8 +49,8 @@
     <div class="sub">16 engineer positions · BLUFOR vs OPFOR · Light &amp; Heavy</div>
   </div>
   <div class="legend">
-    <div><span class="o">⚔</span> = crewed weapon (1 AI each) · <b>crew</b> from personal budget</div>
-    <div>HEAVY = barracks-tech gated · max 2/engineer · 1/town</div>
+    <div><span class="o">⚔</span> = crewed gun · <b>AI cost flat per weight: LIGHT 4 · HEAVY 8</b> (guns + garrison)</div>
+    <div>HEAVY = barracks-tech gated · max 2/engineer · 1/town · from personal AI budget</div>
     <div><span class="ol">+Y</span> faces the threat (front) · top-down, north-up</div>
   </div>
 </div>
@@ -163,10 +163,11 @@ rows.forEach(([label,a,b])=>{
   const rl=document.createElement('div');rl.className='row-label';rl.textContent=label;grid.appendChild(rl);
   for(let i=a;i<b;i++){
     const [grp,side,key,name,objs,doc]=P[i];
-    const crew=objs.filter(o=>ISW(o[0])).length;
+    const guns=objs.filter(o=>ISW(o[0])).length;
+    const ai=key.includes('_h_')?8:4;          // flat: LIGHT 4 · HEAVY 8
     const sideTxt=side=='w'?'WEST':'EAST';
     const tile=document.createElement('div');tile.className='tile';
-    tile.innerHTML=`<div class="cap"><span class="nm"><span class="side-${side}">${sideTxt}</span> · ${name}</span><span class="crew">⚔ ${crew} crew</span></div>
+    tile.innerHTML=`<div class="cap"><span class="nm"><span class="side-${side}">${sideTxt}</span> · ${name}</span><span class="crew">⚔ ${guns} · AI ${ai}</span></div>
       <canvas width="380" height="230"></canvas><div class="doc">${doc}</div>`;
     grid.appendChild(tile);
     tileRender(tile.querySelector('canvas'), objs);

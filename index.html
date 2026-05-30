@@ -161,8 +161,8 @@
       <button id="resetView">Reset view</button>
     </div>
     <div class="crewbox" id="crewbox">
-      <div>weapons: <b id="cWpn">0</b></div>
-      <div>est. AI crew: <span class="ai" id="cAI">0</span></div>
+      <div>guns: <b id="cWpn">0</b></div>
+      <div>AI cost: <span class="ai" id="cAI">0</span> <span id="cAInote" style="color:#6f7780"></span></div>
     </div>
     <div class="legend">
       <div><span class="swatch" style="background:#5C6536"></span><b>Deploy pad</b> at origin [0,0,0]</div>
@@ -222,8 +222,10 @@
       </details>
 
       <div class="hint" style="margin-top:14px">
-        The <b>est. AI crew</b> count is the number of weapon emplacements in this composition — the figure that
-        would be charged against an engineer's personal AI budget when the position is deployed.
+        <b>AI cost</b> is flat per weight: every <b>LIGHT</b> position = <b>4 AI</b>, every <b>HEAVY</b> = <b>8 AI</b>,
+        charged against the engineer's personal AI budget. In game the guns are crewed first and any remaining
+        slots are filled with garrison riflemen, so the position both costs and contains exactly that many AI.
+        (Custom templates without <code>_LIGHT_</code>/<code>_HEAVY_</code> in the name fall back to 1 AI per gun.)
       </div>
     </div>
   </div>
@@ -613,9 +615,15 @@ function syncUI(){
   $('inspector').style.display=o?'block':'none'; $('noSel').style.display=o?'none':'block';
   $('selName').textContent=o?o.cls:'no selection';
   if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; }
-  // crew estimate
-  const wpns=objs.filter(x=>IS_WPN(x.cls)).length, ai=objs.reduce((s,x)=>s+CREW_OF(x.cls),0);
-  $('cWpn').textContent=wpns; $('cAI').textContent=ai;
+  // crew estimate — flat per WEIGHT: LIGHT = 4 AI, HEAVY = 8 AI (gun crews + garrison).
+  // Custom templates (no _LIGHT_/_HEAVY_ in the name) fall back to 1 AI per gun.
+  const wpns=objs.filter(x=>IS_WPN(x.cls)).length;
+  const tpl=$('tplName').value;
+  let ai, note;
+  if(/_HEAVY_/.test(tpl)){ ai=8; note='(heavy)'; }
+  else if(/_LIGHT_/.test(tpl)){ ai=4; note='(light)'; }
+  else { ai=objs.reduce((s,x)=>s+CREW_OF(x.cls),0); note='(per gun)'; }
+  $('cWpn').textContent=wpns; $('cAI').textContent=ai; $('cAInote').textContent=note;
   buildOut();
 }
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('input',()=>{ const o=objs.find(x=>x.id===sel); if(!o)return;

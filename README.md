@@ -93,12 +93,18 @@ Besides the real WASP **Barracks factory walls** (included as a worked reference
 blank canvas, WDDM ships the four engineer defense types, each in **Light** and **Heavy**
 weight and **BLUFOR (WEST) / OPFOR (EAST)** variants:
 
-| Type | Light (crew) | Heavy (crew) |
+| Type | Light — guns | Heavy — guns |
 |---|---|---|
-| **AA Battery** | 2 launchers/guns · WEST 2× Stinger, EAST ZU-23 + Igla | 4 · WEST 4× Stinger, EAST 2× ZU-23 + 2× Igla |
-| **Artillery Battery** | 2 howitzers · M119 / D-30 | 4 howitzers |
-| **Weapons Emplacement** | 3 · 2× MG + 1× AT | 6 · 4× MG + 2× AT + watchtower |
-| **Checkpoint** | 1 · chicane + overwatch MG + guard tower | 3 · twin towers, 2× MG + 1× AT, hardened chicane |
+| **AA Battery** | WEST 2× Stinger · EAST ZU-23 + Igla | WEST 4× Stinger · EAST 2× ZU-23 + 2× Igla |
+| **Artillery Battery** | 2× howitzer (M119 / D-30) | 4× howitzer |
+| **Weapons Emplacement** | 2× MG + 1× AT | 4× MG + 2× AT + watchtower |
+| **Checkpoint** | chicane + overwatch MG + guard tower | twin towers, 2× MG + 1× AT, hardened chicane |
+
+**AI cost is flat per weight — every LIGHT position = 4 AI, every HEAVY = 8 AI** — charged
+against the engineer's personal AI budget. Guns are crewed first; remaining slots are filled
+with **garrison riflemen** holding the position, so it both costs and contains exactly that
+many AI. HEAVY is gated behind the side's Barracks upgrade; limits are 2 positions per
+engineer and 1 per town, within 250 m of a friendly town centre.
 
 > Note: stock Arma 2 OA has no static *bullet*-AA for the US side, so the WEST AA battery
 > uses Stinger (rocket) pods; OPFOR gets a true rocket + bullet mix (ZU-23 + Igla).
