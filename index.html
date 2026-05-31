@@ -161,6 +161,9 @@
       <label style="display:flex;align-items:center;gap:4px;margin:0;text-transform:none;letter-spacing:0" title="Show generated sprites where available, else procedural glyphs">
         <input id="useSprites" type="checkbox" checked style="width:auto"> sprites
       </label>
+      <label style="display:flex;align-items:center;gap:4px;margin:0;text-transform:none;letter-spacing:0" title="Weapon firing arcs — indicative ranges, not to scale">
+        <input id="fofToggle" type="checkbox" style="width:auto"> fields of fire
+      </label>
       <button id="resetView">Reset view</button>
     </div>
     <div class="crewbox" id="crewbox">
@@ -208,6 +211,7 @@
       <label>Generated SQF — drop into <code>Server/Init/Init_Defenses.sqf</code></label>
       <textarea id="out" rows="13" readonly></textarea>
       <button class="primary copybtn" id="copyBtn" style="width:100%">Copy SQF</button>
+      <button class="copybtn" id="shareBtn" style="width:100%;margin-top:6px" title="Copy a link that opens this exact layout — great for Discord">Copy share link</button>
 
       <details>
         <summary>Import an existing template</summary>
@@ -510,7 +514,7 @@ function headingOf(o){ return ((parentDir - o.dir)%360+360)%360; }
 function localToWorld(lx,ly,H){ const r=H*Math.PI/180; return [ lx*Math.cos(r)+ly*Math.sin(r), -lx*Math.sin(r)+ly*Math.cos(r) ]; }
 
 /* ---------- Drawing ---------- */
-function draw(){ ctx.clearRect(0,0,cw(),ch()); drawGrid(); drawParent(); objs.forEach(drawObj); }
+function draw(){ ctx.clearRect(0,0,cw(),ch()); drawGrid(); drawParent(); drawFOF(); objs.forEach(drawObj); }
 function drawGrid(){
   const step=view.scale, [ox,oy]=w2s(0,0); ctx.lineWidth=1;
   const left=-Math.ceil((cw()/2+view.panX)/step)-1, right=Math.ceil((cw()/2-view.panX)/step)+1;
@@ -597,6 +601,42 @@ const TEX = {
     lw(1.2);ctx.strokeStyle=c.s; ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.45,0,7);ctx.stroke();
     ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.2,0,7);ctx.stroke(); }
 };
+/* ---------- Fields of fire overlay (Component 3) ----------
+   Filled translucent firing-arc per weapon, centred on its heading, reusing the
+   renderer's forward convention ([sin H, cos H]). Ranges are INDICATIVE (a real
+   MG range would dwarf a 12 m pad) — labelled as such on the toggle. Drawn under
+   the objects so sprites/glyphs stay crisp on top. Indirect (arty/mortar) skipped. */
+let SHOW_FOF = false;
+const FOF = {                              // arc°, indicative range (grid m), rgb fill
+  mg:{arc:90,  rng:9,  col:'217,118,60'},
+  gl:{arc:75,  rng:8,  col:'217,118,60'},
+  at:{arc:25,  rng:15, col:'127,176,200'},
+  aa:{arc:360, rng:11, col:'92,101,54'}
+};
+function drawFOF(){
+  if(!SHOW_FOF) return;
+  objs.forEach(o=>{
+    const f=FOF[CAT_OF(o.cls)]; if(!f) return;          // weapons only
+    const c=w2s(o.x,o.y);
+    if(f.arc>=360){                                      // AA = all-round coverage (full circle)
+      ctx.beginPath(); ctx.arc(c[0],c[1], f.rng*view.scale, 0, 7);
+      ctx.fillStyle=`rgba(${f.col},0.15)`; ctx.fill();
+      ctx.strokeStyle=`rgba(${f.col},0.5)`; ctx.lineWidth=1.2; ctx.stroke();
+      return;
+    }
+    const H=headingOf(o), half=f.arc/2, steps=Math.max(2,Math.round(f.arc/6));
+    ctx.beginPath(); ctx.moveTo(c[0],c[1]);             // apex = weapon position
+    for(let i=0;i<=steps;i++){
+      const a=(H-half + f.arc*i/steps)*Math.PI/180;     // centred on heading
+      const p=w2s(o.x+Math.sin(a)*f.rng, o.y+Math.cos(a)*f.rng);
+      ctx.lineTo(p[0],p[1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle=`rgba(${f.col},0.22)`; ctx.fill();
+    ctx.strokeStyle=`rgba(${f.col},0.55)`; ctx.lineWidth=1.4; ctx.stroke();
+  });
+}
+
 function drawObj(o){
   const [w,d]=SIZE_OF(o.cls), [aw,ad]=ART_OF(o.cls), H=headingOf(o), isSel=o.id===sel, st=STYLE(o.cls);
   const sp = USE_SPRITES ? spriteFor(o.cls) : null;
@@ -692,6 +732,7 @@ $('pW').addEventListener('input',e=>{parentW=parseFloat(e.target.value)||2;draw(
 $('pD').addEventListener('input',e=>{parentD=parseFloat(e.target.value)||2;draw();});
 $('snap').addEventListener('change',e=>snap=e.target.checked);
 $('useSprites').addEventListener('change',e=>{USE_SPRITES=e.target.checked;draw();});
+$('fofToggle').addEventListener('change',e=>{SHOW_FOF=e.target.checked;draw();});
 $('resetView').onclick=()=>{view.scale=14;view.panX=0;view.panY=0;draw();};
 $('tplName').addEventListener('input',buildOut);
 
@@ -702,6 +743,46 @@ function buildOut(){ const name=$('tplName').value.trim()||'WFBE_NEURODEF_CUSTOM
   const lines=objs.map(o=>`    ['${o.cls}',[${fmt(o.x)},${fmt(o.y)},${fmt(o.z)}],${fmt(o.dir)}]`);
   $('out').value=`missionNamespace setVariable ['${name}',[\n${lines.join(',\n')}\n]];`; }
 $('copyBtn').onclick=()=>{ navigator.clipboard.writeText($('out').value).then(()=>{ $('copyBtn').textContent='Copied ✓'; setTimeout(()=>$('copyBtn').textContent='Copy SQF',1200); }); };
+
+/* ---------- Shareable layout links (Component 4) ----------
+   Whole composition encoded in the URL hash (#d=base64url(JSON)). Client-only:
+   the fragment is never sent to a server, never eval'd, never inserted as HTML
+   (names render via textContent). A hostile link can at most draw shapes. */
+const b64u = {
+  enc(obj){ const u=new TextEncoder().encode(JSON.stringify(obj)); let s=''; u.forEach(c=>s+=String.fromCharCode(c));
+    return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); },           // real base64url, no deprecated unescape
+  dec(str){ let b=str.replace(/-/g,'+').replace(/_/g,'/'); while(b.length%4) b+='=';
+    const u=Uint8Array.from(atob(b), c=>c.charCodeAt(0)); return JSON.parse(new TextDecoder().decode(u)); }
+};
+function projectData(){ return {name:$('tplName').value, parentW, parentD, parentDir,
+  objs:objs.map(o=>({cls:o.cls,x:o.x,y:o.y,z:o.z,dir:o.dir}))}; }
+function loadProject(d){ if(!d || typeof d!=='object') return false;
+  $('tplName').value = (typeof d.name==='string' && d.name) ? d.name : $('tplName').value;
+  parentW=+d.parentW||14; parentD=+d.parentD||14; parentDir=+d.parentDir||0;
+  $('pW').value=parentW; $('pD').value=parentD; $('parentDir').value=parentDir;
+  objs=(Array.isArray(d.objs)?d.objs:[]).map(o=>({id:nextId++, cls:String(o.cls||''), x:+o.x||0, y:+o.y||0, z:+o.z||0, dir:+o.dir||0}));
+  sel=null; syncUI(); draw(); return true;
+}
+function toast(msg){ let t=document.getElementById('_toast');
+  if(!t){ t=document.createElement('div'); t.id='_toast';
+    t.style.cssText='position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#2A2F36;border:1px solid #5C6536;color:#E7E3D6;font:13px Inter,system-ui,sans-serif;padding:8px 14px;border-radius:6px;z-index:99;box-shadow:0 4px 14px rgba(0,0,0,.45);pointer-events:none';
+    document.body.appendChild(t); }
+  t.textContent=msg; t.style.transition='none'; t.style.opacity='1';
+  clearTimeout(t._h); t._h=setTimeout(()=>{ t.style.transition='opacity .5s'; t.style.opacity='0'; },2000);
+}
+$('shareBtn').onclick=()=>{
+  let url; try{ url=`${location.origin}${location.pathname}#d=${b64u.enc(projectData())}`; }
+  catch(e){ toast('Could not build link'); return; }
+  if(url.length>1900) toast('Heads up: long layout — link may be large');
+  navigator.clipboard.writeText(url).then(
+    ()=>{ $('shareBtn').textContent='Link copied ✓'; setTimeout(()=>$('shareBtn').textContent='Copy share link',1400); },
+    ()=>{ toast('Clipboard blocked — copy from the address bar'); location.hash='d='+b64u.enc(projectData()); }
+  );
+};
+function loadFromHash(){ const h=location.hash||''; if(h.indexOf('#d=')!==0) return false;
+  try{ if(loadProject(b64u.dec(h.slice(3)))){ toast('Loaded layout from link'); return true; } }catch(e){}
+  return false;                                                   // malformed → caller keeps the default preset
+}
 
 /* ---------- Import ---------- */
 $('importBtn').onclick=()=>{ let raw=$('importBox').value.trim(); if(!raw)return; let inner=raw;
@@ -717,12 +798,10 @@ $('saveJson').onclick=()=>{ const data=JSON.stringify({name:$('tplName').value,p
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type:'application/json'})); a.download=($('tplName').value||'composition')+'.json'; a.click(); };
 $('loadJson').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
   inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const r=new FileReader();
-    r.onload=()=>{ try{ const d=JSON.parse(r.result); $('tplName').value=d.name||$('tplName').value; parentW=d.parentW||14; parentD=d.parentD||14; parentDir=d.parentDir||0;
-      $('pW').value=parentW;$('pD').value=parentD;$('parentDir').value=parentDir; objs=(d.objs||[]).map(o=>({...o,id:nextId++})); sel=null; syncUI(); draw();
-    }catch(e){alert('Bad JSON');} }; r.readAsText(f); }; inp.click(); };
+    r.onload=()=>{ try{ loadProject(JSON.parse(r.result)); }catch(e){alert('Bad JSON');} }; r.readAsText(f); }; inp.click(); };
 
 /* ---------- Boot ---------- */
-loadPreset('barracks_walls'); resize(); preloadSprites();
+loadPreset('barracks_walls'); resize(); preloadSprites(); loadFromHash();   // hash layout (if any) overrides the default preset
 </script>
 </body>
 </html>
