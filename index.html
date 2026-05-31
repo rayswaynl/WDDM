@@ -235,59 +235,70 @@
    Class catalogue.  style drives the on-canvas texture; cat drives the
    crew estimate.  size = [width along local X, depth along local Y].
    =================================================================== */
+/* ===================================================================
+   Component 0 — MEASUREMENT ACCURACY.
+   size = ground/COLLISION footprint [Xwidth, Ydepth] in real metres
+          (drives spacing intuition, 0.5m snap, hit-testing, selection).
+   art  = OPTIONAL full VISUAL span incl. barrel/trail (sprite/glyph draws
+          to this; defaults to size when omitted). +Y = front (firing axis).
+   Values are real-world equipment dimensions (Phase A, RESEARCH.md /
+   manufacturer specs). Phase B: lock to the engine's own boundingBoxReal
+   via a one-off server dump (optional, user-run).
+   =================================================================== */
 const CATALOG = [
-  // --- Walls / H-barriers ---
+  // --- Walls / H-barriers (HESCO/H-barrier segments) ---
   {grp:'Walls (H-barrier)', cls:'Land_HBarrier_large',       size:[5,1.2],  style:'hbarrier'},
   {grp:'Walls (H-barrier)', cls:'Land_HBarrier5',            size:[5,1.2],  style:'hbarrier'},
   {grp:'Walls (H-barrier)', cls:'Land_HBarrier3',            size:[3,1.2],  style:'hbarrier'},
-  {grp:'Walls (H-barrier)', cls:'Land_HBarrier_corner',      size:[2,2],    style:'hbarrier'},
-  // --- Sandbags ---
-  {grp:'Sandbags',          cls:'Land_fort_bagfence_long',   size:[5,0.8],  style:'sandbag'},
-  {grp:'Sandbags',          cls:'Land_fort_bagfence_corner', size:[2,2],    style:'sandbag'},
-  {grp:'Sandbags',          cls:'Land_fort_bagfence_round',  size:[1.6,1.6],style:'sandbag'},
-  {grp:'Sandbags',          cls:'Land_BagFenceLong',         size:[2.5,0.7],style:'sandbag'},
-  {grp:'Sandbags',          cls:'Land_BagFenceShort',        size:[1.2,0.7],style:'sandbag'},
+  {grp:'Walls (H-barrier)', cls:'Land_HBarrier_corner',      size:[2.5,2.5],style:'hbarrier'},
+  // --- Sandbags (fort_bagfence series ≈ 2.85m long segment; round ≈ 3m ring) ---
+  {grp:'Sandbags',          cls:'Land_fort_bagfence_long',   size:[2.85,0.5],style:'sandbag'},
+  {grp:'Sandbags',          cls:'Land_fort_bagfence_corner', size:[1.5,1.5], style:'sandbag'},
+  {grp:'Sandbags',          cls:'Land_fort_bagfence_round',  size:[3,3],     style:'sandbag'},
+  {grp:'Sandbags',          cls:'Land_BagFenceLong',         size:[2.5,0.4], style:'sandbag'},
+  {grp:'Sandbags',          cls:'Land_BagFenceShort',        size:[1.2,0.4], style:'sandbag'},
   // --- Fortifications ---
-  {grp:'Fortifications',    cls:'Land_fortified_nest_small_EP1',size:[4,4], style:'nest'},
-  {grp:'Fortifications',    cls:'Land_fortified_nest_small', size:[4,4],    style:'nest'},
-  {grp:'Fortifications',    cls:'Land_fort_watchtower_EP1',  size:[3,3],    style:'tower'},
-  {grp:'Fortifications',    cls:'Land_fort_watchtower',      size:[3,3],    style:'tower'},
-  {grp:'Fortifications',    cls:'Land_CamoNetVar_EAST',      size:[8,8],    style:'camo'},
-  {grp:'Fortifications',    cls:'Land_CamoNetVar_NATO',      size:[8,8],    style:'camo'},
+  {grp:'Fortifications',    cls:'Land_fortified_nest_small_EP1',size:[3.5,3.5],style:'nest'},
+  {grp:'Fortifications',    cls:'Land_fortified_nest_small', size:[3.5,3.5], style:'nest'},
+  {grp:'Fortifications',    cls:'Land_fort_watchtower_EP1',  size:[2.5,2.5], style:'tower'},
+  {grp:'Fortifications',    cls:'Land_fort_watchtower',      size:[2.5,2.5], style:'tower'},
+  {grp:'Fortifications',    cls:'Land_CamoNetVar_EAST',      size:[7,7],     style:'camo'},
+  {grp:'Fortifications',    cls:'Land_CamoNetVar_NATO',      size:[7,7],     style:'camo'},
   // --- Obstacles ---
-  {grp:'Obstacles',        cls:'Land_Razorwire',            size:[8,0.5],  style:'wire'},
-  {grp:'Obstacles',        cls:'Hedgehog',                  size:[1.5,1.5],style:'hedgehog'},
-  {grp:'Obstacles',        cls:'Land_CncBlock_Stripes',     size:[1,1],    style:'cnc'},
-  {grp:'Obstacles',        cls:'Land_CncBlock',             size:[1,1],    style:'cnc'},
-  {grp:'Obstacles',        cls:'RoadCone_L_EP1',            size:[0.5,0.5],style:'cone'},
-  // --- MG / GL (1 crew) ---
-  {grp:'MG / GL',          cls:'M2StaticMG',                size:[1.6,1.6],style:'mg', cat:'mg'},
-  {grp:'MG / GL',          cls:'M2HD_mini_TripodCamo_US',   size:[1.6,1.6],style:'mg', cat:'mg'},
-  {grp:'MG / GL',          cls:'DSHKM_TK_INS_EP1',          size:[1.6,1.6],style:'mg', cat:'mg'},
-  {grp:'MG / GL',          cls:'KORD_high_TK_EP1',          size:[1.6,1.6],style:'mg', cat:'mg'},
-  {grp:'MG / GL',          cls:'MK19_TriPod_US_EP1',        size:[1.8,1.8],style:'gl', cat:'gl'},
-  {grp:'MG / GL',          cls:'AGS_TK_EP1',                size:[1.8,1.8],style:'gl', cat:'gl'},
-  // --- Anti-tank (1 crew) ---
-  {grp:'Anti-tank',        cls:'TOW_TriPod_US_EP1',         size:[2,2],    style:'at', cat:'at'},
-  {grp:'Anti-tank',        cls:'Metis_TK_EP1',              size:[2,2],    style:'at', cat:'at'},
-  {grp:'Anti-tank',        cls:'SPG9_TK_INS_EP1',           size:[2,2],    style:'at', cat:'at'},
-  // --- Anti-air (1 crew) ---
-  {grp:'Anti-air',         cls:'Stinger_Pod_US_EP1',        size:[2,2],    style:'aa', cat:'aa'},
-  {grp:'Anti-air',         cls:'Igla_AA_pod_TK_EP1',        size:[2,2],    style:'aa', cat:'aa'},
-  {grp:'Anti-air',         cls:'ZU23_TK_EP1',               size:[3,2.2],  style:'aa', cat:'aa'},
-  // --- Artillery / mortar (2 crew) ---
-  {grp:'Artillery / mortar',cls:'M119_US_EP1',              size:[4,2.6],  style:'arty', cat:'arty'},
-  {grp:'Artillery / mortar',cls:'D30_TK_EP1',               size:[4,2.6],  style:'arty', cat:'arty'},
-  {grp:'Artillery / mortar',cls:'M252_US_EP1',              size:[1.6,1.6],style:'mortar', cat:'mortar'},
-  {grp:'Artillery / mortar',cls:'2b14_82mm_TK_EP1',         size:[1.6,1.6],style:'mortar', cat:'mortar'},
-  // --- Ammo / logistics ---
-  {grp:'Ammo / logistics', cls:'USLaunchersBox_EP1',        size:[1.4,0.9],style:'ammo'},
-  {grp:'Ammo / logistics', cls:'USBasicAmmunitionBox_EP1',  size:[1.4,0.9],style:'ammo'},
-  {grp:'Ammo / logistics', cls:'TKVehicleBox_EP1',          size:[1.4,0.9],style:'ammo'},
-  {grp:'Ammo / logistics', cls:'TKBasicAmmunitionBox_EP1',  size:[1.4,0.9],style:'ammo'},
+  {grp:'Obstacles',        cls:'Land_Razorwire',            size:[8,0.6],   style:'wire'},
+  {grp:'Obstacles',        cls:'Hedgehog',                  size:[2,2],     style:'hedgehog'}, // Czech hedgehog ≈ 2m
+  {grp:'Obstacles',        cls:'Land_CncBlock_Stripes',     size:[1,1],     style:'cnc'},
+  {grp:'Obstacles',        cls:'Land_CncBlock',             size:[1,1],     style:'cnc'},
+  {grp:'Obstacles',        cls:'RoadCone_L_EP1',            size:[0.5,0.5], style:'cone'},
+  // --- MG / GL (1 crew). M2 on M3 tripod ≈ 1.6×1.9; DShKM wheeled ≈ 1.4×1.9 ---
+  {grp:'MG / GL',          cls:'M2StaticMG',                size:[1.6,1.9], style:'mg', cat:'mg'},
+  {grp:'MG / GL',          cls:'M2HD_mini_TripodCamo_US',   size:[1.6,1.9], style:'mg', cat:'mg'},
+  {grp:'MG / GL',          cls:'DSHKM_TK_INS_EP1',          size:[1.4,1.9], style:'mg', cat:'mg'},
+  {grp:'MG / GL',          cls:'KORD_high_TK_EP1',          size:[1.4,1.9], style:'mg', cat:'mg'},
+  {grp:'MG / GL',          cls:'MK19_TriPod_US_EP1',        size:[1.6,1.7], style:'gl', cat:'gl'},
+  {grp:'MG / GL',          cls:'AGS_TK_EP1',                size:[1.2,1.4], style:'gl', cat:'gl'},
+  // --- Anti-tank (1 crew). TOW M220 ≈ 1.8; Metis tiny; SPG-9 long barrel ---
+  {grp:'Anti-tank',        cls:'TOW_TriPod_US_EP1',         size:[1.8,1.8], style:'at', cat:'at'},
+  {grp:'Anti-tank',        cls:'Metis_TK_EP1',              size:[0.9,1.0], style:'at', cat:'at'},
+  {grp:'Anti-tank',        cls:'SPG9_TK_INS_EP1',           size:[1.0,1.2], art:[1.0,2.3], style:'at', cat:'at'}, // 2.1m barrel
+  // --- Anti-air (1 crew). Stinger/Igla pods small; ZU-23-2 ≈ 2.9×4.6 ---
+  {grp:'Anti-air',         cls:'Stinger_Pod_US_EP1',        size:[1.4,1.4], style:'aa', cat:'aa'},
+  {grp:'Anti-air',         cls:'Igla_AA_pod_TK_EP1',        size:[1.1,1.1], style:'aa', cat:'aa'},
+  {grp:'Anti-air',         cls:'ZU23_TK_EP1',               size:[2.9,2.7], art:[2.9,4.6], style:'aa', cat:'aa'}, // twin barrels fwd
+  // --- Artillery (2 crew real, 1 gunner seat). Long barrels → art span ---
+  {grp:'Artillery / mortar',cls:'M119_US_EP1',              size:[2.0,3.6], art:[2.0,6.3], style:'arty', cat:'arty'}, // 105mm, split trails + barrel
+  {grp:'Artillery / mortar',cls:'D30_TK_EP1',               size:[3.0,3.0], art:[3.0,6.0], style:'arty', cat:'arty'}, // 122mm, 3-leg + barrel (est; lock via boundingBoxReal)
+  {grp:'Artillery / mortar',cls:'M252_US_EP1',              size:[1.0,1.0], style:'mortar', cat:'mortar'},
+  {grp:'Artillery / mortar',cls:'2b14_82mm_TK_EP1',         size:[1.0,1.0], style:'mortar', cat:'mortar'},
+  // --- Ammo / logistics (crates ≈ 1.0×0.6) ---
+  {grp:'Ammo / logistics', cls:'USLaunchersBox_EP1',        size:[1.0,0.6], style:'ammo'},
+  {grp:'Ammo / logistics', cls:'USBasicAmmunitionBox_EP1',  size:[1.0,0.6], style:'ammo'},
+  {grp:'Ammo / logistics', cls:'TKVehicleBox_EP1',          size:[1.0,0.6], style:'ammo'},
+  {grp:'Ammo / logistics', cls:'TKBasicAmmunitionBox_EP1',  size:[1.0,0.6], style:'ammo'},
 ];
 const META   = c => CATALOG.find(o=>o.cls===c) || {};
-const SIZE_OF= c => META(c).size  || [2,2];
+const SIZE_OF= c => META(c).size  || [2,2];               // collision footprint (spacing/snap/hit-test)
+const ART_OF = c => { const m=META(c); return m.art || m.size || [2,2]; }; // visual span (glyph/sprite draw)
 const STYLE  = c => META(c).style || 'box';
 const CAT_OF = c => META(c).cat   || null;       // weapon category or null
 /* In Arma 2 each static weapon fills exactly ONE gunner seat (moveInGunner),
@@ -544,10 +555,10 @@ const TEX = {
     ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.2,0,7);ctx.stroke(); }
 };
 function drawObj(o){
-  const [w,d]=SIZE_OF(o.cls), H=headingOf(o), isSel=o.id===sel, st=STYLE(o.cls);
-  withLocal(o,H,()=>{ ctx.globalAlpha=isSel?1:0.96; (TEX[st]||TEX.box)(w,d); ctx.globalAlpha=1;
-    if(isSel){ lw(2); ctx.strokeStyle='#D9763C'; ctx.strokeRect(-w/2-0.2,-d/2-0.2,w+0.4,d+0.4); } });
-  // facing tick + rotate handle in screen space
+  const [w,d]=SIZE_OF(o.cls), [aw,ad]=ART_OF(o.cls), H=headingOf(o), isSel=o.id===sel, st=STYLE(o.cls);
+  withLocal(o,H,()=>{ ctx.globalAlpha=isSel?1:0.96; (TEX[st]||TEX.box)(aw,ad); ctx.globalAlpha=1;   // glyph draws to ART span
+    if(isSel){ lw(2); ctx.strokeStyle='#D9763C'; ctx.strokeRect(-w/2-0.2,-d/2-0.2,w+0.4,d+0.4); } });  // selection rect = COLLISION size
+  // facing tick + rotate handle in screen space (offset from collision depth)
   const [fx,fy]=localToWorld(0,d/2+0.8,H), c=w2s(o.x,o.y), f=w2s(o.x+fx,o.y+fy);
   ctx.strokeStyle=isSel?'#F2EFE8':'rgba(231,227,214,.5)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(c[0],c[1]);ctx.lineTo(f[0],f[1]);ctx.stroke();
   if(isSel){ o._handle=f; ctx.fillStyle='#F2EFE8';ctx.beginPath();ctx.arc(f[0],f[1],5,0,7);ctx.fill(); }
