@@ -193,6 +193,7 @@ python -m http.server 8000
 
 - Built for the **Arma Warfare** community.
 - Visual identity (palette, logo, fonts) from **Miksuu's Warfare** — used here with permission.
+- Developed with the help of [Claude](https://www.anthropic.com/claude), Anthropic's AI assistant.
 - Licensed under the [MIT License](LICENSE) — free to use, fork, and adapt.
 
 Classnames in the presets reference Bohemia Interactive's Arma 2: Operation Arrowhead
