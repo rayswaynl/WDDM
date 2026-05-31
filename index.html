@@ -341,16 +341,32 @@ const SPRITES = {};                       // basename -> {img, ok}
 let _spriteRedraw = false;
 function queueDraw(){ if(_spriteRedraw) return; _spriteRedraw=true;
   requestAnimationFrame(()=>{ _spriteRedraw=false; draw(); }); }   // coalesce burst loads → 1 repaint
-function spriteFor(cls){ const b = SPRITE_ALIAS[cls] || cls; return SPRITES[b]; }
-function loadSprite(b){ if(SPRITES[b]) return; const img=new Image();
+// Basenames that actually ship in assets/sprites/ (the manifest). Only these are
+// requested, so alias-only classes never trigger a 404 in the console.
+const SPRITE_FILES = new Set([
+  '2b14_82mm_TK_EP1','AGS_TK_EP1','D30_TK_EP1','DSHKM_TK_INS_EP1','Hedgehog','Igla_AA_pod_TK_EP1',
+  'Land_CamoNetVar_NATO','Land_CncBlock_Stripes','Land_HBarrier3','Land_HBarrier_corner',
+  'Land_HBarrier_large','Land_Razorwire','Land_fort_bagfence_corner','Land_fort_bagfence_long',
+  'Land_fort_bagfence_round','Land_fort_watchtower_EP1','Land_fortified_nest_small_EP1','M119_US_EP1',
+  'M2StaticMG','M252_US_EP1','MK19_TriPod_US_EP1','Metis_TK_EP1','RoadCone_L_EP1','SPG9_TK_INS_EP1',
+  'Stinger_Pod_US_EP1','TOW_TriPod_US_EP1','USBasicAmmunitionBox_EP1','ZU23_TK_EP1'
+]);
+function spriteFor(cls){
+  const own = SPRITES[cls];                          // prefer the class's OWN art if present + loaded
+  if (own && own.ok) return own;
+  const a = SPRITE_ALIAS[cls];                        // else fall back to its alias target
+  return (a && SPRITES[a]) ? SPRITES[a] : own;
+}
+function loadSprite(b){ if(SPRITES[b] || !SPRITE_FILES.has(b)) return;   // only request files that exist
+  const img=new Image();
   SPRITES[b]={img,ok:false};
   img.onload =()=>{ SPRITES[b].ok = (img.naturalWidth>0); if(SPRITES[b].ok) queueDraw(); };
-  img.onerror=()=>{ SPRITES[b].ok=false; };          // 404/missing → keep procedural glyph
+  img.onerror=()=>{ SPRITES[b].ok=false; };          // belt-and-braces → keep procedural glyph
   img.src = `assets/sprites/${b}.png`;
 }
 function preloadSprites(){
-  const seen={};
-  CATALOG.forEach(o=>{ const b=SPRITE_ALIAS[o.cls]||o.cls; if(!seen[b]){seen[b]=1; loadSprite(b);} });
+  const seen={};                                     // load each class's own file AND its alias target (existing files only)
+  CATALOG.forEach(o=>{ [o.cls, SPRITE_ALIAS[o.cls]].forEach(b=>{ if(b && !seen[b]){ seen[b]=1; loadSprite(b); } }); });
 }
 
 /* ===================================================================
