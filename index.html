@@ -158,6 +158,9 @@
       <label style="display:flex;align-items:center;gap:4px;margin:0;text-transform:none;letter-spacing:0">
         <input id="snap" type="checkbox" checked style="width:auto"> snap
       </label>
+      <label style="display:flex;align-items:center;gap:4px;margin:0;text-transform:none;letter-spacing:0" title="Show generated sprites where available, else procedural glyphs">
+        <input id="useSprites" type="checkbox" checked style="width:auto"> sprites
+      </label>
       <button id="resetView">Reset view</button>
     </div>
     <div class="crewbox" id="crewbox">
@@ -305,6 +308,45 @@ const CAT_OF = c => META(c).cat   || null;       // weapon category or null
    so every weapon emplacement = 1 AI against the engineer's budget. */
 const CREW_OF= c => (IS_WPN(c) ? 1 : 0);
 const IS_WPN = c => CAT_OF(c)!==null;
+
+/* ===================================================================
+   Component 1 — SPRITE LAYER (top-down minis, real-kit anchored).
+   Tries assets/sprites/<basename>.png; on miss/404 silently falls back
+   to the procedural TEX glyph. Aliased classes share one sprite file.
+   Drawn fit-contain into the object's ART span so imperfect-aspect art
+   is letterboxed, never stretched. Toggle: USE_SPRITES (default on).
+   =================================================================== */
+let USE_SPRITES = true;
+const SPRITE_ALIAS = {
+  // visual duplicates share one sprite file (basename = a real catalog cls)
+  M2HD_mini_TripodCamo_US: 'M2StaticMG',
+  KORD_high_TK_EP1:        'DSHKM_TK_INS_EP1',
+  Land_HBarrier5:          'Land_HBarrier_large',
+  Land_fortified_nest_small:'Land_fortified_nest_small_EP1',
+  Land_fort_watchtower:    'Land_fort_watchtower_EP1',
+  Land_CamoNetVar_EAST:    'Land_CamoNetVar_NATO',
+  Land_CncBlock:           'Land_CncBlock_Stripes',
+  Land_BagFenceLong:       'Land_fort_bagfence_long',
+  Land_BagFenceShort:      'Land_fort_bagfence_long',
+  USLaunchersBox_EP1:      'USBasicAmmunitionBox_EP1',
+  TKVehicleBox_EP1:        'USBasicAmmunitionBox_EP1',
+  TKBasicAmmunitionBox_EP1:'USBasicAmmunitionBox_EP1'
+};
+const SPRITES = {};                       // basename -> {img, ok}
+let _spriteRedraw = false;
+function queueDraw(){ if(_spriteRedraw) return; _spriteRedraw=true;
+  requestAnimationFrame(()=>{ _spriteRedraw=false; draw(); }); }   // coalesce burst loads → 1 repaint
+function spriteFor(cls){ const b = SPRITE_ALIAS[cls] || cls; return SPRITES[b]; }
+function loadSprite(b){ if(SPRITES[b]) return; const img=new Image();
+  SPRITES[b]={img,ok:false};
+  img.onload =()=>{ SPRITES[b].ok = (img.naturalWidth>0); if(SPRITES[b].ok) queueDraw(); };
+  img.onerror=()=>{ SPRITES[b].ok=false; };          // 404/missing → keep procedural glyph
+  img.src = `assets/sprites/${b}.png`;
+}
+function preloadSprites(){
+  const seen={};
+  CATALOG.forEach(o=>{ const b=SPRITE_ALIAS[o.cls]||o.cls; if(!seen[b]){seen[b]=1; loadSprite(b);} });
+}
 
 /* ===================================================================
    Presets — incl. the demo "Larger defense" emplacements.
@@ -556,7 +598,15 @@ const TEX = {
 };
 function drawObj(o){
   const [w,d]=SIZE_OF(o.cls), [aw,ad]=ART_OF(o.cls), H=headingOf(o), isSel=o.id===sel, st=STYLE(o.cls);
-  withLocal(o,H,()=>{ ctx.globalAlpha=isSel?1:0.96; (TEX[st]||TEX.box)(aw,ad); ctx.globalAlpha=1;   // glyph draws to ART span
+  const sp = USE_SPRITES ? spriteFor(o.cls) : null;
+  withLocal(o,H,()=>{ ctx.globalAlpha=isSel?1:0.96;
+    if(sp && sp.ok){                                   // SPRITE: fit-contain into ART span (no stretch)
+      const iw=sp.img.naturalWidth, ih=sp.img.naturalHeight, s=Math.min(aw/iw, ad/ih);
+      ctx.drawImage(sp.img, -(iw*s)/2, -(ih*s)/2, iw*s, ih*s);
+    } else {
+      (TEX[st]||TEX.box)(aw,ad);                       // FALLBACK: procedural glyph at ART span
+    }
+    ctx.globalAlpha=1;
     if(isSel){ lw(2); ctx.strokeStyle='#D9763C'; ctx.strokeRect(-w/2-0.2,-d/2-0.2,w+0.4,d+0.4); } });  // selection rect = COLLISION size
   // facing tick + rotate handle in screen space (offset from collision depth)
   const [fx,fy]=localToWorld(0,d/2+0.8,H), c=w2s(o.x,o.y), f=w2s(o.x+fx,o.y+fy);
@@ -640,6 +690,7 @@ $('parentDir').addEventListener('input',e=>{parentDir=parseFloat(e.target.value)
 $('pW').addEventListener('input',e=>{parentW=parseFloat(e.target.value)||2;draw();});
 $('pD').addEventListener('input',e=>{parentD=parseFloat(e.target.value)||2;draw();});
 $('snap').addEventListener('change',e=>snap=e.target.checked);
+$('useSprites').addEventListener('change',e=>{USE_SPRITES=e.target.checked;draw();});
 $('resetView').onclick=()=>{view.scale=14;view.panX=0;view.panY=0;draw();};
 $('tplName').addEventListener('input',buildOut);
 
@@ -670,7 +721,7 @@ $('loadJson').onclick=()=>{ const inp=document.createElement('input'); inp.type=
     }catch(e){alert('Bad JSON');} }; r.readAsText(f); }; inp.click(); };
 
 /* ---------- Boot ---------- */
-loadPreset('barracks_walls'); resize();
+loadPreset('barracks_walls'); resize(); preloadSprites();
 </script>
 </body>
 </html>
