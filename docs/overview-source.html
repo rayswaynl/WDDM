@@ -108,6 +108,47 @@ const P=[
 ['CHECKPOINT · HEAVY','e','cp_h_e','Checkpoint — Heavy',[['Land_CncBlock_Stripes',[-4,8],0],['Land_CncBlock_Stripes',[-2,8],0],['Land_CncBlock_Stripes',[0,8],0],['Land_CncBlock_Stripes',[4,3],0],['Land_CncBlock_Stripes',[2,3],0],['Land_CncBlock_Stripes',[0,3],0],['Land_CncBlock',[-7,6],0],['Land_CncBlock',[7,6],0],['Land_fort_watchtower_EP1',[7,5],270],['Land_fort_watchtower_EP1',[-7,5],90],['DSHKM_TK_INS_EP1',[7,7],270],['DSHKM_TK_INS_EP1',[-7,7],90],['Metis_TK_EP1',[0,-3],180],['Hedgehog',[-3,-5],0],['Hedgehog',[3,-5],0],['Land_Razorwire',[0,-6],0],['Land_HBarrier_large',[-9,5],90]],'Max concrete, twin towers, dual DShKM, Metis, belt.'],
 ];
 
+/* ---- sprite layer (mirrors the editor: own-art-first, alias fallback, art-span fit-contain) ---- */
+const USE_SPRITES = true;
+const SPRITE_BASE = '../assets/sprites/';
+const SPRITE_ALIAS = {
+  'Land_CncBlock':'Land_CncBlock_Stripes',
+  'Land_HBarrier5':'Land_HBarrier_large',
+  'Land_HBarrier_corner':'Land_HBarrier_large',
+  'Land_HBarrier3':'Land_HBarrier_large',
+  'Land_CamoNetVar_EAST':'Land_CamoNetVar_NATO',
+  'USLaunchersBox_EP1':'USBasicAmmunitionBox_EP1',
+  'TKVehicleBox_EP1':'USBasicAmmunitionBox_EP1',
+  'TKBasicAmmunitionBox_EP1':'USBasicAmmunitionBox_EP1',
+  'Land_fortified_nest_small_EP1':'Land_fort_watchtower_EP1',
+  '2b14_82mm_TK_EP1':'M252_US_EP1',
+  'AGS_TK_EP1':'MK19_TriPod_US_EP1',
+};
+const SPRITE_FILES = new Set(['2b14_82mm_TK_EP1','AGS_TK_EP1','D30_TK_EP1','DSHKM_TK_INS_EP1','Hedgehog','Igla_AA_pod_TK_EP1','Land_CamoNetVar_NATO','Land_CncBlock_Stripes','Land_HBarrier3','Land_HBarrier_corner','Land_HBarrier_large','Land_Razorwire','Land_fort_bagfence_corner','Land_fort_bagfence_long','Land_fort_bagfence_round','Land_fort_watchtower_EP1','Land_fortified_nest_small_EP1','M119_US_EP1','M252_US_EP1','M2StaticMG','MK19_TriPod_US_EP1','Metis_TK_EP1','RoadCone_L_EP1','SPG9_TK_INS_EP1','Stinger_Pod_US_EP1','TOW_TriPod_US_EP1','USBasicAmmunitionBox_EP1','ZU23_TK_EP1']);
+/* art span (metres) for long-barrel guns so the sprite's barrel/trail isn't squashed; else = footprint */
+const ART = {'SPG9_TK_INS_EP1':[1.0,2.3],'ZU23_TK_EP1':[2.9,4.6],'M119_US_EP1':[2.0,6.3],'D30_TK_EP1':[3.0,6.0]};
+const ARTOF = c => ART[c] || SIZE(c);
+const SPRITES = {};
+const TILES = [];
+function spriteFor(cls){ const own=SPRITES[cls]; if(own&&own.ok) return own; const a=SPRITE_ALIAS[cls]; return (a&&SPRITES[a])?SPRITES[a]:own; }
+function redrawAll(){ TILES.forEach(t=>tileRender(t.cv,t.objs)); }
+let _want=0,_done=0;
+function checkReady(){ if(_done>=_want) window.OVERVIEW_SPRITES_READY=true; }
+function loadSprite(b){
+  if(SPRITES[b] || !SPRITE_FILES.has(b)) return;
+  _want++;
+  const img=new Image(); const rec={img,ok:false}; SPRITES[b]=rec;
+  img.onload=()=>{ rec.ok=(img.naturalWidth>0); _done++; redrawAll(); checkReady(); };
+  img.onerror=()=>{ rec.ok=false; _done++; checkReady(); };
+  img.src=SPRITE_BASE+b+'.png';
+}
+function preload(){
+  const want=new Set();
+  P.forEach(p=>p[4].forEach(o=>{ const cls=o[0]; if(SPRITE_FILES.has(cls)) want.add(cls); const a=SPRITE_ALIAS[cls]; if(a&&SPRITE_FILES.has(a)) want.add(a); }));
+  want.forEach(loadSprite);
+  if(_want===0) window.OVERVIEW_SPRITES_READY=true;
+}
+
 /* ---- texture renderer (matches the editor) ---- */
 const PAL={wall:['#444e58','#69737d'],bag:['#5a5436','#7d7448'],fort:['#3f4750','#67727d'],wpn:['#6f4322','#D9763C'],aa:['#3c4a55','#7fb0c8'],arty:['#5a3f22','#e0905a'],ammo:['#4a5230','#8a965a'],wire:['#2f353c','#9aa3ad'],box:['#3a444e','#5c6776']};
 function col(st){if(['mg','at'].includes(st))return PAL.wpn;if(st=='aa')return PAL.aa;if(st=='arty')return PAL.arty;if(st=='ammo')return PAL.ammo;if(st=='hbarrier'||st=='cnc')return PAL.wall;if(st=='sandbag')return PAL.bag;if(['nest','tower','camo','hedgehog'].includes(st))return PAL.fort;if(st=='wire')return PAL.wire;if(st=='cone')return PAL.wpn;return PAL.box;}
@@ -133,8 +174,19 @@ function tileRender(cv, objs){
   // objects
   function lw(px){ctx.lineWidth=px/s;}
   objs.forEach(o=>{
-    const cls=o[0],[w,d]=SIZE(cls),st=STYLE(cls),dir=o[2]||0;
+    const cls=o[0],st=STYLE(cls),dir=o[2]||0;
     const c=w2s(o[1][0],o[1][1]),r=dir*Math.PI/180;
+    if(USE_SPRITES){
+      const sp=spriteFor(cls);
+      if(sp&&sp.ok&&sp.img&&sp.img.naturalWidth>0){
+        const iw=sp.img.naturalWidth,ih=sp.img.naturalHeight,[aw,ad]=ARTOF(cls);
+        const sc=Math.min((aw*s)/iw,(ad*s)/ih),dw=iw*sc,dh=ih*sc;
+        ctx.save();ctx.translate(c[0],c[1]);ctx.rotate(-r);ctx.scale(1,-1);
+        ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+        ctx.drawImage(sp.img,-dw/2,-dh/2,dw,dh);ctx.restore();return;
+      }
+    }
+    const [w,d]=SIZE(cls);
     ctx.save();ctx.translate(c[0],c[1]);ctx.scale(s,-s);ctx.rotate(-r);ctx.lineJoin='round';ctx.lineCap='round';
     const[f,st2]=col(st);
     if(['mg','at','aa','arty'].includes(st)){ // weapon: filled disc + barrel
@@ -169,8 +221,11 @@ rows.forEach(([label,a,b])=>{
     tile.innerHTML=`<div class="cap"><span class="nm"><span class="side-${side}">${sideTxt}</span> · ${name}</span><span class="crew">⚔ ${guns} · ${guns} AI</span></div>
       <canvas width="380" height="230"></canvas><div class="doc">${doc}</div>`;
     grid.appendChild(tile);
-    tileRender(tile.querySelector('canvas'), objs);
+    const cnv=tile.querySelector('canvas');
+    TILES.push({cv:cnv,objs});
+    tileRender(cnv, objs);
   }
 });
+preload();
 </script>
 </body></html>
