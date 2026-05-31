@@ -8,8 +8,9 @@
 
 ## 1. Goal
 
-A deeper, better-researched pass on the engineer-defense feature and the WDDM editor, in six coherent workstreams:
+A deeper, better-researched pass on the engineer-defense feature and the WDDM editor, in seven coherent workstreams:
 
+0. **Measurement accuracy (foundation)** — replace the editor's eyeballed object footprints with real-world measured dimensions, with an optional later lock to the game's own `boundingBoxReal`. Done FIRST because layouts + sprites both depend on honest scale.
 1. **Sprite asset system** — replace the editor's procedural glyphs with a consistent set of top-down sprites (style B, grounded in real-world kit), generated in ChatGPT, with a safe procedural fallback.
 2. **Doctrine layout rework** — revise the 16 SQF + 16 editor preset layouts to match real NATO vs Warsaw Pact field-fortification doctrine (see `RESEARCH.md`).
 3. **Fields-of-fire overlay** — filled translucent firing-arc wedges (style A) as an editor toggle.
@@ -20,6 +21,50 @@ A deeper, better-researched pass on the engineer-defense feature and the WDDM ed
 **Locked decisions (from brainstorming):** overlay = **A** (filled wedges); sprites = **B** (top-down minis) anchored to **real weapon systems** (not Bohemia models — IP + brand "original assets" rule); integration = **sprite-or-procedural fallback**; build order = **3-sprite pilot → layouts → editor features → cleanup → eggs**; prompt pack covers the **full set**.
 
 **Research basis:** `C:\Users\Steff\wddm-mockups\RESEARCH.md` (US FMs 5-103, 6-50/ATP 3-09.50, 44-18-1, 19-4, 17-98; Soviet FM 100-2-1/-3; CIA FOIA; DTIC). All claims cited there.
+
+---
+
+## 1b. Component 0 — Measurement accuracy (asset → map → in-game)
+
+**Problem (confirmed by code read).** The editor's `size:[w,d]` values are **eyeballed approximations** (original catalog comment: "approx footprints"). They are *not* exported and *not* read by Arma — they only control how big an object **draws in the editor**. The position/rotation chain is already provably exact and is NOT touched here:
+
+- Editor stores `{x,y,z}` in **metres** → export writes them verbatim into `['cls',[x,y,z],dir]` → SQF `_origin modelToWorld _relPos` interprets `[x,y,z]` as **model-space metres** → object spawns at the exact metre point. No scale factor anywhere.
+- Rotation: editor `headingOf = (parentDir − dir)` ≡ SQF `setDir (_dir − _relDir)`. Grid = 1 m, snap = 0.5 m.
+
+So the ONLY soft spot in asset→map→in-game is the footprint sizes, and they're guessed. A wrong `size` never moves anything in-game; it makes the **preview lie about scale**, so the user spaces objects by eye wrongly → clipping or gaps in-game. Fixing this = an honest preview.
+
+### 0.1 Data model: `size` (collision footprint) + optional `art` (visual span) — both in real metres
+
+A thin barrel/trail overhangs but doesn't collide. One number can't serve both spacing and art (a D-30 carriage ≈ 2.4 m wide, but barrel+trail span ≈ 5.4 m). So each catalog entry gets:
+
+- **`size:[w,d]`** — the object's **base/carriage footprint** in metres. Drives spacing intuition, 0.5 m snap, hit-testing, selection rect. = the "will it clip in-game" box.
+- **`art:[w,d]`** *(optional)* — the **full visual span** in metres incl. barrel/trail, used only to draw the sprite/glyph at true scale. Defaults to `size` when omitted. The fit-contain draw (§2.4) uses `art` if present, else `size`.
+
+Both are real metres → editor visual extent = in-game reality. Hit-testing/snap stay on `size` so selecting a howitzer isn't a giant barrel-sized hitbox.
+
+### 0.2 Source of truth — real-world now, game-exact later (user decision)
+
+- **Phase A (now):** set all ~35 footprints from **cited real-world equipment dimensions** (RESEARCH.md + manufacturer/Wikipedia specs). ~90% match to Arma's model boxes. Examples to correct from current guesses:
+  | class | current (guess) | real-world `size` | `art` (w/ barrel) |
+  |---|---|---|---|
+  | M2StaticMG (M3 tripod) | 1.6×1.6 | 1.6×1.9 | — |
+  | ZU23_TK_EP1 | 3×2.2 | 2.9×4.6 | — (twin barrels ~ within) |
+  | D30_TK_EP1 | 4×2.6 | 2.4×2.4 (carriage) | 2.4×6.0 (barrel+trail) |
+  | M119_US_EP1 | 4×2.6 | 2.0×2.5 (carriage) | 2.0×6.3 (barrel+trail) |
+  | TOW_TriPod_US_EP1 | 2×2 | 1.8×1.8 | — |
+  | Stinger_Pod_US_EP1 | 2×2 | 1.4×1.4 | — |
+  | Land_HBarrier_large | 5×1.2 | 5.0×1.2 (≈ correct) | — |
+  | Hedgehog | 1.5×1.5 | 2.0×2.0 | — |
+  (full table produced during implementation; every value cited.)
+- **Phase B (optional, later, user-run):** a throwaway ~10-line SQF dumps `boundingBoxReal` for each classname; user pastes output; catalog locked to the engine's exact numbers. Not a shipped tool — run once and discard. (User chose: do Phase A now, keep B available.)
+
+### 0.3 Sprite contract tie-in
+
+Each generated sprite is **trim-to-content** (cropped to its alpha bounding box) at asset-prep, so the drawn equipment maps exactly onto its `art` (or `size`) metre box → fit-contain becomes exact, not approximate. The orientation contract (front=up) is unchanged.
+
+### 0.4 What this explicitly does NOT change
+
+Coordinates, `modelToWorld`, rotation, snap granularity, SQF, crew counts, the 16 m clear-radius. Only the per-class draw dimensions and (additively) the optional `art` field. No QA gadgets are shipped in the editor (user declined ruler/extent/ring tools).
 
 ---
 
@@ -101,20 +146,23 @@ function loadSprite(b){ if(SPRITES[b]) return; const img=new Image();
 // kick off loads for every catalog class (+aliases) at boot
 ```
 
-In `drawObj`, inside the existing `withLocal(o,H,…)` scaled+rotated metre frame — **fit-contain** to avoid distortion (BLOCKER #1):
+In `drawObj`, inside the existing `withLocal(o,H,…)` scaled+rotated metre frame — draw to the **art span** (`art` if present, else `size`), **fit-contain** to avoid distortion (BLOCKER #1 + Component 0):
 
 ```js
+const [aw, ad] = ART_OF(o.cls);             // = art || size, real metres
 const sp = spriteFor(o.cls);
 if (USE_SPRITES && sp && sp.ok) {
   const iw = sp.img.naturalWidth, ih = sp.img.naturalHeight;
-  const s  = Math.min(w/iw, d/ih);          // metre-per-pixel that fits the box
+  const s  = Math.min(aw/iw, ad/ih);        // metre-per-pixel that fits the art box
   const dw = iw*s, dh = ih*s;               // contained draw size (metres)
   ctx.drawImage(sp.img, -dw/2, -dh/2, dw, dh);
 } else {
-  (TEX[st]||TEX.box)(w,d);                  // unchanged procedural path
+  (TEX[st]||TEX.box)(aw, ad);               // procedural path also draws to art span
 }
-if (isSel) { /* existing orange selection rect, unchanged */ }
+if (isSel) { /* existing orange selection rect — drawn on `size` (collision box), unchanged */ }
 ```
+
+Note: the sprite/glyph draws to the **art span** (true visual extent incl. barrel), while hit-testing and the selection rect stay on the **collision `size`** — so a howitzer looks full-length but selects by its carriage, not a giant barrel hitbox.
 
 **Properties:** zero new deps; offline-safe (missing files → procedural); custom user classnames → procedural; **coalesced repaint** (one rAF per burst, not one per image — SHOULD-FIX #4); fit-contain so imperfect-aspect art is letterboxed, never stretched. **Expected behaviour:** on first load users briefly see procedural glyphs that pop to sprites as PNGs arrive — this is intended, not a bug (SHOULD-FIX #5). A **"sprites on/off"** toggle (`USE_SPRITES`, default on) lets users compare and keeps the procedural path first-class.
 
@@ -218,13 +266,15 @@ Both are gated, reversible (reload), and never touch the SQF contract.
 - No framework/build step — single-file offline HTML stays the point.
 - No backend / analytics / accounts.
 - No `enableSimulation` threat-sleep, no capturable positions, no HC offload (all **ask-first / future**).
-- No change to crew counts, caps, PV protocol, or footprints.
+- No change to crew counts, caps, PV protocol, or **coordinates/rotation** (only the editor-only draw dimensions change; positions stay 1:1 metres).
+- No shipped QA gadgets in the editor (ruler / extent readout / clear-radius ring) — user declined.
 - Sprites do not replace the procedural renderer — they layer on top of it.
 
 ---
 
 ## 9. Build order + verification
 
+0. **Measurement accuracy** → add `art` support (`ART_OF`, fit-contain uses art, hit-test stays on size) + replace all ~35 footprints with cited real-world dimensions → browser check: presets still load, gun counts unchanged, 0 console errors; spot-check a few extents look right vs known sizes. (Phase B `boundingBoxReal` lock deferred to user.)
 1. **Sprite pilot** (3: M2 / D-30 / sandbag-long) → loader + fit-contain draw + toggle → Playwright screenshot at real scale, console-clean. **Confirm not upside-down**, lock style.
 2. **Full sprite prompt pack** → `docs/sprite-prompts.md` (deliverable; user generates in ChatGPT).
 3. **Layout rework** *(needs step-1 sprites available for visual verification of the new positions)* → edit SQF + presets → browser parity check: 16 presets report expected gun counts (`allMatch:true`), 0 console errors; SQF grep: weapon-class counts per template unchanged, no A3 syntax, mutex still balanced.
