@@ -272,7 +272,7 @@ const CATALOG = [
   {grp:'Fortifications',    cls:'Land_CamoNetVar_EAST',      size:[7,7],     style:'camo'},
   {grp:'Fortifications',    cls:'Land_CamoNetVar_NATO',      size:[7,7],     style:'camo'},
   // --- Obstacles ---
-  {grp:'Obstacles',        cls:'Land_Razorwire',            size:[8,0.6],   style:'wire'},
+  {grp:'Obstacles',        cls:'Fort_RazorWire',            size:[8,0.6],   style:'wire'},
   {grp:'Obstacles',        cls:'Hedgehog',                  size:[2,2],     style:'hedgehog'}, // Czech hedgehog ≈ 2m
   {grp:'Obstacles',        cls:'Land_CncBlock_Stripes',     size:[1,1],     style:'cnc'},
   {grp:'Obstacles',        cls:'Land_CncBlock',             size:[1,1],     style:'cnc'},
@@ -298,7 +298,7 @@ const CATALOG = [
   {grp:'Artillery / mortar',cls:'M252_US_EP1',              size:[1.0,1.0], style:'mortar', cat:'mortar'},
   {grp:'Artillery / mortar',cls:'2b14_82mm_TK_EP1',         size:[1.0,1.0], style:'mortar', cat:'mortar'},
   // --- Ammo / logistics (crates ≈ 1.0×0.6) ---
-  {grp:'Ammo / logistics', cls:'USLaunchersBox_EP1',        size:[1.0,0.6], style:'ammo'},
+  {grp:'Ammo / logistics', cls:'USLaunchers_EP1',           size:[1.0,0.6], style:'ammo'},
   {grp:'Ammo / logistics', cls:'USBasicAmmunitionBox_EP1',  size:[1.0,0.6], style:'ammo'},
   {grp:'Ammo / logistics', cls:'TKVehicleBox_EP1',          size:[1.0,0.6], style:'ammo'},
   {grp:'Ammo / logistics', cls:'TKBasicAmmunitionBox_EP1',  size:[1.0,0.6], style:'ammo'},
@@ -333,7 +333,8 @@ const SPRITE_ALIAS = {
   Land_BagFenceLong:       'Land_fort_bagfence_long',
   Land_BagFenceShort:      'Land_fort_bagfence_long',
   '2b14_82mm_TK_EP1':      'M252_US_EP1',   // 82mm mortar ≈ identical top-down to the M252 81mm (round baseplate + tube + bipod)
-  USLaunchersBox_EP1:      'USBasicAmmunitionBox_EP1',
+  Fort_RazorWire:          'Land_Razorwire',
+  USLaunchers_EP1:         'USBasicAmmunitionBox_EP1',
   TKVehicleBox_EP1:        'USBasicAmmunitionBox_EP1',
   TKBasicAmmunitionBox_EP1:'USBasicAmmunitionBox_EP1'
 };
@@ -382,14 +383,14 @@ const PRESETS = {
     ['Land_HBarrier_large',[2.5,0,0],0],['Land_HBarrier_large',[7.5,0,0],0]
   ]},
   wall_corner: { name:'🧱 WALL · CORNER (L) — modular base turn', tpl:'WFBE_NEURODEF_WALL_CORNER', w:24, d:24, objs:[
-    ['Land_HBarrier_corner',[0,0,0],0],
+    ['Land_HBarrier3',[0,0,0],0],
     ['Land_HBarrier_large',[5,0,0],0],['Land_HBarrier_large',[10,0,0],0],
     ['Land_HBarrier_large',[0,5,0],90],['Land_HBarrier_large',[0,10,0],90]
   ]},
   wall_gate: { name:'🧱 WALL · GATE — vehicle entrance', tpl:'WFBE_NEURODEF_WALL_GATE', w:24, d:4, objs:[
     ['Land_HBarrier_large',[-10,0,0],0],['Land_HBarrier_large',[-5,0,0],0],
     ['Land_HBarrier_large',[5,0,0],0],['Land_HBarrier_large',[10,0,0],0],
-    ['Land_CncBlock_Stripes',[-2.7,0,0],0],['Land_CncBlock_Stripes',[2.7,0,0],0]
+    ['Hedgehog',[-2.7,0,0],0],['Hedgehog',[2.7,0,0],0]
   ]},
   // ===== END-GAME MANNED POSITIONS (faction-unique, ~4 guns each, NO guard tower) =====
   // AA POSITION
@@ -397,9 +398,9 @@ const PRESETS = {
     ['Stinger_Pod_US_EP1',[-8,6,0],330],['Stinger_Pod_US_EP1',[0,8,0],0],['Stinger_Pod_US_EP1',[8,6,0],30],
     ['Land_fort_bagfence_round',[-8,6,0],0],['Land_fort_bagfence_round',[0,8,0],0],['Land_fort_bagfence_round',[8,6,0],0],
     ['M2StaticMG',[0,-4,0],180],['Land_fort_bagfence_round',[0,-4,0],0],
-    ['USLaunchersBox_EP1',[-4,2,0],0],['USLaunchersBox_EP1',[4,2,0],0],
+    ['USLaunchers_EP1',[-4,2,0],0],['USLaunchers_EP1',[4,2,0],0],
     ['Land_CamoNetVar_NATO',[-4,6,0],0],['Land_CamoNetVar_NATO',[4,6,0],0],
-    ['Land_Razorwire',[-7,-6,0],0],['Land_Razorwire',[7,-6,0],0]
+    ['Fort_RazorWire',[-7,-6,0],0],['Fort_RazorWire',[7,-6,0],0]
   ]},
   aapos_east: { name:'⚔ AA POSITION · LARGE · EAST — WarPac ZU-23 + Igla', tpl:'WFBE_NEURODEF_AAPOS_EAST', w:12, d:12, objs:[
     ['ZU23_TK_EP1',[-7,5,0],350],['ZU23_TK_EP1',[7,5,0],10],['Igla_AA_pod_TK_EP1',[0,7,0],0],
@@ -407,7 +408,7 @@ const PRESETS = {
     ['TKVehicleBox_EP1',[-5,1,0],0],['TKVehicleBox_EP1',[5,1,0],0],
     ['Land_HBarrier_large',[-11,4,0],90],['Land_HBarrier_large',[11,4,0],90],
     ['Land_HBarrier_large',[-6,-2,0],0],['Land_HBarrier_large',[0,-2,0],0],['Land_HBarrier_large',[6,-2,0],0],
-    ['Hedgehog',[-4,-6,0],0],['Hedgehog',[4,-6,0],0],['Land_Razorwire',[0,-7,0],0]
+    ['Hedgehog',[-4,-6,0],0],['Hedgehog',[4,-6,0],0],['Fort_RazorWire',[0,-7,0],0]
   ]},
   // ARTILLERY POSITION
   artypos_west: { name:'⚔ ARTY POSITION · LARGE · WEST — NATO M119 line', tpl:'WFBE_NEURODEF_ARTYPOS_WEST', w:16, d:14, objs:[
@@ -417,7 +418,7 @@ const PRESETS = {
     ['Land_fort_bagfence_long',[-13,3,0],90],['Land_fort_bagfence_long',[13,3,0],90],
     ['Land_fort_bagfence_long',[-6,-3,0],0],['Land_fort_bagfence_long',[6,-3,0],0],
     ['M2StaticMG',[0,-5,0],180],['Land_fort_bagfence_round',[0,-5,0],0],
-    ['Land_Razorwire',[-8,-7,0],0],['Land_Razorwire',[8,-7,0],0]
+    ['Fort_RazorWire',[-8,-7,0],0],['Fort_RazorWire',[8,-7,0],0]
   ]},
   artypos_east: { name:'⚔ ARTY POSITION · LARGE · EAST — WarPac D-30 battery', tpl:'WFBE_NEURODEF_ARTYPOS_EAST', w:16, d:14, objs:[
     ['D30_TK_EP1',[-9,4,0],8],['D30_TK_EP1',[0,5,0],0],['D30_TK_EP1',[9,4,0],352],
@@ -436,7 +437,7 @@ const PRESETS = {
     ['Land_fort_bagfence_corner',[-10,1,0],270],['Land_fort_bagfence_long',[-10,-3,0],0],
     ['Land_fort_bagfence_long',[10,-3,0],0],['Land_fort_bagfence_corner',[10,1,0],180],
     ['Land_HBarrier_large',[0,9,0],0],
-    ['Land_Razorwire',[-6,-6,0],0],['Land_Razorwire',[6,-6,0],0]
+    ['Fort_RazorWire',[-6,-6,0],0],['Fort_RazorWire',[6,-6,0],0]
   ]},
   mixedpos_east: { name:'⚔ MIXED POSITION · LARGE · EAST — WarPac combined arms', tpl:'WFBE_NEURODEF_MIXEDPOS_EAST', w:14, d:12, objs:[
     ['DSHKM_TK_INS_EP1',[-8,4,0],350],['DSHKM_TK_INS_EP1',[8,4,0],10],['Metis_TK_EP1',[0,6,0],0],
@@ -444,7 +445,7 @@ const PRESETS = {
     ['TKBasicAmmunitionBox_EP1',[-4,0,0],0],['TKBasicAmmunitionBox_EP1',[4,0,0],0],
     ['Land_HBarrier_large',[-10,3,0],90],['Land_HBarrier_large',[10,3,0],90],
     ['Land_HBarrier_large',[-6,-3,0],0],['Land_HBarrier_large',[0,-3,0],0],['Land_HBarrier_large',[6,-3,0],0],
-    ['Hedgehog',[-6,-6,0],0],['Hedgehog',[6,-6,0],0],['Land_Razorwire',[0,-7,0],0]
+    ['Hedgehog',[-6,-6,0],0],['Hedgehog',[6,-6,0],0],['Fort_RazorWire',[0,-7,0],0]
   ]},
   blank: { name:'— Blank canvas —', tpl:'WFBE_NEURODEF_CUSTOM_WALLS', w:10, d:10, objs:[] },
 };
