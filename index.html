@@ -651,6 +651,61 @@ const PRESETS = {
     ['Hedgehog',[0,-3,0],0],['Fort_RazorWire',[0,-4,0],0]
   ]},
 
+  // ====================== MEGA FORTRESSES (high AI — end-game, FPS-heavy by design) ======================
+  // AI = gun count. Walled compounds; MG bulk uses fortified nests (gun+cover = 1 obj).
+  fortress_west_8ai: { name:'🏰 FORTRESS · WEST · ~8 AI — combined strongpoint', tpl:'WFBE_NEURODEF_FORT_W8', w:28, d:28, objs:[
+    ['Base_WarfareBBarrier10x',[0,12,0],0],['Base_WarfareBBarrier10x',[0,-12,0],0],['Base_WarfareBBarrier10x',[-12,0,0],90],['Base_WarfareBBarrier10x',[12,0,0],90],
+    ['WarfareBMGNest_M240_US_EP1',[-10,8,0],0],['WarfareBMGNest_M240_US_EP1',[0,10,0],0],['WarfareBMGNest_M240_US_EP1',[10,8,0],0],
+    ['TOW_TriPod_US_EP1',[-8,2,0],320],['Land_fort_bagfence_round',[-8,2,0],0],['TOW_TriPod_US_EP1',[8,2,0],40],['Land_fort_bagfence_round',[8,2,0],0],
+    ['Stinger_Pod_US_EP1',[0,0,0],0],['Land_fort_bagfence_round',[0,0,0],0],
+    ['MK19_TriPod_US_EP1',[-6,-8,0],180],['MK19_TriPod_US_EP1',[6,-8,0],180],
+    ['USBasicAmmunitionBox_EP1',[-3,-4,0],0],['USBasicAmmunitionBox_EP1',[3,-4,0],0],['Land_CamoNetVar_NATO',[0,8,0],0]
+  ]},
+  fortress_west_12ai: { name:'🏰 FORTRESS · WEST · ~12 AI — combined-arms fort', tpl:'WFBE_NEURODEF_FORT_W12', w:32, d:30, objs:[
+    ['Base_WarfareBBarrier10x',[0,14,0],0],['Base_WarfareBBarrier10x',[0,-14,0],0],['Base_WarfareBBarrier10x',[-14,0,0],90],['Base_WarfareBBarrier10x',[14,0,0],90],
+    ['WarfareBMGNest_M240_US_EP1',[-12,9,0],0],['WarfareBMGNest_M240_US_EP1',[-6,11,0],0],['WarfareBMGNest_M240_US_EP1',[0,12,0],0],['WarfareBMGNest_M240_US_EP1',[6,11,0],0],['WarfareBMGNest_M240_US_EP1',[12,9,0],0],
+    ['TOW_TriPod_US_EP1',[-9,3,0],320],['Land_fort_bagfence_round',[-9,3,0],0],['TOW_TriPod_US_EP1',[9,3,0],40],['Land_fort_bagfence_round',[9,3,0],0],['TOW_TriPod_US_EP1',[0,5,0],0],['Land_fort_bagfence_round',[0,5,0],0],
+    ['Stinger_Pod_US_EP1',[-4,0,0],0],['Land_fort_bagfence_round',[-4,0,0],0],['Stinger_Pod_US_EP1',[4,0,0],0],['Land_fort_bagfence_round',[4,0,0],0],
+    ['MK19_TriPod_US_EP1',[-8,-10,0],180],['MK19_TriPod_US_EP1',[8,-10,0],180],
+    ['USBasicAmmunitionBox_EP1',[-3,-5,0],0],['USBasicAmmunitionBox_EP1',[3,-5,0],0],['USBasicAmmunitionBox_EP1',[0,-8,0],0],
+    ['Land_CamoNetVar_NATO',[-6,10,0],0],['Land_CamoNetVar_NATO',[6,10,0],0]
+  ]},
+  fortress_west_16ai: { name:'🏰 FORTRESS · WEST · ~16 AI — max fortress', tpl:'WFBE_NEURODEF_FORT_W16', w:36, d:34, objs:[
+    ['Base_WarfareBBarrier10x',[-7,16,0],0],['Base_WarfareBBarrier10x',[7,16,0],0],['Base_WarfareBBarrier10x',[0,-16,0],0],['Base_WarfareBBarrier10x',[-16,2,0],90],['Base_WarfareBBarrier10x',[16,2,0],90],
+    ['WarfareBMGNest_M240_US_EP1',[-14,11,0],0],['WarfareBMGNest_M240_US_EP1',[-9,13,0],0],['WarfareBMGNest_M240_US_EP1',[-3,14,0],0],['WarfareBMGNest_M240_US_EP1',[3,14,0],0],['WarfareBMGNest_M240_US_EP1',[9,13,0],0],['WarfareBMGNest_M240_US_EP1',[14,11,0],0],['WarfareBMGNest_M240_US_EP1',[0,-13,0],180],
+    ['TOW_TriPod_US_EP1',[-11,4,0],320],['Land_fort_bagfence_round',[-11,4,0],0],['TOW_TriPod_US_EP1',[11,4,0],40],['Land_fort_bagfence_round',[11,4,0],0],['TOW_TriPod_US_EP1',[-4,6,0],0],['Land_fort_bagfence_round',[-4,6,0],0],['TOW_TriPod_US_EP1',[4,6,0],0],['Land_fort_bagfence_round',[4,6,0],0],
+    ['Stinger_Pod_US_EP1',[-6,0,0],0],['Land_fort_bagfence_round',[-6,0,0],0],['Stinger_Pod_US_EP1',[0,1,0],0],['Land_fort_bagfence_round',[0,1,0],0],['Stinger_Pod_US_EP1',[6,0,0],0],['Land_fort_bagfence_round',[6,0,0],0],
+    ['MK19_TriPod_US_EP1',[-9,-9,0],180],['M252_US_EP1',[9,-9,0],0],
+    ['USBasicAmmunitionBox_EP1',[-4,-5,0],0],['USBasicAmmunitionBox_EP1',[4,-5,0],0],['USBasicAmmunitionBox_EP1',[-2,-9,0],0],['USBasicAmmunitionBox_EP1',[2,-9,0],0],
+    ['Land_CamoNetVar_NATO',[-8,12,0],0],['Land_CamoNetVar_NATO',[8,12,0],0]
+  ]},
+  fortress_east_8ai: { name:'🏰 FORTRESS · EAST · ~8 AI — combined strongpoint', tpl:'WFBE_NEURODEF_FORT_E8', w:28, d:28, objs:[
+    ['Base_WarfareBBarrier10x',[0,12,0],0],['Base_WarfareBBarrier10x',[0,-12,0],0],['Base_WarfareBBarrier10x',[-12,0,0],90],['Base_WarfareBBarrier10x',[12,0,0],90],
+    ['RU_WarfareBMGNest_PK',[-10,8,0],0],['RU_WarfareBMGNest_PK',[0,10,0],0],['RU_WarfareBMGNest_PK',[10,8,0],0],
+    ['SPG9_TK_INS_EP1',[-8,2,0],320],['Land_fort_bagfence_round',[-8,2,0],0],['SPG9_TK_INS_EP1',[8,2,0],40],['Land_fort_bagfence_round',[8,2,0],0],
+    ['ZU23_TK_EP1',[0,0,0],0],['Land_fort_bagfence_round',[0,0,0],0],
+    ['AGS_TK_EP1',[-6,-8,0],180],['AGS_TK_EP1',[6,-8,0],180],
+    ['TKBasicAmmunitionBox_EP1',[-3,-4,0],0],['TKBasicAmmunitionBox_EP1',[3,-4,0],0],['Land_CamoNet_EAST',[0,8,0],0]
+  ]},
+  fortress_east_12ai: { name:'🏰 FORTRESS · EAST · ~12 AI — combined-arms fort', tpl:'WFBE_NEURODEF_FORT_E12', w:32, d:30, objs:[
+    ['Base_WarfareBBarrier10x',[0,14,0],0],['Base_WarfareBBarrier10x',[0,-14,0],0],['Base_WarfareBBarrier10x',[-14,0,0],90],['Base_WarfareBBarrier10x',[14,0,0],90],
+    ['RU_WarfareBMGNest_PK',[-12,9,0],0],['RU_WarfareBMGNest_PK',[-6,11,0],0],['RU_WarfareBMGNest_PK',[0,12,0],0],['RU_WarfareBMGNest_PK',[6,11,0],0],['RU_WarfareBMGNest_PK',[12,9,0],0],
+    ['Metis_TK_EP1',[-9,3,0],320],['Land_fort_bagfence_round',[-9,3,0],0],['Metis_TK_EP1',[9,3,0],40],['Land_fort_bagfence_round',[9,3,0],0],['SPG9_TK_INS_EP1',[0,5,0],0],['Land_fort_bagfence_round',[0,5,0],0],
+    ['ZU23_TK_EP1',[-4,0,0],0],['Land_fort_bagfence_round',[-4,0,0],0],['Igla_AA_pod_TK_EP1',[4,0,0],0],['Land_fort_bagfence_round',[4,0,0],0],
+    ['AGS_TK_EP1',[-8,-10,0],180],['AGS_TK_EP1',[8,-10,0],180],
+    ['TKBasicAmmunitionBox_EP1',[-3,-5,0],0],['TKBasicAmmunitionBox_EP1',[3,-5,0],0],['TKBasicAmmunitionBox_EP1',[0,-8,0],0],
+    ['Land_CamoNet_EAST',[-6,10,0],0],['Land_CamoNet_EAST',[6,10,0],0]
+  ]},
+  fortress_east_16ai: { name:'🏰 FORTRESS · EAST · ~16 AI — max fortress', tpl:'WFBE_NEURODEF_FORT_E16', w:36, d:34, objs:[
+    ['Base_WarfareBBarrier10x',[-7,16,0],0],['Base_WarfareBBarrier10x',[7,16,0],0],['Base_WarfareBBarrier10x',[0,-16,0],0],['Base_WarfareBBarrier10x',[-16,2,0],90],['Base_WarfareBBarrier10x',[16,2,0],90],
+    ['RU_WarfareBMGNest_PK',[-14,11,0],0],['RU_WarfareBMGNest_PK',[-9,13,0],0],['RU_WarfareBMGNest_PK',[-3,14,0],0],['RU_WarfareBMGNest_PK',[3,14,0],0],['RU_WarfareBMGNest_PK',[9,13,0],0],['RU_WarfareBMGNest_PK',[14,11,0],0],['RU_WarfareBMGNest_PK',[0,-13,0],180],
+    ['Metis_TK_EP1',[-11,4,0],320],['Land_fort_bagfence_round',[-11,4,0],0],['Metis_TK_EP1',[11,4,0],40],['Land_fort_bagfence_round',[11,4,0],0],['SPG9_TK_INS_EP1',[-4,6,0],0],['Land_fort_bagfence_round',[-4,6,0],0],['SPG9_TK_INS_EP1',[4,6,0],0],['Land_fort_bagfence_round',[4,6,0],0],
+    ['ZU23_TK_EP1',[-6,0,0],0],['Land_fort_bagfence_round',[-6,0,0],0],['Igla_AA_pod_TK_EP1',[0,1,0],0],['Land_fort_bagfence_round',[0,1,0],0],['ZU23_TK_EP1',[6,0,0],0],['Land_fort_bagfence_round',[6,0,0],0],
+    ['AGS_TK_EP1',[-9,-9,0],180],['2b14_82mm_TK_EP1',[9,-9,0],0],
+    ['TKBasicAmmunitionBox_EP1',[-4,-5,0],0],['TKBasicAmmunitionBox_EP1',[4,-5,0],0],['TKBasicAmmunitionBox_EP1',[-2,-9,0],0],['TKBasicAmmunitionBox_EP1',[2,-9,0],0],
+    ['Land_CamoNet_EAST',[-8,12,0],0],['Land_CamoNet_EAST',[8,12,0],0]
+  ]},
+
   // ====================== GUER — small/simple TOWN DEFENCE (experimental) ======================
   guer_town_mg: { name:'🟢 GUER TOWN · MG — DShKM + sandbags (1 AI)', tpl:'WFBE_NEURODEF_GUER_MG', w:6, d:6, objs:[
     ['DSHKM_TK_INS_EP1',[0,1,0],0],['Land_fort_bagfence_long',[-2.5,0,0],0],['Land_fort_bagfence_long',[2.5,0,0],0]
