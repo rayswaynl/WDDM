@@ -37,6 +37,7 @@ Cold War defensive doctrine (NATO dispersed & concealed · Warsaw Pact massed & 
 - **Rotation preview** — a "facing" control rotates the whole composition so you can confirm it stays coherent when the building is placed at any heading (matches Arma's `modelToWorld` math).
 - **Import** an existing template to edit it, and **save/load** your work as JSON.
 - **18 built-in presets**, including the four faction-specific defense types in light & heavy variants.
+- **HQ / Factory wall mode** — click **Edit HQ / Factory walls** to load enclosed one-exit wall examples and filter the palette to fortifications-only assets for community submissions.
 
 > WDDM is engine-agnostic about *what* you build — any classname string works, so it's
 > equally useful for Arma 2 (OA), Arma 3, and forks of the various Warfare modes.
@@ -89,7 +90,7 @@ and it degrades gracefully to system fonts offline).
 
 ## Built-in presets
 
-Besides the real WASP **Barracks factory walls** (included as a worked reference) and a
+Besides the real WASP **HQ / Factory wall** examples (included as worked references) and a
 blank canvas, WDDM ships the four engineer defense types, each in **Light** and **Heavy**
 weight and **BLUFOR (WEST) / OPFOR (EAST)** variants:
 
@@ -108,6 +109,16 @@ within 250 m of a friendly town centre — so you can dot cheap fortifications a
 
 > Note: stock Arma 2 OA has no static *bullet*-AA for the US side, so the WEST AA battery
 > uses Stinger (rocket) pods; OPFOR gets a true rocket + bullet mix (ZU-23 + Igla).
+
+### HQ / Factory wall submissions
+
+Use **Edit HQ / Factory walls** for community wall designs. It enables **Fortifications only**,
+which keeps the palette to empty wall/cover assets such as HESCO walls, H-barriers, sandbags,
+concrete walls, ramparts, empty nests, watchtowers, camo nets, razor wire, hedgehogs and
+concrete blocks. Guns, ammo crates, logistics objects and vehicles are intentionally excluded.
+
+When the layout is ready, submit either the copied SQF block or the copied share link so the
+design can be reopened and reviewed exactly as authored.
 
 ---
 

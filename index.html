@@ -68,6 +68,13 @@
   .obj-list li .xy{font-size:10px;color:#8b939c;font-family:'JetBrains Mono',monospace;white-space:nowrap}
   .hint{font-size:11px;color:#8b939c;line-height:1.5;margin-top:8px}
   .hint code{background:#0d1014;padding:1px 4px;border-radius:3px;color:var(--orange)}
+  .modebox{border:1px solid var(--line);border-radius:6px;background:#20262c;padding:8px;margin-top:8px}
+  .modebox.active{border-color:var(--orange);background:#251f18;color:#b8c0c8}
+  .modebox b{color:var(--bone)}
+  .asset-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .asset-list span{font-size:10px;border:1px solid #46505b;border-radius:10px;padding:2px 7px;color:#c8d0d8;background:#14171B}
+  .inline-check{display:flex;align-items:center;gap:7px;margin:8px 0 0;text-transform:none;letter-spacing:0;color:var(--bone)}
+  .inline-check input{width:auto}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
   .badge{display:inline-block;font-size:10px;background:var(--olive);color:var(--chalk);padding:1px 6px;border-radius:10px;margin-left:6px}
   .toolbar{position:absolute;top:10px;left:10px;display:flex;gap:6px;background:rgba(20,23,27,.86);
@@ -119,11 +126,48 @@
       <label>Load a demo / preset composition</label>
       <select id="preset"></select>
       <button class="primary" id="loadPreset" style="width:100%;margin-top:8px">Load preset →</button>
+      <button class="primary" id="wallModeBtn" style="width:100%;margin-top:8px">Edit HQ / Factory walls</button>
+      <label class="inline-check" title="Filters the palette to empty fortification objects and blocks known guns/ammo while wall mode is active">
+        <input id="fortOnly" type="checkbox"> Fortifications only
+      </label>
+      <div class="modebox" id="wallModeInfo">
+        <b>Wall-design assets</b>
+        <div class="asset-list">
+          <span>HESCO walls</span><span>H-barriers</span><span>Sandbags</span><span>Concrete walls</span>
+          <span>Ramparts</span><span>Empty nests</span><span>Watchtowers</span><span>Camo nets</span>
+          <span>Razor wire</span><span>Hedgehogs</span><span>Concrete blocks</span>
+        </div>
+      </div>
 
       <div class="divider"></div>
 
       <label>Template variable name</label>
       <input id="tplName" type="text" value="WFBE_NEURODEF_BARRACKS_WALLS">
+
+      <label style="margin-top:10px">Structure footprint</label>
+      <select id="structureType">
+        <option value="pad">Generic deploy pad</option>
+        <option value="hq">HQ / MHQ deployed</option>
+        <option value="barracks">Barracks</option>
+        <option value="light">Light Factory</option>
+        <option value="heavy">Heavy Factory</option>
+        <option value="aircraft">Aircraft Factory</option>
+        <option value="commandcenter">Command Center</option>
+        <option value="servicepoint">Service Point</option>
+      </select>
+
+      <label style="margin-top:10px">Mission wall target</label>
+      <select id="missionTarget">
+        <option value="custom">Custom / position template</option>
+        <option value="hq">HQ walls</option>
+        <option value="factory_all">All factory walls</option>
+        <option value="factory_barracks">Barracks walls</option>
+        <option value="factory_light">Light factory walls</option>
+        <option value="factory_heavy">Heavy factory walls</option>
+        <option value="factory_aircraft">Aircraft factory walls</option>
+        <option value="commandcenter">Command Center walls</option>
+        <option value="servicepoint">Service Point walls</option>
+      </select>
 
       <div class="divider"></div>
 
@@ -150,7 +194,7 @@
   <div class="stage">
     <canvas id="cv"></canvas>
     <div class="toolbar">
-      <span>Deploy pad</span>
+      <span id="parentLabel">Deploy pad</span>
       <input id="pW" type="number" step="0.5" value="14" style="width:54px">×
       <input id="pD" type="number" step="0.5" value="14" style="width:54px">m
       <span style="margin-left:8px">Facing</span>
@@ -171,7 +215,7 @@
       <div>AI cost: <span class="ai" id="cAI">0</span> <span id="cAInote" style="color:#6f7780"></span></div>
     </div>
     <div class="legend">
-      <div><span class="swatch" style="background:#5C6536"></span><b>Deploy pad</b> at origin [0,0,0]</div>
+      <div><span class="swatch" style="background:#5C6536"></span><b>Structure footprint</b> at origin [0,0,0]</div>
       <div><span class="swatch" style="background:#D9763C"></span>+Y = front · +X = right</div>
       <div>scroll = zoom · right-drag = pan</div>
     </div>
@@ -212,6 +256,10 @@
       <textarea id="out" rows="13" readonly></textarea>
       <button class="primary copybtn" id="copyBtn" style="width:100%">Copy SQF</button>
       <button class="copybtn" id="shareBtn" style="width:100%;margin-top:6px" title="Copy a link that opens this exact layout — great for Discord">Copy share link</button>
+      <div class="hint modebox">
+        <b>Factory wall submissions:</b> use <code>Edit HQ / Factory walls</code>, keep <code>Fortifications only</code> on,
+        then submit the copied SQF or share link with the target name shown above.
+      </div>
 
       <details>
         <summary>Import an existing template</summary>
@@ -340,6 +388,15 @@ const SIZE_OF= c => META(c).size  || [2,2];               // collision footprint
 const ART_OF = c => { const m=META(c); return m.art || m.size || [2,2]; }; // visual span (glyph/sprite draw)
 const STYLE  = c => META(c).style || 'box';
 const CAT_OF = c => META(c).cat   || null;       // weapon category or null
+const FORTIFICATION_GROUPS = ['Walls (H-barrier)','Sandbags','Fortifications','HESCO walls'];
+const OPTIONAL_FORTIFICATION_CLASSES = ['Fort_RazorWire','Hedgehog','Land_CncBlock_Stripes','Land_CncBlock'];
+function isFortificationAsset(o){
+  return !!o && !o.cat && (FORTIFICATION_GROUPS.includes(o.grp) || OPTIONAL_FORTIFICATION_CLASSES.includes(o.cls));
+}
+function classAllowedInFortMode(cls){
+  const m = META(cls);
+  return !m.cls || isFortificationAsset(m);
+}
 /* In Arma 2 each static weapon fills exactly ONE gunner seat (moveInGunner),
    so every weapon emplacement = 1 AI against the engineer's budget. */
 const CREW_OF= c => (IS_WPN(c) ? 1 : 0);
@@ -476,42 +533,36 @@ const PRESETS = {
     ['Base_WarfareBBarrier10x',[0,0,0],0]
   ]},
 
-  // ---------- FACTORY WALL SUGGESTIONS (0 AI — alternatives to a plain wall ring) ----------
-  factory_hesco_gate: { name:'🏭 FACTORY WALL · v1 — HESCO box + gate, FPS-light (0 AI)', tpl:'WFBE_NEURODEF_FACTORY_HESCO', w:30, d:30, objs:[
-    ['Base_WarfareBBarrier10x',[0,12,0],0],['Base_WarfareBBarrier10x',[-12,0,0],90],['Base_WarfareBBarrier10x',[12,0,0],90],
-    ['Base_WarfareBBarrier5x',[-7,-12,0],0],['Base_WarfareBBarrier5x',[7,-12,0],0],['Hedgehog',[0,-12,0],0]
+  // ---------- MISSION-READY HQ / FACTORY WALLS (0 AI, fortifications only, one walking exit) ----------
+  hq_walk_exit: { name:'HQ WALL · enclosed HESCO, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_HEADQUARTERS_WALLS', parent:'hq', objs:[
+    ['Base_WarfareBBarrier5x',[-6,13,0],0],['Base_WarfareBBarrier5x',[6,13,0],0],
+    ['Base_WarfareBBarrier5x',[-7.5,-13,0],0],['Base_WarfareBBarrier5x',[7.5,-13,0],0],
+    ['Base_WarfareBBarrier5x',[-13,6,0],90],['Base_WarfareBBarrier5x',[-13,-6,0],90],
+    ['Base_WarfareBBarrier5x',[13,6,0],90],['Base_WarfareBBarrier5x',[13,-6,0],90]
   ]},
-  factory_mixed_ring: { name:'🏭 FACTORY WALL · v2 — H-barrier + sandbag + hedgehog ring (0 AI)', tpl:'WFBE_NEURODEF_FACTORY_MIXED', w:30, d:30, objs:[
-    ['Land_HBarrier_large',[-8,12,0],0],['Land_HBarrier_large',[2,12,0],0],['Land_HBarrier_large',[12,7,0],90],['Land_HBarrier_large',[12,-3,0],90],
-    ['Land_HBarrier_large',[-12,7,0],90],['Land_HBarrier_large',[-12,-3,0],90],['Land_fort_bagfence_long',[-6,-12,0],0],['Land_fort_bagfence_long',[6,-12,0],0],
-    ['Hedgehog',[-12,-9,0],0],['Hedgehog',[12,-9,0],0],['Fort_RazorWire',[0,-13,0],0]
+  factory_barracks_walk_exit: { name:'FACTORY WALL · Barracks enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_BARRACKS_WALLS', parent:'barracks', objs:[
+    ['Base_WarfareBBarrier10x',[-12,21,0],0],['Base_WarfareBBarrier10x',[12,21,0],0],
+    ['Base_WarfareBBarrier10x',[-13.5,-21,0],0],['Base_WarfareBBarrier10x',[13.5,-21,0],0],
+    ['Base_WarfareBBarrier10x',[-24,-10.5,0],90],['Base_WarfareBBarrier10x',[-24,10.5,0],90],
+    ['Base_WarfareBBarrier10x',[24,-10.5,0],90],['Base_WarfareBBarrier10x',[24,10.5,0],90]
   ]},
-  factory_concrete: { name:'🏭 FACTORY WALL · v3 — concrete perimeter (0 AI)', tpl:'WFBE_NEURODEF_FACTORY_CONCRETE', w:30, d:30, objs:[
-    ['Concrete_Wall_EP1',[-9,12,0],0],['Concrete_Wall_EP1',[-5.4,12,0],0],['Concrete_Wall_EP1',[5.4,12,0],0],['Concrete_Wall_EP1',[9,12,0],0],
-    ['Concrete_Wall_EP1',[-12,8,0],90],['Concrete_Wall_EP1',[-12,4.4,0],90],['Concrete_Wall_EP1',[12,8,0],90],['Concrete_Wall_EP1',[12,4.4,0],90],
-    ['Concrete_Wall_EP1',[-9,-12,0],0],['Concrete_Wall_EP1',[9,-12,0],0]
+  factory_light_walk_exit: { name:'FACTORY WALL · Light enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_LIGHT_WALLS', parent:'light', objs:[
+    ['Base_WarfareBBarrier10x',[-12,21,0],0],['Base_WarfareBBarrier10x',[12,21,0],0],
+    ['Base_WarfareBBarrier10x',[-13.5,-21,0],0],['Base_WarfareBBarrier10x',[13.5,-21,0],0],
+    ['Base_WarfareBBarrier10x',[-24,-10.5,0],90],['Base_WarfareBBarrier10x',[-24,10.5,0],90],
+    ['Base_WarfareBBarrier10x',[24,-10.5,0],90],['Base_WarfareBBarrier10x',[24,10.5,0],90]
   ]},
-  factory_layered: { name:'🏭 FACTORY WALL · v4 — wall + outer wire/hedgehog belt (0 AI)', tpl:'WFBE_NEURODEF_FACTORY_LAYERED', w:34, d:30, objs:[
-    ['Land_HBarrier_large',[-8,11,0],0],['Land_HBarrier_large',[2,11,0],0],['Land_HBarrier_large',[-11,6,0],90],['Land_HBarrier_large',[11,6,0],90],
-    ['Fort_RazorWire',[-14,9,0],0],['Fort_RazorWire',[14,9,0],0],['Hedgehog',[-14,4,0],0],['Hedgehog',[14,4,0],0],['Hedgehog',[-4,15,0],0],['Hedgehog',[4,15,0],0]
+  factory_heavy_walk_exit: { name:'FACTORY WALL · Heavy enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_HEAVY_WALLS', parent:'heavy', objs:[
+    ['Base_WarfareBBarrier10x',[-12,21,0],0],['Base_WarfareBBarrier10x',[12,21,0],0],
+    ['Base_WarfareBBarrier10x',[-13.5,-21,0],0],['Base_WarfareBBarrier10x',[13.5,-21,0],0],
+    ['Base_WarfareBBarrier10x',[-24,-10.5,0],90],['Base_WarfareBBarrier10x',[-24,10.5,0],90],
+    ['Base_WarfareBBarrier10x',[24,-10.5,0],90],['Base_WarfareBBarrier10x',[24,10.5,0],90]
   ]},
-
-  // ---------- HQ — CONCRETE (0 AI) ----------
-  hq_concrete_keep: { name:'🏛 HQ WALL · Concrete v1 — square keep + gate (0 AI)', tpl:'WFBE_NEURODEF_HQ_KEEP', w:30, d:30, objs:[
-    ['Concrete_Wall_EP1',[-9,11,0],0],['Concrete_Wall_EP1',[-5.4,11,0],0],['Concrete_Wall_EP1',[5.4,11,0],0],['Concrete_Wall_EP1',[9,11,0],0],
-    ['Concrete_Wall_EP1',[-11,7,0],90],['Concrete_Wall_EP1',[-11,3.4,0],90],['Concrete_Wall_EP1',[-11,-0.2,0],90],
-    ['Concrete_Wall_EP1',[11,7,0],90],['Concrete_Wall_EP1',[11,3.4,0],90],['Concrete_Wall_EP1',[11,-0.2,0],90],
-    ['Concrete_Wall_EP1',[-9,-9,0],0],['Concrete_Wall_EP1',[9,-9,0],0]
-  ]},
-  hq_concrete_layered: { name:'🏛 HQ WALL · Concrete v2 — keep + hedgehog skirt (0 AI)', tpl:'WFBE_NEURODEF_HQ_LAYERED', w:34, d:34, objs:[
-    ['Concrete_Wall_EP1',[-9,11,0],0],['Concrete_Wall_EP1',[-5.4,11,0],0],['Concrete_Wall_EP1',[5.4,11,0],0],['Concrete_Wall_EP1',[9,11,0],0],
-    ['Concrete_Wall_EP1',[-11,7,0],90],['Concrete_Wall_EP1',[-11,3.4,0],90],['Concrete_Wall_EP1',[11,7,0],90],['Concrete_Wall_EP1',[11,3.4,0],90],
-    ['Hedgehog',[-14,9,0],0],['Hedgehog',[14,9,0],0],['Hedgehog',[-14,4,0],0],['Hedgehog',[14,4,0],0],['Fort_RazorWire',[-9,14,0],0],['Fort_RazorWire',[9,14,0],0]
-  ]},
-  hq_concrete_bastion: { name:'🏛 HQ WALL · Concrete v3 — bastion corners (0 AI)', tpl:'WFBE_NEURODEF_HQ_BASTION', w:32, d:32, objs:[
-    ['Concrete_Wall_EP1',[-6,12,0],0],['Concrete_Wall_EP1',[6,12,0],0],['Concrete_Wall_EP1',[-12,6,0],90],['Concrete_Wall_EP1',[12,6,0],90],
-    ['Concrete_Wall_EP1',[-12,-6,0],90],['Concrete_Wall_EP1',[12,-6,0],90],['Concrete_Wall_EP1',[-6,-12,0],0],['Concrete_Wall_EP1',[6,-12,0],0],
-    ['Land_fort_bagfence_round',[-12,12,0],0],['Land_fort_bagfence_round',[12,12,0],0]
+  factory_aircraft_walk_exit: { name:'FACTORY WALL · Aircraft enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_AIRCRAFT_WALLS', parent:'aircraft', objs:[
+    ['Base_WarfareBBarrier10x',[-12,21,0],0],['Base_WarfareBBarrier10x',[12,21,0],0],
+    ['Base_WarfareBBarrier10x',[-13.5,-21,0],0],['Base_WarfareBBarrier10x',[13.5,-21,0],0],
+    ['Base_WarfareBBarrier10x',[-24,-10.5,0],90],['Base_WarfareBBarrier10x',[-24,10.5,0],90],
+    ['Base_WarfareBBarrier10x',[24,-10.5,0],90],['Base_WarfareBBarrier10x',[24,10.5,0],90]
   ]},
 
   // ====================== WEST (US / NATO) MANNED DEFENSES ======================
@@ -726,16 +777,55 @@ const PRESETS = {
 /* ---------- State ---------- */
 let objs = [], sel = null, nextId = 1;
 const view = {scale:14, panX:0, panY:0};
-let parentDir = 0, parentW = 14, parentD = 14, snap = true;
+let parentDir = 0, parentW = 14, parentD = 14, structureType = 'pad', fortOnly = false, snap = true;
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
 
+const STRUCTURES = {
+  pad:{label:'Deploy pad', w:14, d:14, style:'pad'},
+  hq:{label:'HQ / MHQ deployed', w:13, d:10, style:'hq'},
+  barracks:{label:'Barracks', w:18, d:12, style:'factory'},
+  light:{label:'Light Factory', w:22, d:14, style:'factory'},
+  heavy:{label:'Heavy Factory', w:28, d:16, style:'factory'},
+  aircraft:{label:'Aircraft Factory', w:30, d:18, style:'hangar'},
+  commandcenter:{label:'Command Center', w:12, d:10, style:'hq'},
+  servicepoint:{label:'Service Point', w:16, d:8, style:'factory'}
+};
+function setStructure(type, resizeFootprint=true){
+  structureType = STRUCTURES[type] ? type : 'pad';
+  const s = STRUCTURES[structureType];
+  $('structureType').value = structureType;
+  $('parentLabel').textContent = s.label;
+  if(resizeFootprint){
+    parentW = s.w; parentD = s.d;
+    $('pW').value = s.w; $('pD').value = s.d;
+  }
+}
+
 /* populate palette */
-(function(){ const s=$('palette'); let last='';
-  CATALOG.forEach(o=>{ if(o.grp!==last){ const og=document.createElement('optgroup'); og.label=o.grp; og.dataset.g=o.grp; s.appendChild(og); last=o.grp; }
-    const op=document.createElement('option'); op.value=o.cls; op.textContent=o.cls+(IS_WPN(o.cls)?'  ⚔':'');
-    [...s.querySelectorAll('optgroup')].find(g=>g.dataset.g===o.grp).appendChild(op); });
-})();
+function renderPalette(){
+  const s=$('palette'), previous=s.value;
+  s.innerHTML='';
+  let last='', group=null;
+  CATALOG.filter(o=>!fortOnly || isFortificationAsset(o)).forEach(o=>{
+    if(o.grp!==last){
+      group=document.createElement('optgroup');
+      group.label=o.grp; group.dataset.g=o.grp;
+      s.appendChild(group); last=o.grp;
+    }
+    const op=document.createElement('option');
+    op.value=o.cls; op.textContent=o.cls+(IS_WPN(o.cls)?'  ⚔':'');
+    group.appendChild(op);
+  });
+  if(previous && Array.from(s.options).some(o=>o.value===previous)) s.value=previous;
+}
+function setFortOnly(on){
+  fortOnly=!!on;
+  $('fortOnly').checked=fortOnly;
+  $('wallModeInfo').classList.toggle('active',fortOnly);
+  renderPalette();
+}
+renderPalette();
 /* populate presets */
 (function(){ const s=$('preset');
   Object.keys(PRESETS).forEach(k=>{ const op=document.createElement('option'); op.value=k; op.textContent=PRESETS[k].name; s.appendChild(op); });
@@ -767,11 +857,32 @@ function poly(points,fill,stroke,lw){ ctx.beginPath(); points.forEach((p,i)=> i?
 function rectWorld(cx,cy,w,d,H){ const hw=w/2,hd=d/2; return [[-hw,-hd],[hw,-hd],[hw,hd],[-hw,hd]].map(([lx,ly])=>{ const [wx,wy]=localToWorld(lx,ly,H); return w2s(cx+wx,cy+wy); }); }
 function drawParent(){
   const pts=rectWorld(0,0,parentW,parentD,((parentDir)%360+360)%360);
-  poly(pts,'rgba(92,101,54,.18)','#5C6536',2);
+  poly(pts,'rgba(92,101,54,.12)','#5C6536',1.5);
+  drawStructureFootprint();
   const [fx,fy]=localToWorld(0,parentD/2+2,((parentDir)%360+360)%360), a=w2s(fx,fy), b=w2s(0,0);
   ctx.strokeStyle='#D9763C';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(b[0],b[1]);ctx.lineTo(a[0],a[1]);ctx.stroke();
   ctx.fillStyle='#D9763C';ctx.beginPath();ctx.arc(a[0],a[1],4,0,7);ctx.fill();
   ctx.fillStyle='#E7E3D6';ctx.beginPath();ctx.arc(b[0],b[1],3,0,7);ctx.fill();
+}
+function drawStructureFootprint(){
+  const s=STRUCTURES[structureType]||STRUCTURES.pad, H=((parentDir)%360+360)%360;
+  const pts=rectWorld(0,0,parentW,parentD,H), center=w2s(0,0);
+  poly(pts,'rgba(58,68,78,.45)','#8A965A',1.5);
+  ctx.fillStyle='rgba(231,227,214,.82)';
+  ctx.font='11px Inter,system-ui,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(s.label, center[0], center[1]+4);
+  if(s.style==='hangar'){
+    poly(rectWorld(0,0,parentW*0.72,parentD*0.45,H),'rgba(68,78,88,.5)','#69737D',1);
+  } else if(s.style==='factory'){
+    [-0.22,0.22].forEach(x=>poly(rectWorld(parentW*x,0,parentW*0.22,parentD*0.75,H),'rgba(68,78,88,.45)','#69737D',1));
+  } else if(s.style==='hq'){
+    poly(rectWorld(0,parentD*0.12,parentW*0.45,parentD*0.45,H),'rgba(68,78,88,.5)','#69737D',1);
+  }
+  const front=w2s(...localToWorld(0,parentD/2,H));
+  ctx.strokeStyle='rgba(217,118,60,.8)';
+  ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(front[0],front[1]); ctx.lineTo(center[0],center[1]); ctx.stroke();
 }
 
 /* Run fn() in the object's local metre frame (x=right, y=front). */
@@ -930,7 +1041,13 @@ window.addEventListener('keydown',e=>{ const o=objs.find(x=>x.id===sel); if(!o) 
   if(used){e.preventDefault();syncUI();draw();} });
 
 /* ---------- CRUD ---------- */
-function addObj(cls,x=0,y=0,dir=0){ const o={id:nextId++,cls,x,y,z:0,dir}; objs.push(o); sel=o.id; syncUI(); draw(); return o; }
+function addObj(cls,x=0,y=0,dir=0){
+  if(fortOnly && !classAllowedInFortMode(cls)){
+    alert('Fortifications-only mode blocks known guns, ammo, vehicles and logistics objects. Turn it off for full defense templates.');
+    return null;
+  }
+  const o={id:nextId++,cls,x,y,z:0,dir}; objs.push(o); sel=o.id; syncUI(); draw(); return o;
+}
 function delObj(){ objs=objs.filter(o=>o.id!==sel); sel=null; syncUI(); draw(); }
 $('addBtn').onclick=()=>addObj($('palette').value);
 $('addCustomBtn').onclick=()=>{ const c=prompt('Enter exact Arma classname:'); if(c)addObj(c.trim()); };
@@ -940,10 +1057,13 @@ $('mirrorBtn').onclick=()=>{ const o=objs.find(x=>x.id===sel); if(o)addObj(o.cls
 
 /* ---------- Presets ---------- */
 function loadPreset(key){ const p=PRESETS[key]; if(!p)return; $('tplName').value=p.tpl;
-  parentW=p.w; parentD=p.d; $('pW').value=p.w; $('pD').value=p.d; parentDir=0; $('parentDir').value=0;
+  $('preset').value=key;
+  $('missionTarget').value=TARGET_BY_TEMPLATE[p.tpl]||'custom';
+  setStructure(p.parent||'pad', true); if(p.w){parentW=p.w;$('pW').value=p.w;} if(p.d){parentD=p.d;$('pD').value=p.d;} parentDir=0; $('parentDir').value=0;
   objs=[]; nextId=1; sel=null; p.objs.forEach(e=>objs.push({id:nextId++,cls:e[0],x:e[1][0],y:e[1][1],z:e[1][2],dir:e[2]}));
   view.scale=14; view.panX=0; view.panY=0; syncUI(); draw(); }
 $('loadPreset').onclick=()=>loadPreset($('preset').value);
+$('wallModeBtn').onclick=()=>{ setFortOnly(true); loadPreset('hq_walk_exit'); $('missionTarget').value='hq'; buildOut(); };
 
 /* ---------- Inspector sync + crew estimate ---------- */
 function syncUI(){
@@ -969,18 +1089,49 @@ function syncUI(){
 $('parentDir').addEventListener('input',e=>{parentDir=parseFloat(e.target.value)||0;draw();});
 $('pW').addEventListener('input',e=>{parentW=parseFloat(e.target.value)||2;draw();});
 $('pD').addEventListener('input',e=>{parentD=parseFloat(e.target.value)||2;draw();});
+$('structureType').addEventListener('change',e=>{setStructure(e.target.value,true);draw();});
+$('fortOnly').addEventListener('change',e=>setFortOnly(e.target.checked));
 $('snap').addEventListener('change',e=>snap=e.target.checked);
 $('useSprites').addEventListener('change',e=>{USE_SPRITES=e.target.checked;draw();});
 $('fofToggle').addEventListener('change',e=>{SHOW_FOF=e.target.checked;draw();});
 $('resetView').onclick=()=>{view.scale=14;view.panX=0;view.panY=0;draw();};
 $('tplName').addEventListener('input',buildOut);
+$('missionTarget').addEventListener('change',()=>{ const names=targetNames();
+  if(names.length===1 && $('missionTarget').value!=='custom') $('tplName').value=names[0];
+  const map={hq:'hq',factory_all:'barracks',factory_barracks:'barracks',factory_light:'light',factory_heavy:'heavy',factory_aircraft:'aircraft',commandcenter:'commandcenter',servicepoint:'servicepoint'};
+  if(map[$('missionTarget').value]) setStructure(map[$('missionTarget').value], true);
+  buildOut();
+});
 
 /* ---------- Export ---------- */
+const MISSION_TARGETS = {
+  hq:['WFBE_NEURODEF_HEADQUARTERS_WALLS'],
+  factory_all:['WFBE_NEURODEF_BARRACKS_WALLS','WFBE_NEURODEF_LIGHT_WALLS','WFBE_NEURODEF_HEAVY_WALLS','WFBE_NEURODEF_AIRCRAFT_WALLS'],
+  factory_barracks:['WFBE_NEURODEF_BARRACKS_WALLS'],
+  factory_light:['WFBE_NEURODEF_LIGHT_WALLS'],
+  factory_heavy:['WFBE_NEURODEF_HEAVY_WALLS'],
+  factory_aircraft:['WFBE_NEURODEF_AIRCRAFT_WALLS'],
+  commandcenter:['WFBE_NEURODEF_COMMANDCENTER_WALLS'],
+  servicepoint:['WFBE_NEURODEF_SERVICEPOINT_WALLS']
+};
+const TARGET_BY_TEMPLATE = {
+  WFBE_NEURODEF_HEADQUARTERS_WALLS:'hq',
+  WFBE_NEURODEF_BARRACKS_WALLS:'factory_barracks',
+  WFBE_NEURODEF_LIGHT_WALLS:'factory_light',
+  WFBE_NEURODEF_HEAVY_WALLS:'factory_heavy',
+  WFBE_NEURODEF_AIRCRAFT_WALLS:'factory_aircraft',
+  WFBE_NEURODEF_COMMANDCENTER_WALLS:'commandcenter',
+  WFBE_NEURODEF_SERVICEPOINT_WALLS:'servicepoint'
+};
+function targetNames(){ const target=$('missionTarget').value;
+  if(target==='custom') return [($('tplName').value.trim()||'WFBE_NEURODEF_CUSTOM_WALLS')];
+  return MISSION_TARGETS[target] || [($('tplName').value.trim()||'WFBE_NEURODEF_CUSTOM_WALLS')];
+}
 function fmt(n){ return Number.isInteger(n)?String(n):String(parseFloat(n.toFixed(3))); }
-function buildOut(){ const name=$('tplName').value.trim()||'WFBE_NEURODEF_CUSTOM_WALLS';
-  if(!objs.length){ $('out').value=`missionNamespace setVariable ['${name}',[]];`; return; }
+function buildOut(){ const names=targetNames();
+  if(!objs.length){ $('out').value=names.map(name=>`missionNamespace setVariable ['${name}',[]];`).join('\n\n'); return; }
   const lines=objs.map(o=>`    ['${o.cls}',[${fmt(o.x)},${fmt(o.y)},${fmt(o.z)}],${fmt(o.dir)}]`);
-  $('out').value=`missionNamespace setVariable ['${name}',[\n${lines.join(',\n')}\n]];`; }
+  $('out').value=names.map(name=>`missionNamespace setVariable ['${name}',[\n${lines.join(',\n')}\n]];`).join('\n\n'); }
 $('copyBtn').onclick=()=>{ navigator.clipboard.writeText($('out').value).then(()=>{ $('copyBtn').textContent='Copied ✓'; setTimeout(()=>$('copyBtn').textContent='Copy SQF',1200); }); };
 
 /* ---------- Shareable layout links (Component 4) ----------
@@ -993,12 +1144,14 @@ const b64u = {
   dec(str){ let b=str.replace(/-/g,'+').replace(/_/g,'/'); while(b.length%4) b+='=';
     const u=Uint8Array.from(atob(b), c=>c.charCodeAt(0)); return JSON.parse(new TextDecoder().decode(u)); }
 };
-function projectData(){ return {name:$('tplName').value, parentW, parentD, parentDir,
+function projectData(){ return {name:$('tplName').value, parentW, parentD, parentDir, structureType, fortOnly,
   objs:objs.map(o=>({cls:o.cls,x:o.x,y:o.y,z:o.z,dir:o.dir}))}; }
 function loadProject(d){ if(!d || typeof d!=='object') return false;
   $('tplName').value = (typeof d.name==='string' && d.name) ? d.name : $('tplName').value;
   parentW=+d.parentW||14; parentD=+d.parentD||14; parentDir=+d.parentDir||0;
   $('pW').value=parentW; $('pD').value=parentD; $('parentDir').value=parentDir;
+  setStructure(typeof d.structureType==='string'?d.structureType:'pad', false);
+  setFortOnly(!!d.fortOnly);
   objs=(Array.isArray(d.objs)?d.objs:[]).map(o=>({id:nextId++, cls:String(o.cls||''), x:+o.x||0, y:+o.y||0, z:+o.z||0, dir:+o.dir||0}));
   sel=null; syncUI(); draw(); return true;
 }
@@ -1033,14 +1186,14 @@ $('importBtn').onclick=()=>{ let raw=$('importBox').value.trim(); if(!raw)return
   }catch(err){ alert("Could not parse. Paste entries as they appear inside the outer [ ], e.g.\n['Land_HBarrier_large',[8,0,0],90],\n['Land_HBarrier_large',[8,10,0],90]"); } };
 
 /* ---------- Save / load JSON ---------- */
-$('saveJson').onclick=()=>{ const data=JSON.stringify({name:$('tplName').value,parentW,parentD,parentDir,objs},null,2);
+$('saveJson').onclick=()=>{ const data=JSON.stringify({name:$('tplName').value,parentW,parentD,parentDir,structureType,fortOnly,objs},null,2);
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type:'application/json'})); a.download=($('tplName').value||'composition')+'.json'; a.click(); };
 $('loadJson').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
   inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const r=new FileReader();
     r.onload=()=>{ try{ loadProject(JSON.parse(r.result)); }catch(e){alert('Bad JSON');} }; r.readAsText(f); }; inp.click(); };
 
 /* ---------- Boot ---------- */
-loadPreset('wall_straight'); resize(); preloadSprites(); loadFromHash();   // hash layout (if any) overrides the default preset
+loadPreset('hq_walk_exit'); resize(); preloadSprites(); loadFromHash();   // hash layout (if any) overrides the default preset
 </script>
 </body>
 </html>
