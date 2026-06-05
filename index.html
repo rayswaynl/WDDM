@@ -540,6 +540,17 @@ const PRESETS = {
     ['Base_WarfareBBarrier5x',[-13,6,0],90],['Base_WarfareBBarrier5x',[-13,-6,0],90],
     ['Base_WarfareBBarrier5x',[13,6,0],90],['Base_WarfareBBarrier5x',[13,-6,0],90]
   ]},
+  hq_concrete_walk_exit: { name:'HQ WALL · concrete shield, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_HEADQUARTERS_WALLS', parent:'hq', objs:[
+    ['Concrete_Wall_EP1',[-10.8,13,0],0],['Concrete_Wall_EP1',[-7.2,13,0],0],['Concrete_Wall_EP1',[-3.6,13,0],0],['Concrete_Wall_EP1',[0,13,0],0],
+    ['Concrete_Wall_EP1',[3.6,13,0],0],['Concrete_Wall_EP1',[7.2,13,0],0],['Concrete_Wall_EP1',[10.8,13,0],0],
+    ['Concrete_Wall_EP1',[-13,-10.8,0],90],['Concrete_Wall_EP1',[-13,-7.2,0],90],['Concrete_Wall_EP1',[-13,-3.6,0],90],
+    ['Concrete_Wall_EP1',[-13,0,0],90],['Concrete_Wall_EP1',[-13,3.6,0],90],['Concrete_Wall_EP1',[-13,7.2,0],90],['Concrete_Wall_EP1',[-13,10.8,0],90],
+    ['Concrete_Wall_EP1',[13,-10.8,0],90],['Concrete_Wall_EP1',[13,-7.2,0],90],['Concrete_Wall_EP1',[13,-3.6,0],90],
+    ['Concrete_Wall_EP1',[13,0,0],90],['Concrete_Wall_EP1',[13,3.6,0],90],['Concrete_Wall_EP1',[13,7.2,0],90],['Concrete_Wall_EP1',[13,10.8,0],90],
+    ['Concrete_Wall_EP1',[-10.8,-13,0],0],['Concrete_Wall_EP1',[-7.2,-13,0],0],['Concrete_Wall_EP1',[-3.6,-13,0],0],
+    ['Concrete_Wall_EP1',[3.6,-13,0],0],['Concrete_Wall_EP1',[7.2,-13,0],0],['Concrete_Wall_EP1',[10.8,-13,0],0],
+    ['Land_CncBlock_Stripes',[-2.7,-13.4,0],0],['Land_CncBlock_Stripes',[2.7,-13.4,0],0]
+  ]},
   factory_barracks_walk_exit: { name:'FACTORY WALL · Barracks enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_BARRACKS_WALLS', parent:'barracks', objs:[
     ['Base_WarfareBBarrier10x',[-12,21,0],0],['Base_WarfareBBarrier10x',[12,21,0],0],
     ['Base_WarfareBBarrier10x',[-13.5,-21,0],0],['Base_WarfareBBarrier10x',[13.5,-21,0],0],
@@ -1063,7 +1074,7 @@ function loadPreset(key){ const p=PRESETS[key]; if(!p)return; $('tplName').value
   objs=[]; nextId=1; sel=null; p.objs.forEach(e=>objs.push({id:nextId++,cls:e[0],x:e[1][0],y:e[1][1],z:e[1][2],dir:e[2]}));
   view.scale=14; view.panX=0; view.panY=0; syncUI(); draw(); }
 $('loadPreset').onclick=()=>loadPreset($('preset').value);
-$('wallModeBtn').onclick=()=>{ setFortOnly(true); loadPreset('hq_walk_exit'); $('missionTarget').value='hq'; buildOut(); };
+$('wallModeBtn').onclick=()=>{ setFortOnly(true); loadPreset('hq_concrete_walk_exit'); $('missionTarget').value='hq'; buildOut(); };
 
 /* ---------- Inspector sync + crew estimate ---------- */
 function syncUI(){
@@ -1193,7 +1204,7 @@ $('loadJson').onclick=()=>{ const inp=document.createElement('input'); inp.type=
     r.onload=()=>{ try{ loadProject(JSON.parse(r.result)); }catch(e){alert('Bad JSON');} }; r.readAsText(f); }; inp.click(); };
 
 /* ---------- Boot ---------- */
-loadPreset('hq_walk_exit'); resize(); preloadSprites(); loadFromHash();   // hash layout (if any) overrides the default preset
+loadPreset('hq_concrete_walk_exit'); resize(); preloadSprites(); loadFromHash();   // hash layout (if any) overrides the default preset
 </script>
 </body>
 </html>

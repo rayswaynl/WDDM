@@ -37,7 +37,7 @@ Cold War defensive doctrine (NATO dispersed & concealed · Warsaw Pact massed & 
 - **Rotation preview** — a "facing" control rotates the whole composition so you can confirm it stays coherent when the building is placed at any heading (matches Arma's `modelToWorld` math).
 - **Import** an existing template to edit it, and **save/load** your work as JSON.
 - **18 built-in presets**, including the four faction-specific defense types in light & heavy variants.
-- **HQ / Factory wall mode** — click **Edit HQ / Factory walls** to load enclosed one-exit wall examples and filter the palette to fortifications-only assets for community submissions.
+- **HQ / Factory wall mode** — click **Edit HQ / Factory walls** to load enclosed one-exit wall examples, including the concrete HQ shield, and filter the palette to fortifications-only assets for community submissions.
 
 > WDDM is engine-agnostic about *what* you build — any classname string works, so it's
 > equally useful for Arma 2 (OA), Arma 3, and forks of the various Warfare modes.
