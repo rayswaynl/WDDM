@@ -301,6 +301,49 @@
         </div>
       </details>
 
+      <details>
+        <summary>Build-up animation helper (SQF)</summary>
+        <div class="hint">
+          Spawns a template with the same <b>rise-from-the-ground construction animation</b> the stock
+          Warfare factories play. Save as <code>CreateDefenseTemplateAnimated.sqf</code> and call it
+          exactly like <code>CreateDefenseTemplate</code>: <code>[_origin, _template] call ...</code>
+        </div>
+        <textarea id="animHelper" rows="12" readonly>// CreateDefenseTemplateAnimated.sqf
+// Like CreateDefenseTemplate, but each object rises out of the ground
+// over ~4 s — the stock Warfare factory build-up look.
+// [_originObject, _templateArray] call ...; returns the created objects.
+private ["_origin","_template","_dir","_created"];
+_origin   = _this select 0;
+_template = _this select 1;
+_dir = getDir _origin;
+_created = [];
+{
+    private ["_obj","_relPos","_relDir","_o","_world","_h"];
+    _obj = _x select 0; _relPos = _x select 1; _relDir = _x select 2;
+    _o = createVehicle [_obj, [0,0,0], [], 0, "NONE"];
+    _world = _origin modelToWorld _relPos;
+    _world set [2, 0];
+    _o setDir (_dir - _relDir);
+    _h = abs ((boundingBoxReal _o select 0) select 2) + ((boundingBoxReal _o select 1) select 2);
+    if (_h < 1) then { _h = 1 };
+    _o setPos [_world select 0, _world select 1, -_h];   // start buried
+    _created = _created + [_o];
+    [_o, _h, _world] spawn {
+        private ["_o","_h","_world","_t"];
+        _o = _this select 0; _h = _this select 1; _world = _this select 2;
+        _t = 0;
+        while {_t < 1} do {
+            _t = _t + 0.025;                              // ~4 s total rise
+            _o setPos [_world select 0, _world select 1, -_h * (1 - _t)];
+            sleep 0.1;
+        };
+        _o setPos [_world select 0, _world select 1, 0];  // settle flush
+    };
+} forEach _template;
+_created</textarea>
+        <button id="copyAnimBtn" style="width:100%;margin-top:6px">Copy helper</button>
+      </details>
+
       <div class="hint" style="margin-top:14px">
         <b>AI cost</b> = one soldier per crewable weapon (no garrison) — cheap, single-soldier-manned positions.
         It's charged against the engineer's personal AI budget when the position is deployed, so the count here
@@ -428,8 +471,8 @@ const CATALOG = [
   {grp:'Base structures (WEST)', cls:'US_WarfareBHeavyFactory_EP1',        size:[28,16], style:'structw', label:'Heavy Fct'},
   {grp:'Base structures (WEST)', cls:'US_WarfareBAircraftFactory_EP1',     size:[30,18], style:'structw', label:'Aircraft Fct'},
   {grp:'Base structures (WEST)', cls:'US_WarfareBVehicleServicePoint_EP1', size:[16,8],  style:'structw', label:'Service Pt'},
-  {grp:'Base structures (WEST)', cls:'US_WarfareBArtilleryRadar_EP1',      size:[10,10], style:'structw', label:'Arty Radar'},
-  {grp:'Base structures (WEST)', cls:'US_WarfareBAntiAirRadar_EP1',        size:[10,10], style:'structw', label:'AA Radar'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBArtilleryRadar_EP1',      size:[10,10], style:'structw', label:'Arty Radar', icon:'radar'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBAntiAirRadar_EP1',        size:[10,10], style:'structw', label:'AA Radar',   icon:'radar'},
   {grp:'Base structures (WEST)', cls:'US_WarfareBUAVterminal_EP1',         size:[10,8],  style:'structw', label:'UAV Term'},
   {grp:'Base structures (WEST)', cls:'US_WarfareBFieldhHospital_EP1',      size:[12,10], style:'structw', label:'Hospital'},
   {grp:'Base structures (EAST)', cls:'TK_WarfareBBarracks_EP1',            size:[18,12], style:'structe', label:'Barracks'},
@@ -437,8 +480,8 @@ const CATALOG = [
   {grp:'Base structures (EAST)', cls:'TK_WarfareBHeavyFactory_EP1',        size:[28,16], style:'structe', label:'Heavy Fct'},
   {grp:'Base structures (EAST)', cls:'TK_WarfareBAircraftFactory_EP1',     size:[30,18], style:'structe', label:'Aircraft Fct'},
   {grp:'Base structures (EAST)', cls:'TK_WarfareBVehicleServicePoint_EP1', size:[16,8],  style:'structe', label:'Service Pt'},
-  {grp:'Base structures (EAST)', cls:'TK_WarfareBArtilleryRadar_EP1',      size:[10,10], style:'structe', label:'Arty Radar'},
-  {grp:'Base structures (EAST)', cls:'TK_WarfareBAntiAirRadar_EP1',        size:[10,10], style:'structe', label:'AA Radar'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBArtilleryRadar_EP1',      size:[10,10], style:'structe', label:'Arty Radar', icon:'radar'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBAntiAirRadar_EP1',        size:[10,10], style:'structe', label:'AA Radar',   icon:'radar'},
   {grp:'Base structures (EAST)', cls:'TK_WarfareBUAVterminal_EP1',         size:[10,8],  style:'structe', label:'UAV Term'},
   {grp:'Base structures (EAST)', cls:'TK_WarfareBFieldhHospital_EP1',      size:[12,10], style:'structe', label:'Hospital'},
   {grp:'Base structures (Neutral)', cls:'WarfareBDepot',                   size:[12,12], style:'structn', label:'Depot'},
@@ -661,23 +704,8 @@ const PRESETS = {
     ['Base_WarfareBBarrier5x',[13,5,0],90],['Base_WarfareBBarrier5x',[13,-5,0],90]
   ]},
 
-  // ---------- BUILDING GUARDS — defended Artillery Radar / Reserve compounds ----------
-  radar_guard_west: { name:'📡 RADAR GUARD · WEST — AA umbrella + MG gate (3 AI)', tpl:'WFBE_NEURODEF_RADARGUARD_WEST', parent:'radar', objs:[
-    ['Stinger_Pod_US_EP1',[-9,9,0],330],['Land_fort_bagfence_round',[-9,9,0],0],
-    ['Stinger_Pod_US_EP1',[9,9,0],30],['Land_fort_bagfence_round',[9,9,0],0],
-    ['M2StaticMG',[0,-10,0],180],['Land_fort_bagfence_round',[0,-10,0],0],
-    ['Land_HBarrier_large',[-11,0,0],90],['Land_HBarrier_large',[11,0,0],90],
-    ['USBasicAmmunitionBox_EP1',[-5,-8,0],0],
-    ['Fort_RazorWire',[-7,-11,0],0],['Fort_RazorWire',[7,-11,0],0]
-  ]},
-  radar_guard_east: { name:'📡 RADAR GUARD · EAST — ZU-23 belt + DShKM gate (3 AI)', tpl:'WFBE_NEURODEF_RADARGUARD_EAST', parent:'radar', objs:[
-    ['ZU23_TK_EP1',[-9,9,0],350],['Land_fort_bagfence_round',[-9,9,0],0],
-    ['Igla_AA_pod_TK_EP1',[9,9,0],10],['Land_fort_bagfence_round',[9,9,0],0],
-    ['DSHKM_TK_INS_EP1',[0,-10,0],180],['Land_fort_bagfence_round',[0,-10,0],0],
-    ['Land_HBarrier_large',[-11,0,0],90],['Land_HBarrier_large',[11,0,0],90],
-    ['TKVehicleBox_EP1',[-5,-8,0],0],
-    ['Hedgehog',[-7,-11,0],0],['Hedgehog',[7,-11,0],0]
-  ]},
+  // ---------- BUILDING GUARDS — defended Reserve compounds ----------
+  // (No radar guards: the Artillery Radar takes FORTIFICATIONS ONLY — walls, no gun defenses.)
   reserve_guard_west: { name:'🏥 RESERVE GUARD · WEST — flank MGs + AT overwatch (3 AI)', tpl:'WFBE_NEURODEF_RESERVEGUARD_WEST', parent:'reserve', objs:[
     ['M2StaticMG',[-13,6,0],330],['Land_fort_bagfence_round',[-13,6,0],0],
     ['M2StaticMG',[13,6,0],30],['Land_fort_bagfence_round',[13,6,0],0],
@@ -977,7 +1005,7 @@ const PRESETS = {
 const PRESET_GROUPS = [
   ['🏗 Base layouts (whole base)', ['base_west_fob','base_east_regiment','base_compact_start','base_airbase_west','base_arty_firebase_east']],
   ['🧰 Mission walls — per building', ['hq_walk_exit','hq_concrete_walk_exit','factory_barracks_walk_exit','factory_light_walk_exit','factory_heavy_walk_exit','factory_aircraft_walk_exit','radar_walk_exit','reserve_walk_exit','uav_walk_exit']],
-  ['🎯 Building guards', ['radar_guard_west','radar_guard_east','reserve_guard_west','reserve_guard_east']],
+  ['🎯 Building guards', ['reserve_guard_west','reserve_guard_east']],
   ['🧱 Fortifications & modular walls (0 AI)', ['fort_sandbag_ring','fort_sandbag_horseshoe','fort_hbarrier_ubay','fort_obstacle_line','fort_wire_belt','fort_bunker_shell','wall_straight','wall_corner','wall_gate','wall_hesco_run']],
   ['🛡 WEST defenses', ['aa_west_v1','aa_west_v2','aapos_west','at_west_v1','at_west_v2','mg_west_v1','mg_west_v2','gl_west_v1','mortar_west_v1','arty_west_v1','artypos_west','mixed_west_v1','mixedpos_west','cp_west_v1','cp_west_v2']],
   ['🛡 EAST defenses', ['aa_east_v1','aa_east_v2','aapos_east','at_east_v1','at_east_v2','mg_east_v1','mg_east_v2','gl_east_v1','mortar_east_v1','arty_east_v1','artypos_east','mixed_east_v1','mixedpos_east','cp_east_v1','cp_east_v2']],
@@ -1004,7 +1032,7 @@ const STRUCTURES = {
   commandcenter:{label:'Command Center', w:12, d:10, style:'hq'},
   servicepoint:{label:'Service Point', w:16, d:8, style:'factory'},
   radar:{label:'Artillery Radar', w:14, d:14, style:'radar'},
-  reserve:{label:'Reserve', w:20, d:14, style:'factory'},
+  reserve:{label:'Reserve', w:20, d:14, style:'reserve'},
   uav:{label:'UAV Terminal', w:10, d:8, style:'hq'}
 };
 function setStructure(type, resizeFootprint=true){
@@ -1126,13 +1154,24 @@ function drawStructureFootprint(){
   } else if(s.style==='hq'){
     poly(rectWorld(0,parentD*0.12,parentW*0.45,parentD*0.45,H),'rgba(68,78,88,.5)','#69737D',1);
   } else if(s.style==='radar'){
-    // radar dish: circle + sweep line, reads as "antenna" at any zoom
-    const r=Math.min(parentW,parentD)*0.28*view.scale, c2=w2s(0,0);
-    ctx.strokeStyle='#69737D'; ctx.lineWidth=1.2;
+    // radar antenna: rings + LIVE rotating sweep with trailing blip (the building's signature)
+    const rm=Math.min(parentW,parentD)*0.28, r=rm*view.scale, c2=w2s(0,0);
+    ctx.strokeStyle='#8A965A'; ctx.lineWidth=1.2;
     ctx.beginPath(); ctx.arc(c2[0],c2[1],r,0,7); ctx.stroke();
     ctx.beginPath(); ctx.arc(c2[0],c2[1],r*0.55,0,7); ctx.stroke();
-    const sw=localToWorld(0,Math.min(parentW,parentD)*0.28,(H+45)%360), p2=w2s(sw[0],sw[1]);
+    const a=(performance.now()/2400*360)%360;                       // one rotation ≈ 2.4 s
+    const sw=localToWorld(0,rm,a), p2=w2s(sw[0],sw[1]);
+    ctx.strokeStyle='#D9763C'; ctx.lineWidth=1.6;
     ctx.beginPath(); ctx.moveTo(c2[0],c2[1]); ctx.lineTo(p2[0],p2[1]); ctx.stroke();
+    const bl=localToWorld(0,rm*0.72,(a-38+360)%360), p3=w2s(bl[0],bl[1]);   // trailing contact blip
+    ctx.fillStyle='rgba(217,118,60,.85)';
+    ctx.beginPath(); ctx.arc(p3[0],p3[1],2.4,0,7); ctx.fill();
+  } else if(s.style==='reserve'){
+    // reserve: motor-pool plan — three parked-vehicle bays + a marshalling lane along the front
+    [-0.3,0,0.3].forEach(x=>poly(rectWorld(parentW*x,-parentD*0.08,parentW*0.2,parentD*0.5,H),'rgba(68,78,88,.45)','#69737D',1));
+    const l1=w2s(...localToWorld(-parentW*0.42,parentD*0.32,H)), l2=w2s(...localToWorld(parentW*0.42,parentD*0.32,H));
+    ctx.strokeStyle='#69737D'; ctx.lineWidth=1; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(l1[0],l1[1]); ctx.lineTo(l2[0],l2[1]); ctx.stroke(); ctx.setLineDash([]);
   }
   const front=w2s(...localToWorld(0,parentD/2,H));
   ctx.strokeStyle='rgba(217,118,60,.8)';
@@ -1224,6 +1263,26 @@ const TEX = {
   structe(w,d){ TEX.building(styleColors('structe'),w,d); },
   structn(w,d){ TEX.building(styleColors('structn'),w,d); }
 };
+/* Icon overlays — drawn on top of a structure glyph in its local frame (catalog `icon` field). */
+const ICONS = {
+  radar(w,d){ const r=Math.min(w,d)*0.3;                          // rooftop antenna: rings + live sweep + blip
+    lw(1.1); ctx.strokeStyle='#c8d0d8';
+    ctx.beginPath(); ctx.arc(0,0,r,0,7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,r*0.55,0,7); ctx.stroke();
+    const a=(performance.now()/2400*2*Math.PI)%(2*Math.PI);
+    lw(1.5); ctx.strokeStyle='#D9763C';
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.sin(a)*r,Math.cos(a)*r); ctx.stroke();
+    const b=a-0.66; ctx.fillStyle='rgba(217,118,60,.85)';
+    ctx.beginPath(); ctx.arc(Math.sin(b)*r*0.72,Math.cos(b)*r*0.72,Math.max(0.1,r*0.09),0,7); ctx.fill(); }
+};
+/* Animation loop — repaints (~25 fps) only while a live radar sweep is on screen. */
+(function animLoop(){ requestAnimationFrame(animLoop);
+  const need = structureType==='radar' || objs.some(o=>META(o.cls).icon==='radar');
+  if(!need) return;
+  const t=performance.now();
+  if(t-(animLoop._t||0) < 40) return; animLoop._t=t;
+  draw();
+})();
 /* ---------- Fields of fire overlay (Component 3) ----------
    Filled translucent firing-arc per weapon, centred on its heading, reusing the
    renderer's forward convention ([sin H, cos H]). Ranges are INDICATIVE (a real
@@ -1270,6 +1329,7 @@ function drawObj(o){
     } else {
       (TEX[st]||TEX.box)(aw,ad);                       // FALLBACK: procedural glyph at ART span
     }
+    const ic=META(o.cls).icon; if(ic && ICONS[ic]) ICONS[ic](aw,ad);   // icon overlay (e.g. live radar antenna)
     ctx.globalAlpha=1;
     if(isSel && !PREVIEW){ lw(2); ctx.strokeStyle='#D9763C'; ctx.strokeRect(-w/2-0.2,-d/2-0.2,w+0.4,d+0.4); } });  // selection rect = COLLISION size
   const lbl=META(o.cls).label;                          // base structures carry a short name — draw it upright in screen space
@@ -1350,6 +1410,7 @@ function loadPreset(key){ const p=PRESETS[key]; if(!p)return;
   $('tplName').value=p.tpl;
   $('preset').value=key;
   $('missionTarget').value=TARGET_BY_TEMPLATE[p.tpl]||'custom';
+  if(p.mode!=='base' && $('missionTarget').value==='radar') setFortOnly(true);   // radar = fortifications only
   if(p.mode!=='base') setStructure(p.parent||'pad', true);
   if(p.w){parentW=p.w;$('pW').value=p.w;} if(p.d){parentD=p.d;$('pD').value=p.d;} parentDir=0; $('parentDir').value=0;
   objs=[]; nextId=1; sel=null; p.objs.forEach(e=>objs.push({id:nextId++,cls:e[0],x:e[1][0],y:e[1][1],z:e[1][2],dir:e[2]}));
@@ -1388,7 +1449,9 @@ function syncUI(){
 $('parentDir').addEventListener('input',e=>{parentDir=parseFloat(e.target.value)||0;draw();});
 $('pW').addEventListener('input',e=>{parentW=parseFloat(e.target.value)||2;draw();});
 $('pD').addEventListener('input',e=>{parentD=parseFloat(e.target.value)||2;draw();});
-$('structureType').addEventListener('change',e=>{setStructure(e.target.value,true);draw();});
+$('structureType').addEventListener('change',e=>{setStructure(e.target.value,true);
+  if(e.target.value==='radar') setFortOnly(true);            // radar takes fortifications only — no gun defenses
+  draw();});
 $('fortOnly').addEventListener('change',e=>setFortOnly(e.target.checked));
 $('snap').addEventListener('change',e=>snap=e.target.checked);
 $('useSprites').addEventListener('change',e=>{USE_SPRITES=e.target.checked;draw();});
@@ -1413,6 +1476,7 @@ $('missionTarget').addEventListener('change',()=>{ const names=targetNames();
   if(names.length===1 && $('missionTarget').value!=='custom') $('tplName').value=names[0];
   const map={hq:'hq',factory_all:'barracks',factory_barracks:'barracks',factory_light:'light',factory_heavy:'heavy',factory_aircraft:'aircraft',commandcenter:'commandcenter',servicepoint:'servicepoint',radar:'radar',reserve:'reserve',uav:'uav'};
   if(map[$('missionTarget').value]) setStructure(map[$('missionTarget').value], true);
+  if($('missionTarget').value==='radar') setFortOnly(true);  // radar takes fortifications only — no gun defenses
   buildOut();
 });
 
@@ -1452,6 +1516,7 @@ function buildOut(){ const names=targetNames();
   const lines=objs.map(o=>`    ['${o.cls}',[${fmt(o.x)},${fmt(o.y)},${fmt(o.z)}],${fmt(o.dir)}]`);
   $('out').value=names.map(name=>`missionNamespace setVariable ['${name}',[\n${lines.join(',\n')}\n]];`).join('\n\n'); }
 $('copyBtn').onclick=()=>{ navigator.clipboard.writeText($('out').value).then(()=>{ $('copyBtn').textContent='Copied ✓'; setTimeout(()=>$('copyBtn').textContent='Copy SQF',1200); }); };
+$('copyAnimBtn').onclick=()=>{ navigator.clipboard.writeText($('animHelper').value).then(()=>{ $('copyAnimBtn').textContent='Copied ✓'; setTimeout(()=>$('copyAnimBtn').textContent='Copy helper',1200); }); };
 
 /* ---------- Shareable layout links (Component 4) ----------
    Whole composition encoded in the URL hash (#d=base64url(JSON)). Client-only:

@@ -39,7 +39,10 @@ Cold War defensive doctrine (NATO dispersed & concealed · Warsaw Pact massed & 
 - **Import** an existing template to edit it, and **save/load** your work as JSON.
 - **18 built-in presets**, including the four faction-specific defense types in light & heavy variants.
 - **HQ / Factory wall mode** — click **Edit HQ / Factory walls** to load enclosed one-exit wall examples, including the concrete HQ shield, and filter the palette to fortifications-only assets for community submissions.
-- **More buildings** — besides the HQ and factories, design around the **Artillery Radar** (with a radar-dish footprint), **Reserve** and **UAV Terminal**, each with its own wall target and ready-made enclosed-wall + faction guard presets.
+- **More buildings** — besides the HQ and factories, design around the **Artillery Radar**, **Reserve** and **UAV Terminal**, each with its own wall target and ready-made enclosed-wall presets (plus faction guard presets for the Reserve).
+- **Signature footprints** — the Artillery Radar draws a **live rotating antenna sweep** (in the defense footprint *and* on the base-layout building), and the Reserve draws a motor-pool plan with three vehicle bays and a marshalling lane.
+- **Artillery Radar = fortifications only** — picking the radar as footprint, wall target or preset auto-enables *Fortifications only*: it takes walls, not gun defenses.
+- **Build-up animation helper** — a copyable `CreateDefenseTemplateAnimated.sqf` (under the export panel) spawns templates with the same rise-from-the-ground construction animation the stock factories play.
 - **Preview mode** — one click hides the grid, axes, handles and selection and drops the layout on a terrain-toned backdrop so you see it the way it will read in-game.
 - **PNG snapshot** — download the current view as an image, ready to drop straight into Discord.
 - **Checkpoint props** — boom gates, guard shed, fire barrel and manned **searchlights** (1 AI each), plus deer-stand towers, sandbag barricades, single HESCO cells and RU ammo boxes in the palette.
