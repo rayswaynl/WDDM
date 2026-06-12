@@ -4,9 +4,10 @@
 
 # WDDM — Warfare Dynamic Defense Manager
 
-**A browser-based, top-down composition editor for Arma "Warfare" defense templates.**
-Lay out walls, sandbags, batteries, emplacements and checkpoints on a grid, then export
-ready-to-paste **SQF** for your mission. One file, fully offline, no install.
+**A browser-based, top-down composition editor for Arma "Warfare" defense templates — and whole base layouts.**
+Lay out walls, sandbags, batteries, emplacements and checkpoints on a grid — or switch to
+**🏗 Base layout** mode and plan an entire base (barracks, factories, radars) around the HQ —
+then export ready-to-paste **SQF** for your mission. One file, fully offline, no install.
 
 [**▶ Open the editor**](https://rayswaynl.github.io/WDDM/) · [Quick start](#quick-start) · [Templates](#built-in-presets) · [How it works](#how-it-works) · [Using exports in a mission](#using-the-export-in-a-mission)
 
@@ -42,6 +43,28 @@ Cold War defensive doctrine (NATO dispersed & concealed · Warsaw Pact massed & 
 - **Preview mode** — one click hides the grid, axes, handles and selection and drops the layout on a terrain-toned backdrop so you see it the way it will read in-game.
 - **PNG snapshot** — download the current view as an image, ready to drop straight into Discord.
 - **Checkpoint props** — boom gates, guard shed, fire barrel and manned **searchlights** (1 AI each), plus deer-stand towers, sandbag barricades, single HESCO cells and RU ammo boxes in the palette.
+- **Two editor modes** — **🛡 Base defense** (walls & emplacements around one structure) and **🏗 Base layout** (position the Warfare base structures themselves — `US_/TK_WarfareB…_EP1` classes — relative to the deployed HQ). The mode is saved in share links and project JSON.
+- **Five worked base layouts** as inspiration: NATO dispersed FOB, Warsaw-Pact geometric regiment, compact opener, airbase with a kept-clear taxi lane, and an artillery firebase. Each encodes real zoning logic — read the comments in the preset source.
+- **Grouped preset menu & auto-fit** — presets are organized by category and the view zooms to fit whatever you load.
+
+### 🏗 Base layout mode
+
+Click **🏗 Base layout** at the top of the Build panel. The origin becomes the **deployed HQ**,
+the palette switches to the buildable Warfare base structures (WEST `US_…_EP1`, EAST `TK_…_EP1`,
+plus the neutral Depot/Camp), and the cost box shows **structure count and max spread from the HQ**
+(keep it inside your commander's build radius). Structures draw as labelled building plans with the
+entrance bar on the front edge. The export is the same `['class',[x,y,z],dir]` array — feed it to
+whatever placement logic your mission uses for base construction templates.
+
+Zoning rules baked into the sample layouts, if you want to roll your own:
+
+| Principle | WEST (NATO) | EAST (WarPac) |
+|---|---|---|
+| Spacing | Dispersed, irregular, 25–45 m | Massed, geometric rows |
+| Vehicles | Factory strip + Service Point on the exit lane | Production row aligned on the HQ axis |
+| Air | Far flank, clear approach, blast-distance | In the production row, AA radar close |
+| Sensors | Opposite perimeter corners | Symmetric flank pair |
+| Troops/medical | Barracks + Hospital paired, away from vehicles | Support row behind the production line |
 
 > WDDM is engine-agnostic about *what* you build — any classname string works, so it's
 > equally useful for Arma 2 (OA), Arma 3, and forks of the various Warfare modes.

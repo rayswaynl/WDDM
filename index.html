@@ -88,6 +88,11 @@
     border-radius:6px;padding:8px 11px;font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.7;color:#9aa3ad}
   .crewbox b{color:var(--bone)} .crewbox .ai{color:var(--orange)}
   .divider{height:1px;background:var(--line);margin:14px 0}
+  .segmented{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:4px}
+  .segmented button{flex:1;border:none;border-radius:0;background:var(--gunmetal);padding:9px 6px;font-size:12px;color:#9aa3ad}
+  .segmented button+button{border-left:1px solid var(--line)}
+  .segmented button:hover{color:var(--bone)}
+  .segmented button.on{background:var(--orange);color:#1a1208;font-weight:600}
   .copybtn{margin-top:6px}
   .warn{color:var(--orange)}
   details{margin-top:8px}
@@ -123,9 +128,16 @@
       <div class="sub">presets · palette · placed objects</div>
     </header>
     <div class="scroll">
+      <label>Editor mode</label>
+      <div class="segmented">
+        <button id="modeDefense" class="on" title="Design defenses, walls and emplacements around one structure">🛡 Base defense</button>
+        <button id="modeBase" title="Lay out a whole base — barracks, factories, radars — around the HQ">🏗 Base layout</button>
+      </div>
+
       <label>Load a demo / preset composition</label>
       <select id="preset"></select>
       <button class="primary" id="loadPreset" style="width:100%;margin-top:8px">Load preset →</button>
+      <div id="defenseCtrlsA">
       <button class="primary" id="wallModeBtn" style="width:100%;margin-top:8px">Edit HQ / Factory walls</button>
       <label class="inline-check" title="Filters the palette to empty fortification objects and blocks known guns/ammo while wall mode is active">
         <input id="fortOnly" type="checkbox"> Fortifications only
@@ -138,12 +150,14 @@
           <span>Razor wire</span><span>Hedgehogs</span><span>Concrete blocks</span>
         </div>
       </div>
+      </div><!-- /defenseCtrlsA -->
 
       <div class="divider"></div>
 
       <label>Template variable name</label>
       <input id="tplName" type="text" value="WFBE_NEURODEF_BARRACKS_WALLS">
 
+      <div id="defenseCtrlsB">
       <label style="margin-top:10px">Structure footprint</label>
       <select id="structureType">
         <option value="pad">Generic deploy pad</option>
@@ -174,6 +188,7 @@
         <option value="reserve">Reserve walls</option>
         <option value="uav">UAV Terminal walls</option>
       </select>
+      </div><!-- /defenseCtrlsB -->
 
       <div class="divider"></div>
 
@@ -192,6 +207,8 @@
       <div class="hint">
         Click an object on the canvas or list to select. Drag the body to move,
         drag the handle to rotate. Arrow keys nudge (Shift = 1&nbsp;m).
+        <br><b>🛡 Base defense</b> designs walls &amp; emplacements around one structure;
+        <b>🏗 Base layout</b> plans the whole base — barracks, factories, radars — around the HQ.
       </div>
     </div>
   </div>
@@ -219,8 +236,8 @@
       <button id="snapBtn" title="Download the current view as a PNG image — handy for Discord submissions">PNG ⬇</button>
     </div>
     <div class="crewbox" id="crewbox">
-      <div>guns: <b id="cWpn">0</b></div>
-      <div>AI cost: <span class="ai" id="cAI">0</span> <span id="cAInote" style="color:#6f7780"></span></div>
+      <div><span id="cWpnLabel">guns</span>: <b id="cWpn">0</b></div>
+      <div><span id="cAILabel">AI cost</span>: <span class="ai" id="cAI">0</span> <span id="cAInote" style="color:#6f7780"></span></div>
     </div>
     <div class="legend">
       <div><span class="swatch" style="background:#5C6536"></span><b>Structure footprint</b> at origin [0,0,0]</div>
@@ -402,7 +419,32 @@ const CATALOG = [
   {grp:'Walls (H-barrier)', cls:'Land_HBarrier1',             size:[1.2,1.2],style:'hbarrier'}, // single HESCO cell
   {grp:'Ammo / logistics',  cls:'RUBasicAmmunitionBox',       size:[1.0,0.6],style:'ammo'},
   {grp:'Ammo / logistics',  cls:'RUVehicleBox',               size:[1.0,0.6],style:'ammo'},
+  // === BASE-LAYOUT STRUCTURES (🏗 mode) — Warfare buildable base structures.  ===
+  // Faction pattern <FACTION>_WarfareB<Building> from the BIS Warfare config; OA US_/TK_
+  // variants carry _EP1 like the WarfareBBarrier classes above. "FieldhHospital" double-h
+  // is BIS's own spelling. label = short name drawn on the canvas.
+  {grp:'Base structures (WEST)', cls:'US_WarfareBBarracks_EP1',            size:[18,12], style:'structw', label:'Barracks'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBLightFactory_EP1',        size:[22,14], style:'structw', label:'Light Fct'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBHeavyFactory_EP1',        size:[28,16], style:'structw', label:'Heavy Fct'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBAircraftFactory_EP1',     size:[30,18], style:'structw', label:'Aircraft Fct'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBVehicleServicePoint_EP1', size:[16,8],  style:'structw', label:'Service Pt'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBArtilleryRadar_EP1',      size:[10,10], style:'structw', label:'Arty Radar'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBAntiAirRadar_EP1',        size:[10,10], style:'structw', label:'AA Radar'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBUAVterminal_EP1',         size:[10,8],  style:'structw', label:'UAV Term'},
+  {grp:'Base structures (WEST)', cls:'US_WarfareBFieldhHospital_EP1',      size:[12,10], style:'structw', label:'Hospital'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBBarracks_EP1',            size:[18,12], style:'structe', label:'Barracks'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBLightFactory_EP1',        size:[22,14], style:'structe', label:'Light Fct'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBHeavyFactory_EP1',        size:[28,16], style:'structe', label:'Heavy Fct'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBAircraftFactory_EP1',     size:[30,18], style:'structe', label:'Aircraft Fct'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBVehicleServicePoint_EP1', size:[16,8],  style:'structe', label:'Service Pt'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBArtilleryRadar_EP1',      size:[10,10], style:'structe', label:'Arty Radar'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBAntiAirRadar_EP1',        size:[10,10], style:'structe', label:'AA Radar'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBUAVterminal_EP1',         size:[10,8],  style:'structe', label:'UAV Term'},
+  {grp:'Base structures (EAST)', cls:'TK_WarfareBFieldhHospital_EP1',      size:[12,10], style:'structe', label:'Hospital'},
+  {grp:'Base structures (Neutral)', cls:'WarfareBDepot',                   size:[12,12], style:'structn', label:'Depot'},
+  {grp:'Base structures (Neutral)', cls:'WarfareBCamp',                    size:[8,8],   style:'structn', label:'Camp'},
 ];
+const isBaseStructure = o => !!o && typeof o.grp==='string' && o.grp.startsWith('Base structures');
 const META   = c => CATALOG.find(o=>o.cls===c) || {};
 const SIZE_OF= c => META(c).size  || [2,2];               // collision footprint (spacing/snap/hit-test)
 const ART_OF = c => { const m=META(c); return m.art || m.size || [2,2]; }; // visual span (glyph/sprite draw)
@@ -861,13 +903,94 @@ const PRESETS = {
     ['Hedgehog',[-4,0,0],0],['Hedgehog',[0,0,0],0],['Hedgehog',[4,0,0],0],['Fort_RazorWire',[0,-1.5,0],0],['Land_CncBlock',[-2,1.5,0],0],['Land_CncBlock',[2,1.5,0],0]
   ]},
 
-  blank: { name:'— Blank canvas —', tpl:'WFBE_NEURODEF_CUSTOM_WALLS', w:10, d:10, objs:[] },
+  // ====================== 🏗 BASE LAYOUTS (base-building mode — whole-base structure plans) ======================
+  // Origin = the DEPLOYED HQ at [0,0]. All structures sit within ~60 m (commander build radius).
+  // Doctrine per layout in the comments — these are worked examples, steal the ideas.
+  base_west_fob: { name:'🏗 BASE · WEST — dispersed FOB (NATO: survivability first)', tpl:'WFBE_NEURODEF_BASE_WEST_FOB', parent:'hq', mode:'base', objs:[
+    // Troops + medical west of HQ: short spawn walk, mutual support, away from the vehicle noise
+    ['US_WarfareBBarracks_EP1',[-28,-2,0],90],
+    ['US_WarfareBFieldhHospital_EP1',[-28,-20,0],90],
+    // Vehicle production strip east; Service Point sits ON the motor-pool exit lane so fresh armor rearms rolling out
+    ['US_WarfareBLightFactory_EP1',[30,-4,0],270],
+    ['US_WarfareBHeavyFactory_EP1',[34,22,0],270],
+    ['US_WarfareBVehicleServicePoint_EP1',[28,-24,0],0],
+    // Air far north: clear approach over the front, blast-distance from everything else
+    ['US_WarfareBAircraftFactory_EP1',[2,52,0],0],
+    // Sensors dispersed to opposite perimeter corners — one strike can't blind you twice
+    ['US_WarfareBArtilleryRadar_EP1',[-48,28,0],0],
+    ['US_WarfareBAntiAirRadar_EP1',[48,44,0],0],
+    // C2 + logistics hug the HQ
+    ['US_WarfareBUAVterminal_EP1',[-14,14,0],0],
+    ['WarfareBDepot',[6,-32,0],0]
+  ]},
+  base_east_regiment: { name:'🏗 BASE · EAST — geometric regiment (WarPac: massed rows)', tpl:'WFBE_NEURODEF_BASE_EAST_REGIMENT', parent:'hq', mode:'base', objs:[
+    // Production row north of HQ — regular ~30 m spacing, all aligned on the HQ axis (the WarPac tell)
+    ['TK_WarfareBLightFactory_EP1',[-30,24,0],0],
+    ['TK_WarfareBHeavyFactory_EP1',[0,26,0],0],
+    ['TK_WarfareBAircraftFactory_EP1',[32,26,0],0],
+    // Support row behind the line
+    ['TK_WarfareBVehicleServicePoint_EP1',[24,2,0],0],
+    ['TK_WarfareBBarracks_EP1',[-24,-12,0],0],
+    ['TK_WarfareBFieldhHospital_EP1',[-42,-12,0],0],
+    // Radar pair symmetric on the flanks — geometry over concealment
+    ['TK_WarfareBArtilleryRadar_EP1',[-50,26,0],0],
+    ['TK_WarfareBAntiAirRadar_EP1',[55,26,0],0],
+    ['TK_WarfareBUAVterminal_EP1',[12,-14,0],0],
+    ['WarfareBDepot',[0,-28,0],0]
+  ]},
+  base_compact_start: { name:'🏗 BASE · Compact opener — min footprint, fast walk-times', tpl:'WFBE_NEURODEF_BASE_COMPACT', parent:'hq', mode:'base', objs:[
+    // Early-game four: everything inside ~25 m so one engineer wall set can ring the lot later
+    ['US_WarfareBBarracks_EP1',[-20,2,0],90],
+    ['US_WarfareBLightFactory_EP1',[19,4,0],270],
+    ['US_WarfareBVehicleServicePoint_EP1',[16,-16,0],0],
+    ['WarfareBDepot',[-14,-18,0],0]
+  ]},
+  base_airbase_west: { name:'🏗 BASE · WEST — airbase, taxi lane kept clear', tpl:'WFBE_NEURODEF_BASE_AIRBASE', parent:'hq', mode:'base', objs:[
+    // Air complex west of an EMPTY north-south taxi lane (x −8…+8 stays clear — spawn, roll, lift)
+    ['US_WarfareBAircraftFactory_EP1',[-28,14,0],90],
+    ['US_WarfareBVehicleServicePoint_EP1',[-26,-10,0],90],
+    ['US_WarfareBAntiAirRadar_EP1',[-44,38,0],0],
+    // Ground complex east of the lane, mirrored zoning
+    ['US_WarfareBBarracks_EP1',[26,-4,0],270],
+    ['US_WarfareBFieldhHospital_EP1',[26,-22,0],270],
+    ['US_WarfareBUAVterminal_EP1',[20,12,0],0],
+    ['US_WarfareBLightFactory_EP1',[42,10,0],270],
+    ['US_WarfareBHeavyFactory_EP1',[46,-16,0],270],
+    ['US_WarfareBArtilleryRadar_EP1',[52,32,0],0],
+    ['WarfareBDepot',[2,-30,0],0]
+  ]},
+  base_arty_firebase_east: { name:'🏗 BASE · EAST — artillery firebase (radar + sustainment)', tpl:'WFBE_NEURODEF_BASE_FIREBASE', parent:'hq', mode:'base', objs:[
+    // The radar IS the base — everything else keeps it fed, crewed and repaired
+    ['TK_WarfareBArtilleryRadar_EP1',[0,20,0],0],
+    ['TK_WarfareBBarracks_EP1',[-24,-4,0],0],
+    ['TK_WarfareBVehicleServicePoint_EP1',[26,6,0],270],
+    ['WarfareBDepot',[16,-14,0],0],
+    ['TK_WarfareBFieldhHospital_EP1',[-24,-20,0],0],
+    ['WarfareBCamp',[2,-26,0],0]
+  ]},
+
+  blank: { name:'— Blank canvas (defense) —', tpl:'WFBE_NEURODEF_CUSTOM_WALLS', w:10, d:10, objs:[] },
+  blank_base: { name:'— Blank canvas (base layout) —', tpl:'WFBE_NEURODEF_BASE_LAYOUT', parent:'hq', mode:'base', objs:[] },
 };
+
+/* Preset dropdown groups — order = display order; unlisted keys land in "Other". */
+const PRESET_GROUPS = [
+  ['🏗 Base layouts (whole base)', ['base_west_fob','base_east_regiment','base_compact_start','base_airbase_west','base_arty_firebase_east']],
+  ['🧰 Mission walls — per building', ['hq_walk_exit','hq_concrete_walk_exit','factory_barracks_walk_exit','factory_light_walk_exit','factory_heavy_walk_exit','factory_aircraft_walk_exit','radar_walk_exit','reserve_walk_exit','uav_walk_exit']],
+  ['🎯 Building guards', ['radar_guard_west','radar_guard_east','reserve_guard_west','reserve_guard_east']],
+  ['🧱 Fortifications & modular walls (0 AI)', ['fort_sandbag_ring','fort_sandbag_horseshoe','fort_hbarrier_ubay','fort_obstacle_line','fort_wire_belt','fort_bunker_shell','wall_straight','wall_corner','wall_gate','wall_hesco_run']],
+  ['🛡 WEST defenses', ['aa_west_v1','aa_west_v2','aapos_west','at_west_v1','at_west_v2','mg_west_v1','mg_west_v2','gl_west_v1','mortar_west_v1','arty_west_v1','artypos_west','mixed_west_v1','mixedpos_west','cp_west_v1','cp_west_v2']],
+  ['🛡 EAST defenses', ['aa_east_v1','aa_east_v2','aapos_east','at_east_v1','at_east_v2','mg_east_v1','mg_east_v2','gl_east_v1','mortar_east_v1','arty_east_v1','artypos_east','mixed_east_v1','mixedpos_east','cp_east_v1','cp_east_v2']],
+  ['🏰 Mega fortresses (end-game)', ['fortress_west_8ai','fortress_west_12ai','fortress_west_16ai','fortress_east_8ai','fortress_east_12ai','fortress_east_16ai']],
+  ['🟢 GUER town defence', ['guer_town_mg','guer_town_at','guer_town_aa','guer_roadblock']],
+  ['✏️ Start fresh', ['blank','blank_base']],
+];
 
 /* ---------- State ---------- */
 let objs = [], sel = null, nextId = 1;
 const view = {scale:14, panX:0, panY:0};
 let parentDir = 0, parentW = 14, parentD = 14, structureType = 'pad', fortOnly = false, snap = true;
+let buildMode = 'defense';   // 'defense' = walls/emplacements around one structure · 'base' = whole-base structure layout
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
 
@@ -900,7 +1023,8 @@ function renderPalette(){
   const s=$('palette'), previous=s.value;
   s.innerHTML='';
   let last='', group=null;
-  CATALOG.filter(o=>!fortOnly || isFortificationAsset(o)).forEach(o=>{
+  CATALOG.filter(o=> buildMode==='base' ? isBaseStructure(o)
+                                        : (!isBaseStructure(o) && (!fortOnly || isFortificationAsset(o))) ).forEach(o=>{
     if(o.grp!==last){
       group=document.createElement('optgroup');
       group.label=o.grp; group.dataset.g=o.grp;
@@ -918,10 +1042,35 @@ function setFortOnly(on){
   $('wallModeInfo').classList.toggle('active',fortOnly);
   renderPalette();
 }
+function setMode(m){
+  buildMode = (m==='base') ? 'base' : 'defense';
+  $('modeDefense').classList.toggle('on', buildMode==='defense');
+  $('modeBase').classList.toggle('on', buildMode==='base');
+  $('defenseCtrlsA').style.display = buildMode==='defense' ? '' : 'none';
+  $('defenseCtrlsB').style.display = buildMode==='defense' ? '' : 'none';
+  if(buildMode==='base'){
+    if(fortOnly) setFortOnly(false);                       // wall mode is a defense concept
+    $('missionTarget').value='custom';
+    setStructure('hq', true);                              // origin = the deployed HQ
+    $('parentLabel').textContent='HQ (base origin)';
+    if(/_WALLS$/.test($('tplName').value)) $('tplName').value='WFBE_NEURODEF_BASE_LAYOUT';
+  } else {
+    setStructure(structureType, false);                    // restore the structure label
+  }
+  renderPalette(); syncUI(); draw();
+}
+$('modeDefense').onclick=()=>setMode('defense');
+$('modeBase').onclick=()=>setMode('base');
 renderPalette();
-/* populate presets */
-(function(){ const s=$('preset');
-  Object.keys(PRESETS).forEach(k=>{ const op=document.createElement('option'); op.value=k; op.textContent=PRESETS[k].name; s.appendChild(op); });
+/* populate presets — grouped dropdown */
+(function(){ const s=$('preset'), listed=new Set();
+  const addGroup=(label,keys)=>{ const og=document.createElement('optgroup'); og.label=label; let any=false;
+    keys.forEach(k=>{ const p=PRESETS[k]; if(!p) return; const op=document.createElement('option');
+      op.value=k; op.textContent=p.name; og.appendChild(op); listed.add(k); any=true; });
+    if(any) s.appendChild(og); };
+  PRESET_GROUPS.forEach(([label,keys])=>addGroup(label,keys));
+  const rest=Object.keys(PRESETS).filter(k=>!listed.has(k));
+  if(rest.length) addGroup('Other', rest);
 })();
 
 /* ---------- Canvas sizing ---------- */
@@ -969,7 +1118,7 @@ function drawStructureFootprint(){
   ctx.fillStyle='rgba(231,227,214,.82)';
   ctx.font='11px Inter,system-ui,sans-serif';
   ctx.textAlign='center';
-  ctx.fillText(s.label, center[0], center[1]+4);
+  ctx.fillText(buildMode==='base' ? 'HQ (base origin)' : s.label, center[0], center[1]+4);
   if(s.style==='hangar'){
     poly(rectWorld(0,0,parentW*0.72,parentD*0.45,H),'rgba(68,78,88,.5)','#69737D',1);
   } else if(s.style==='factory'){
@@ -1002,7 +1151,8 @@ function withLocal(o,H,fn){
 const PAL = {
   wall:{f:'#444e58',s:'#69737d'}, bag:{f:'#5a5436',s:'#7d7448'}, fort:{f:'#3f4750',s:'#67727d'},
   wpn:{f:'#6f4322',s:'#D9763C'}, aa:{f:'#3c4a55',s:'#7fb0c8'}, arty:{f:'#5a3f22',s:'#e0905a'},
-  ammo:{f:'#4a5230',s:'#8a965a'}, wire:{f:'#2f353c',s:'#9aa3ad'}, box:{f:'#3a444e',s:'#5c6776'}
+  ammo:{f:'#4a5230',s:'#8a965a'}, wire:{f:'#2f353c',s:'#9aa3ad'}, box:{f:'#3a444e',s:'#5c6776'},
+  stw:{f:'#39432f',s:'#8A965A'}, ste:{f:'#46362a',s:'#D9763C'}, stn:{f:'#39414b',s:'#9aa3ad'}
 };
 function lw(px){ ctx.lineWidth = px/view.scale; }   // px line width inside scaled frame
 function styleColors(style){
@@ -1010,7 +1160,9 @@ function styleColors(style){
   if(style==='aa') return PAL.aa; if(style==='arty'||style==='mortar') return PAL.arty;
   if(style==='ammo') return PAL.ammo; if(style==='hbarrier') return PAL.wall;
   if(style==='sandbag') return PAL.bag; if(['nest','tower','camo','hedgehog'].includes(style)) return PAL.fort;
-  if(style==='wire') return PAL.wire; if(style==='search') return PAL.aa; return PAL.box;
+  if(style==='wire') return PAL.wire; if(style==='search') return PAL.aa;
+  if(style==='structw') return PAL.stw; if(style==='structe') return PAL.ste; if(style==='structn') return PAL.stn;
+  return PAL.box;
 }
 /* each texture draws within [-w/2..w/2] x [-d/2..d/2], +y = front */
 const TEX = {
@@ -1059,7 +1211,18 @@ const TEX = {
   search(w,d){ const c=styleColors('search'); TEX.base(c,w,d);            // pedestal + light beam cone
     ctx.globalAlpha=.35; ctx.fillStyle=c.s; ctx.beginPath(); ctx.moveTo(0,0);
     ctx.lineTo(-w*0.45,d*0.95); ctx.lineTo(w*0.45,d*0.95); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
-    lw(1.6); ctx.strokeStyle=c.s; ctx.beginPath(); ctx.arc(0,d*0.12,Math.min(w,d)*0.2,0,7); ctx.stroke(); }
+    lw(1.6); ctx.strokeStyle=c.s; ctx.beginPath(); ctx.arc(0,d*0.12,Math.min(w,d)*0.2,0,7); ctx.stroke(); },
+  building(c,w,d){                                                        // base-structure plan: shell + inset + roof corners + front entrance
+    ctx.fillStyle=c.f; ctx.fillRect(-w/2,-d/2,w,d); lw(1.8); ctx.strokeStyle=c.s; ctx.strokeRect(-w/2,-d/2,w,d);
+    lw(.9); ctx.strokeRect(-w/2+w*0.09,-d/2+d*0.09,w*0.82,d*0.82);
+    ctx.beginPath();
+    ctx.moveTo(-w/2,-d/2);ctx.lineTo(-w/2+w*0.09,-d/2+d*0.09); ctx.moveTo(w/2,-d/2);ctx.lineTo(w/2-w*0.09,-d/2+d*0.09);
+    ctx.moveTo(w/2,d/2);ctx.lineTo(w/2-w*0.09,d/2-d*0.09);     ctx.moveTo(-w/2,d/2);ctx.lineTo(-w/2+w*0.09,d/2-d*0.09);
+    ctx.stroke();
+    lw(2.6); ctx.beginPath(); ctx.moveTo(-w*0.14,d/2); ctx.lineTo(w*0.14,d/2); ctx.stroke(); },  // entrance bar = front
+  structw(w,d){ TEX.building(styleColors('structw'),w,d); },
+  structe(w,d){ TEX.building(styleColors('structe'),w,d); },
+  structn(w,d){ TEX.building(styleColors('structn'),w,d); }
 };
 /* ---------- Fields of fire overlay (Component 3) ----------
    Filled translucent firing-arc per weapon, centred on its heading, reusing the
@@ -1109,6 +1272,12 @@ function drawObj(o){
     }
     ctx.globalAlpha=1;
     if(isSel && !PREVIEW){ lw(2); ctx.strokeStyle='#D9763C'; ctx.strokeRect(-w/2-0.2,-d/2-0.2,w+0.4,d+0.4); } });  // selection rect = COLLISION size
+  const lbl=META(o.cls).label;                          // base structures carry a short name — draw it upright in screen space
+  if(lbl && Math.min(w,d)*view.scale>24){
+    const c0=w2s(o.x,o.y);
+    ctx.fillStyle='rgba(231,227,214,.92)'; ctx.font='10px Inter,system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(lbl, c0[0], c0[1]+3);
+  }
   if(PREVIEW) return;                                   // clean render: no facing ticks / rotate handles
   // facing tick + rotate handle in screen space (offset from collision depth)
   const [fx,fy]=localToWorld(0,d/2+0.8,H), c=w2s(o.x,o.y), f=w2s(o.x+fx,o.y+fy);
@@ -1167,12 +1336,24 @@ $('dupBtn').onclick=()=>{ const o=objs.find(x=>x.id===sel); if(o)addObj(o.cls,o.
 $('mirrorBtn').onclick=()=>{ const o=objs.find(x=>x.id===sel); if(o)addObj(o.cls,-o.x,o.y,(360-o.dir)%360); };
 
 /* ---------- Presets ---------- */
-function loadPreset(key){ const p=PRESETS[key]; if(!p)return; $('tplName').value=p.tpl;
+function fitView(){                                       // auto zoom-to-fit the footprint + all objects
+  let minX=-parentW/2, maxX=parentW/2, minY=-parentD/2, maxY=parentD/2;
+  objs.forEach(o=>{ const [w,d]=ART_OF(o.cls), r=Math.max(w,d)/2+1;
+    minX=Math.min(minX,o.x-r); maxX=Math.max(maxX,o.x+r);
+    minY=Math.min(minY,o.y-r); maxY=Math.max(maxY,o.y+r); });
+  const s=Math.min(cw()/(maxX-minX+10), ch()/(maxY-minY+10));
+  view.scale=Math.max(3, Math.min(18, s));
+  view.panX=-(minX+maxX)/2*view.scale; view.panY=(minY+maxY)/2*view.scale;
+}
+function loadPreset(key){ const p=PRESETS[key]; if(!p)return;
+  setMode(p.mode==='base' ? 'base' : 'defense');
+  $('tplName').value=p.tpl;
   $('preset').value=key;
   $('missionTarget').value=TARGET_BY_TEMPLATE[p.tpl]||'custom';
-  setStructure(p.parent||'pad', true); if(p.w){parentW=p.w;$('pW').value=p.w;} if(p.d){parentD=p.d;$('pD').value=p.d;} parentDir=0; $('parentDir').value=0;
+  if(p.mode!=='base') setStructure(p.parent||'pad', true);
+  if(p.w){parentW=p.w;$('pW').value=p.w;} if(p.d){parentD=p.d;$('pD').value=p.d;} parentDir=0; $('parentDir').value=0;
   objs=[]; nextId=1; sel=null; p.objs.forEach(e=>objs.push({id:nextId++,cls:e[0],x:e[1][0],y:e[1][1],z:e[1][2],dir:e[2]}));
-  view.scale=14; view.panX=0; view.panY=0; syncUI(); draw(); }
+  fitView(); syncUI(); draw(); }
 $('loadPreset').onclick=()=>loadPreset($('preset').value);
 $('wallModeBtn').onclick=()=>{ setFortOnly(true); loadPreset('hq_concrete_walk_exit'); $('missionTarget').value='hq'; buildOut(); };
 
@@ -1187,9 +1368,16 @@ function syncUI(){
   $('selName').textContent=o?o.cls:'no selection';
   if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; }
   // crew estimate — cheap, single soldier per gun: AI cost == weapon count (no garrison).
-  const wpns=objs.filter(x=>IS_WPN(x.cls)).length;
-  const ai=objs.reduce((s,x)=>s+CREW_OF(x.cls),0);
-  $('cWpn').textContent=wpns; $('cAI').textContent=ai; $('cAInote').textContent='(1 / gun)';
+  if(buildMode==='base'){
+    $('cWpnLabel').textContent='structures'; $('cWpn').textContent=objs.length;
+    $('cAILabel').textContent='spread'; const r=objs.reduce((m,x)=>Math.max(m,Math.hypot(x.x,x.y)),0);
+    $('cAI').textContent=Math.round(r)+' m'; $('cAInote').textContent='(max from HQ)';
+  } else {
+    const wpns=objs.filter(x=>IS_WPN(x.cls)).length;
+    const ai=objs.reduce((s,x)=>s+CREW_OF(x.cls),0);
+    $('cWpnLabel').textContent='guns'; $('cAILabel').textContent='AI cost';
+    $('cWpn').textContent=wpns; $('cAI').textContent=ai; $('cAInote').textContent='(1 / gun)';
+  }
   buildOut();
 }
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('input',()=>{ const o=objs.find(x=>x.id===sel); if(!o)return;
@@ -1275,14 +1463,15 @@ const b64u = {
   dec(str){ let b=str.replace(/-/g,'+').replace(/_/g,'/'); while(b.length%4) b+='=';
     const u=Uint8Array.from(atob(b), c=>c.charCodeAt(0)); return JSON.parse(new TextDecoder().decode(u)); }
 };
-function projectData(){ return {name:$('tplName').value, parentW, parentD, parentDir, structureType, fortOnly,
+function projectData(){ return {name:$('tplName').value, parentW, parentD, parentDir, structureType, fortOnly, mode:buildMode,
   objs:objs.map(o=>({cls:o.cls,x:o.x,y:o.y,z:o.z,dir:o.dir}))}; }
 function loadProject(d){ if(!d || typeof d!=='object') return false;
+  setMode(d.mode==='base' ? 'base' : 'defense');
   $('tplName').value = (typeof d.name==='string' && d.name) ? d.name : $('tplName').value;
   parentW=+d.parentW||14; parentD=+d.parentD||14; parentDir=+d.parentDir||0;
   $('pW').value=parentW; $('pD').value=parentD; $('parentDir').value=parentDir;
   setStructure(typeof d.structureType==='string'?d.structureType:'pad', false);
-  setFortOnly(!!d.fortOnly);
+  if(buildMode==='defense') setFortOnly(!!d.fortOnly);
   objs=(Array.isArray(d.objs)?d.objs:[]).map(o=>({id:nextId++, cls:String(o.cls||''), x:+o.x||0, y:+o.y||0, z:+o.z||0, dir:+o.dir||0}));
   sel=null; syncUI(); draw(); return true;
 }
@@ -1317,14 +1506,14 @@ $('importBtn').onclick=()=>{ let raw=$('importBox').value.trim(); if(!raw)return
   }catch(err){ alert("Could not parse. Paste entries as they appear inside the outer [ ], e.g.\n['Land_HBarrier_large',[8,0,0],90],\n['Land_HBarrier_large',[8,10,0],90]"); } };
 
 /* ---------- Save / load JSON ---------- */
-$('saveJson').onclick=()=>{ const data=JSON.stringify({name:$('tplName').value,parentW,parentD,parentDir,structureType,fortOnly,objs},null,2);
+$('saveJson').onclick=()=>{ const data=JSON.stringify({name:$('tplName').value,parentW,parentD,parentDir,structureType,fortOnly,mode:buildMode,objs},null,2);
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type:'application/json'})); a.download=($('tplName').value||'composition')+'.json'; a.click(); };
 $('loadJson').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
   inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const r=new FileReader();
     r.onload=()=>{ try{ loadProject(JSON.parse(r.result)); }catch(e){alert('Bad JSON');} }; r.readAsText(f); }; inp.click(); };
 
 /* ---------- Boot ---------- */
-loadPreset('hq_concrete_walk_exit'); resize(); preloadSprites(); loadFromHash();   // hash layout (if any) overrides the default preset
+resize(); loadPreset('hq_concrete_walk_exit'); preloadSprites(); loadFromHash();   // resize first so fitView sees real canvas dims; hash layout (if any) overrides the default preset
 </script>
 </body>
 </html>
