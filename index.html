@@ -690,18 +690,8 @@ const PRESETS = {
     ['Base_WarfareBBarrier10x',[-24,-10.5,0],90],['Base_WarfareBBarrier10x',[-24,10.5,0],90],
     ['Base_WarfareBBarrier10x',[24,-10.5,0],90],['Base_WarfareBBarrier10x',[24,10.5,0],90]
   ]},
-  radar_walk_exit: { name:'RADAR WALL · Artillery Radar enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_ARTILLERYRADAR_WALLS', parent:'radar', objs:[
-    ['Base_WarfareBBarrier5x',[-6,13,0],0],['Base_WarfareBBarrier5x',[6,13,0],0],
-    ['Base_WarfareBBarrier5x',[-7.5,-13,0],0],['Base_WarfareBBarrier5x',[7.5,-13,0],0],
-    ['Base_WarfareBBarrier5x',[-13,6,0],90],['Base_WarfareBBarrier5x',[-13,-6,0],90],
-    ['Base_WarfareBBarrier5x',[13,6,0],90],['Base_WarfareBBarrier5x',[13,-6,0],90]
-  ]},
-  reserve_walk_exit: { name:'RESERVE WALL · Reserve enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_RESERVE_WALLS', parent:'reserve', objs:[
-    ['Base_WarfareBBarrier10x',[-12,18,0],0],['Base_WarfareBBarrier10x',[12,18,0],0],
-    ['Base_WarfareBBarrier10x',[-13.5,-18,0],0],['Base_WarfareBBarrier10x',[13.5,-18,0],0],
-    ['Base_WarfareBBarrier10x',[-24,-7.5,0],90],['Base_WarfareBBarrier10x',[-24,7.5,0],90],
-    ['Base_WarfareBBarrier10x',[24,-7.5,0],90],['Base_WarfareBBarrier10x',[24,7.5,0],90]
-  ]},
+  // (Plain radar/reserve wall rings removed — the CHOSEN designs below are the canonical
+  //  RADAR WALL ⭐ / RESERVE WALL ⭐ entries: walled boom-gate checkpoint & floodlit walled yard.)
   uav_walk_exit: { name:'UAV WALL · UAV Terminal enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_UAVTERMINAL_WALLS', parent:'uav', objs:[
     ['Base_WarfareBBarrier5x',[-6,10,0],0],['Base_WarfareBBarrier5x',[6,10,0],0],
     ['Base_WarfareBBarrier5x',[-7.5,-10,0],0],['Base_WarfareBBarrier5x',[7.5,-10,0],0],
@@ -741,7 +731,7 @@ const PRESETS = {
     ['Land_fort_watchtower_EP1',[-11,11,0],45],['Land_fort_watchtower_EP1',[11,11,0],315],
     ['Land_Misc_deerstand',[0,-16,0],180]
   ]},
-  radar_gate_checkpoint: { name:'📡 RADAR · Walled + boom-gate entrance (0 AI)', tpl:'WFBE_NEURODEF_ARTILLERYRADAR_WALLS', parent:'radar', objs:[
+  radar_gate_checkpoint: { name:'📡 RADAR WALL ⭐ · walled gate — CHOSEN design (0 AI)', tpl:'WFBE_NEURODEF_ARTILLERYRADAR_WALLS', parent:'radar', objs:[
     ['Base_WarfareBBarrier5x',[-6,13,0],0],['Base_WarfareBBarrier5x',[6,13,0],0],
     ['Base_WarfareBBarrier5x',[-13,6,0],90],['Base_WarfareBBarrier5x',[-13,-6,0],90],
     ['Base_WarfareBBarrier5x',[13,6,0],90],['Base_WarfareBBarrier5x',[13,-6,0],90],
@@ -783,7 +773,7 @@ const PRESETS = {
     ['Fort_Barricade',[-12,-12,0],0],['Fort_Barricade',[12,-12,0],0],
     ['Land_CncBlock_Stripes',[-3,-12,0],0],['Land_CncBlock_Stripes',[3,-12,0],0]
   ]},
-  reserve_tower_yard: { name:'🚛 RESERVE · Walled yard, towers + floodlight (0 AI)', tpl:'WFBE_NEURODEF_RESERVE_WALLS', parent:'reserve', objs:[
+  reserve_tower_yard: { name:'🚛 RESERVE WALL ⭐ · walled yard — CHOSEN design (0 AI)', tpl:'WFBE_NEURODEF_RESERVE_WALLS', parent:'reserve', objs:[
     ['Base_WarfareBBarrier10x',[-12,18,0],0],['Base_WarfareBBarrier10x',[12,18,0],0],
     ['Base_WarfareBBarrier10x',[-13.5,-18,0],0],['Base_WarfareBBarrier10x',[13.5,-18,0],0],
     ['Base_WarfareBBarrier10x',[-24,-7.5,0],90],['Base_WarfareBBarrier10x',[-24,7.5,0],90],
@@ -1093,9 +1083,9 @@ const PRESETS = {
 /* Preset dropdown groups — order = display order; unlisted keys land in "Other". */
 const PRESET_GROUPS = [
   ['🏗 Base layouts (whole base)', ['base_west_fob','base_east_regiment','base_compact_start','base_airbase_west','base_arty_firebase_east']],
-  ['🧰 Mission walls — per building', ['hq_walk_exit','hq_concrete_walk_exit','factory_barracks_walk_exit','factory_light_walk_exit','factory_heavy_walk_exit','factory_aircraft_walk_exit','radar_walk_exit','reserve_walk_exit','uav_walk_exit']],
-  ['📡 Artillery Radar designs (fort-only)', ['radar_concrete_shield','radar_camo_hide','radar_obstacle_belt','radar_tower_overwatch','radar_gate_checkpoint']],
-  ['🚛 Reserve designs', ['reserve_concrete_yard','reserve_motorpool_gate','reserve_camo_compound','reserve_obstacle_perimeter','reserve_tower_yard']],
+  ['🧰 Mission walls — per building', ['hq_walk_exit','hq_concrete_walk_exit','factory_barracks_walk_exit','factory_light_walk_exit','factory_heavy_walk_exit','factory_aircraft_walk_exit','radar_gate_checkpoint','reserve_tower_yard','uav_walk_exit']],
+  ['📡 Artillery Radar designs (fort-only)', ['radar_concrete_shield','radar_camo_hide','radar_obstacle_belt','radar_tower_overwatch']],
+  ['🚛 Reserve designs', ['reserve_concrete_yard','reserve_motorpool_gate','reserve_camo_compound','reserve_obstacle_perimeter']],
   ['🎯 Building guards', ['reserve_guard_west','reserve_guard_east']],
   ['🧱 Fortifications & modular walls (0 AI)', ['fort_sandbag_ring','fort_sandbag_horseshoe','fort_hbarrier_ubay','fort_obstacle_line','fort_wire_belt','fort_bunker_shell','wall_straight','wall_corner','wall_gate','wall_hesco_run']],
   ['🛡 WEST defenses', ['aa_west_v1','aa_west_v2','aapos_west','at_west_v1','at_west_v2','mg_west_v1','mg_west_v2','gl_west_v1','mortar_west_v1','arty_west_v1','artypos_west','mixed_west_v1','mixedpos_west','cp_west_v1','cp_west_v2']],
