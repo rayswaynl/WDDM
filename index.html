@@ -154,6 +154,9 @@
         <option value="aircraft">Aircraft Factory</option>
         <option value="commandcenter">Command Center</option>
         <option value="servicepoint">Service Point</option>
+        <option value="radar">Artillery Radar</option>
+        <option value="reserve">Reserve</option>
+        <option value="uav">UAV Terminal</option>
       </select>
 
       <label style="margin-top:10px">Mission wall target</label>
@@ -167,6 +170,9 @@
         <option value="factory_aircraft">Aircraft factory walls</option>
         <option value="commandcenter">Command Center walls</option>
         <option value="servicepoint">Service Point walls</option>
+        <option value="radar">Artillery Radar walls</option>
+        <option value="reserve">Reserve walls</option>
+        <option value="uav">UAV Terminal walls</option>
       </select>
 
       <div class="divider"></div>
@@ -209,6 +215,8 @@
         <input id="fofToggle" type="checkbox" style="width:auto"> fields of fire
       </label>
       <button id="resetView">Reset view</button>
+      <button id="previewBtn" title="Clean render — hides grid, axes, handles and selection so you see the layout as it will read in-game">Preview</button>
+      <button id="snapBtn" title="Download the current view as a PNG image — handy for Discord submissions">PNG ⬇</button>
     </div>
     <div class="crewbox" id="crewbox">
       <div>guns: <b id="cWpn">0</b></div>
@@ -382,6 +390,18 @@ const CATALOG = [
   {grp:'Fortifications',    cls:'Land_CamoNetB_NATO',         size:[9,9],    style:'camo'},
   {grp:'Fortifications',    cls:'Land_CamoNet_EAST',          size:[7,7],    style:'camo'},
   {grp:'Fortifications',    cls:'Land_CamoNetB_EAST',         size:[9,9],    style:'camo'},
+  // === Catalog expansion 2 — checkpoint & base props (classnames verified vs A2/OA object lists) ===
+  {grp:'Checkpoint props',  cls:'Land_BarGate2',              size:[5.5,0.4],style:'cnc'},   // boom gate
+  {grp:'Checkpoint props',  cls:'ZavoraAnim',                 size:[5,0.4],  style:'cnc'},   // animated boom barrier
+  {grp:'Checkpoint props',  cls:'Land_GuardShed',             size:[2.5,2.5],style:'tower'}, // guard shack
+  {grp:'Checkpoint props',  cls:'Land_Fire_barrel',           size:[0.6,0.6],style:'cone'},
+  {grp:'Checkpoint props',  cls:'SearchLight_US_EP1',         size:[1.2,1.4],style:'search', cat:'search'}, // manned (1 AI)
+  {grp:'Checkpoint props',  cls:'SearchLight_TK_EP1',         size:[1.2,1.4],style:'search', cat:'search'}, // manned (1 AI)
+  {grp:'Fortifications',    cls:'Land_Misc_deerstand',        size:[2,2],    style:'tower'}, // wooden obs tower
+  {grp:'Fortifications',    cls:'Fort_Barricade',             size:[4,2],    style:'sandbag'}, // sandbag barricade + net
+  {grp:'Walls (H-barrier)', cls:'Land_HBarrier1',             size:[1.2,1.2],style:'hbarrier'}, // single HESCO cell
+  {grp:'Ammo / logistics',  cls:'RUBasicAmmunitionBox',       size:[1.0,0.6],style:'ammo'},
+  {grp:'Ammo / logistics',  cls:'RUVehicleBox',               size:[1.0,0.6],style:'ammo'},
 ];
 const META   = c => CATALOG.find(o=>o.cls===c) || {};
 const SIZE_OF= c => META(c).size  || [2,2];               // collision footprint (spacing/snap/hit-test)
@@ -447,7 +467,12 @@ const SPRITE_ALIAS = {
   Land_CamoNet_NATO:       'Land_CamoNetVar_NATO',
   Land_CamoNetB_NATO:      'Land_CamoNetVar_NATO',
   Land_CamoNet_EAST:       'Land_CamoNetVar_NATO',
-  Land_CamoNetB_EAST:      'Land_CamoNetVar_NATO'
+  Land_CamoNetB_EAST:      'Land_CamoNetVar_NATO',
+  // catalog-expansion-2 aliases
+  Land_Misc_deerstand:     'Land_fort_watchtower_EP1',
+  Fort_Barricade:          'Land_fort_bagfence_long',
+  RUBasicAmmunitionBox:    'USBasicAmmunitionBox_EP1',
+  RUVehicleBox:            'USBasicAmmunitionBox_EP1'
 };
 const SPRITES = {};                       // basename -> {img, ok}
 let _spriteRedraw = false;
@@ -574,6 +599,60 @@ const PRESETS = {
     ['Base_WarfareBBarrier10x',[-13.5,-21,0],0],['Base_WarfareBBarrier10x',[13.5,-21,0],0],
     ['Base_WarfareBBarrier10x',[-24,-10.5,0],90],['Base_WarfareBBarrier10x',[-24,10.5,0],90],
     ['Base_WarfareBBarrier10x',[24,-10.5,0],90],['Base_WarfareBBarrier10x',[24,10.5,0],90]
+  ]},
+  radar_walk_exit: { name:'RADAR WALL · Artillery Radar enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_ARTILLERYRADAR_WALLS', parent:'radar', objs:[
+    ['Base_WarfareBBarrier5x',[-6,13,0],0],['Base_WarfareBBarrier5x',[6,13,0],0],
+    ['Base_WarfareBBarrier5x',[-7.5,-13,0],0],['Base_WarfareBBarrier5x',[7.5,-13,0],0],
+    ['Base_WarfareBBarrier5x',[-13,6,0],90],['Base_WarfareBBarrier5x',[-13,-6,0],90],
+    ['Base_WarfareBBarrier5x',[13,6,0],90],['Base_WarfareBBarrier5x',[13,-6,0],90]
+  ]},
+  reserve_walk_exit: { name:'RESERVE WALL · Reserve enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_RESERVE_WALLS', parent:'reserve', objs:[
+    ['Base_WarfareBBarrier10x',[-12,18,0],0],['Base_WarfareBBarrier10x',[12,18,0],0],
+    ['Base_WarfareBBarrier10x',[-13.5,-18,0],0],['Base_WarfareBBarrier10x',[13.5,-18,0],0],
+    ['Base_WarfareBBarrier10x',[-24,-7.5,0],90],['Base_WarfareBBarrier10x',[-24,7.5,0],90],
+    ['Base_WarfareBBarrier10x',[24,-7.5,0],90],['Base_WarfareBBarrier10x',[24,7.5,0],90]
+  ]},
+  uav_walk_exit: { name:'UAV WALL · UAV Terminal enclosed, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_UAVTERMINAL_WALLS', parent:'uav', objs:[
+    ['Base_WarfareBBarrier5x',[-6,10,0],0],['Base_WarfareBBarrier5x',[6,10,0],0],
+    ['Base_WarfareBBarrier5x',[-7.5,-10,0],0],['Base_WarfareBBarrier5x',[7.5,-10,0],0],
+    ['Base_WarfareBBarrier5x',[-13,5,0],90],['Base_WarfareBBarrier5x',[-13,-5,0],90],
+    ['Base_WarfareBBarrier5x',[13,5,0],90],['Base_WarfareBBarrier5x',[13,-5,0],90]
+  ]},
+
+  // ---------- BUILDING GUARDS — defended Artillery Radar / Reserve compounds ----------
+  radar_guard_west: { name:'📡 RADAR GUARD · WEST — AA umbrella + MG gate (3 AI)', tpl:'WFBE_NEURODEF_RADARGUARD_WEST', parent:'radar', objs:[
+    ['Stinger_Pod_US_EP1',[-9,9,0],330],['Land_fort_bagfence_round',[-9,9,0],0],
+    ['Stinger_Pod_US_EP1',[9,9,0],30],['Land_fort_bagfence_round',[9,9,0],0],
+    ['M2StaticMG',[0,-10,0],180],['Land_fort_bagfence_round',[0,-10,0],0],
+    ['Land_HBarrier_large',[-11,0,0],90],['Land_HBarrier_large',[11,0,0],90],
+    ['USBasicAmmunitionBox_EP1',[-5,-8,0],0],
+    ['Fort_RazorWire',[-7,-11,0],0],['Fort_RazorWire',[7,-11,0],0]
+  ]},
+  radar_guard_east: { name:'📡 RADAR GUARD · EAST — ZU-23 belt + DShKM gate (3 AI)', tpl:'WFBE_NEURODEF_RADARGUARD_EAST', parent:'radar', objs:[
+    ['ZU23_TK_EP1',[-9,9,0],350],['Land_fort_bagfence_round',[-9,9,0],0],
+    ['Igla_AA_pod_TK_EP1',[9,9,0],10],['Land_fort_bagfence_round',[9,9,0],0],
+    ['DSHKM_TK_INS_EP1',[0,-10,0],180],['Land_fort_bagfence_round',[0,-10,0],0],
+    ['Land_HBarrier_large',[-11,0,0],90],['Land_HBarrier_large',[11,0,0],90],
+    ['TKVehicleBox_EP1',[-5,-8,0],0],
+    ['Hedgehog',[-7,-11,0],0],['Hedgehog',[7,-11,0],0]
+  ]},
+  reserve_guard_west: { name:'🏥 RESERVE GUARD · WEST — flank MGs + AT overwatch (3 AI)', tpl:'WFBE_NEURODEF_RESERVEGUARD_WEST', parent:'reserve', objs:[
+    ['M2StaticMG',[-13,6,0],330],['Land_fort_bagfence_round',[-13,6,0],0],
+    ['M2StaticMG',[13,6,0],30],['Land_fort_bagfence_round',[13,6,0],0],
+    ['TOW_TriPod_US_EP1',[-10,-9,0],200],['Land_fort_bagfence_round',[-10,-9,0],0],
+    ['Land_CamoNetVar_NATO',[-10,-9,0],0],
+    ['Land_HBarrier_large',[0,11,0],0],
+    ['USBasicAmmunitionBox_EP1',[6,-9,0],0],
+    ['Fort_RazorWire',[-8,12,0],0],['Fort_RazorWire',[8,12,0],0]
+  ]},
+  reserve_guard_east: { name:'🏥 RESERVE GUARD · EAST — DShKM line + SPG-9 flank (3 AI)', tpl:'WFBE_NEURODEF_RESERVEGUARD_EAST', parent:'reserve', objs:[
+    ['DSHKM_TK_INS_EP1',[-13,6,0],340],['Land_fort_bagfence_round',[-13,6,0],0],
+    ['DSHKM_TK_INS_EP1',[13,6,0],20],['Land_fort_bagfence_round',[13,6,0],0],
+    ['SPG9_TK_INS_EP1',[-10,-9,0],200],['Land_fort_bagfence_round',[-10,-9,0],0],
+    ['Land_CamoNetVar_EAST',[-10,-9,0],0],
+    ['Land_HBarrier_large',[0,11,0],0],
+    ['TKBasicAmmunitionBox_EP1',[6,-9,0],0],
+    ['Hedgehog',[-8,12,0],0],['Hedgehog',[8,12,0],0]
   ]},
 
   // ====================== WEST (US / NATO) MANNED DEFENSES ======================
@@ -800,7 +879,10 @@ const STRUCTURES = {
   heavy:{label:'Heavy Factory', w:28, d:16, style:'factory'},
   aircraft:{label:'Aircraft Factory', w:30, d:18, style:'hangar'},
   commandcenter:{label:'Command Center', w:12, d:10, style:'hq'},
-  servicepoint:{label:'Service Point', w:16, d:8, style:'factory'}
+  servicepoint:{label:'Service Point', w:16, d:8, style:'factory'},
+  radar:{label:'Artillery Radar', w:14, d:14, style:'radar'},
+  reserve:{label:'Reserve', w:20, d:14, style:'factory'},
+  uav:{label:'UAV Terminal', w:10, d:8, style:'hq'}
 };
 function setStructure(type, resizeFootprint=true){
   structureType = STRUCTURES[type] ? type : 'pad';
@@ -854,7 +936,11 @@ function headingOf(o){ return ((parentDir - o.dir)%360+360)%360; }
 function localToWorld(lx,ly,H){ const r=H*Math.PI/180; return [ lx*Math.cos(r)+ly*Math.sin(r), -lx*Math.sin(r)+ly*Math.cos(r) ]; }
 
 /* ---------- Drawing ---------- */
-function draw(){ ctx.clearRect(0,0,cw(),ch()); drawGrid(); drawParent(); drawFOF(); objs.forEach(drawObj); }
+let PREVIEW=false;   // clean-render mode: terrain backdrop, no grid/axes/handles/selection
+function draw(){ ctx.clearRect(0,0,cw(),ch());
+  if(PREVIEW){ ctx.fillStyle='#31371f'; ctx.fillRect(0,0,cw(),ch()); }   // muted earth/grass tone
+  else drawGrid();
+  drawParent(); drawFOF(); objs.forEach(drawObj); }
 function drawGrid(){
   const step=view.scale, [ox,oy]=w2s(0,0); ctx.lineWidth=1;
   const left=-Math.ceil((cw()/2+view.panX)/step)-1, right=Math.ceil((cw()/2-view.panX)/step)+1;
@@ -870,6 +956,7 @@ function drawParent(){
   const pts=rectWorld(0,0,parentW,parentD,((parentDir)%360+360)%360);
   poly(pts,'rgba(92,101,54,.12)','#5C6536',1.5);
   drawStructureFootprint();
+  if(PREVIEW) return;                                   // clean render: no front axis markers
   const [fx,fy]=localToWorld(0,parentD/2+2,((parentDir)%360+360)%360), a=w2s(fx,fy), b=w2s(0,0);
   ctx.strokeStyle='#D9763C';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(b[0],b[1]);ctx.lineTo(a[0],a[1]);ctx.stroke();
   ctx.fillStyle='#D9763C';ctx.beginPath();ctx.arc(a[0],a[1],4,0,7);ctx.fill();
@@ -889,6 +976,14 @@ function drawStructureFootprint(){
     [-0.22,0.22].forEach(x=>poly(rectWorld(parentW*x,0,parentW*0.22,parentD*0.75,H),'rgba(68,78,88,.45)','#69737D',1));
   } else if(s.style==='hq'){
     poly(rectWorld(0,parentD*0.12,parentW*0.45,parentD*0.45,H),'rgba(68,78,88,.5)','#69737D',1);
+  } else if(s.style==='radar'){
+    // radar dish: circle + sweep line, reads as "antenna" at any zoom
+    const r=Math.min(parentW,parentD)*0.28*view.scale, c2=w2s(0,0);
+    ctx.strokeStyle='#69737D'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.arc(c2[0],c2[1],r,0,7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(c2[0],c2[1],r*0.55,0,7); ctx.stroke();
+    const sw=localToWorld(0,Math.min(parentW,parentD)*0.28,(H+45)%360), p2=w2s(sw[0],sw[1]);
+    ctx.beginPath(); ctx.moveTo(c2[0],c2[1]); ctx.lineTo(p2[0],p2[1]); ctx.stroke();
   }
   const front=w2s(...localToWorld(0,parentD/2,H));
   ctx.strokeStyle='rgba(217,118,60,.8)';
@@ -915,7 +1010,7 @@ function styleColors(style){
   if(style==='aa') return PAL.aa; if(style==='arty'||style==='mortar') return PAL.arty;
   if(style==='ammo') return PAL.ammo; if(style==='hbarrier') return PAL.wall;
   if(style==='sandbag') return PAL.bag; if(['nest','tower','camo','hedgehog'].includes(style)) return PAL.fort;
-  if(style==='wire') return PAL.wire; return PAL.box;
+  if(style==='wire') return PAL.wire; if(style==='search') return PAL.aa; return PAL.box;
 }
 /* each texture draws within [-w/2..w/2] x [-d/2..d/2], +y = front */
 const TEX = {
@@ -960,7 +1055,11 @@ const TEX = {
     lw(1);ctx.strokeStyle=c.s; ctx.beginPath();ctx.moveTo(-w/2,-d/2);ctx.lineTo(w/2,d/2);ctx.moveTo(w/2,-d/2);ctx.lineTo(-w/2,d/2);ctx.stroke(); },
   cone(w,d){ const c=styleColors('cone'); ctx.fillStyle=c.f; ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.45,0,7);ctx.fill();
     lw(1.2);ctx.strokeStyle=c.s; ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.45,0,7);ctx.stroke();
-    ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.2,0,7);ctx.stroke(); }
+    ctx.beginPath();ctx.arc(0,0,Math.min(w,d)*0.2,0,7);ctx.stroke(); },
+  search(w,d){ const c=styleColors('search'); TEX.base(c,w,d);            // pedestal + light beam cone
+    ctx.globalAlpha=.35; ctx.fillStyle=c.s; ctx.beginPath(); ctx.moveTo(0,0);
+    ctx.lineTo(-w*0.45,d*0.95); ctx.lineTo(w*0.45,d*0.95); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+    lw(1.6); ctx.strokeStyle=c.s; ctx.beginPath(); ctx.arc(0,d*0.12,Math.min(w,d)*0.2,0,7); ctx.stroke(); }
 };
 /* ---------- Fields of fire overlay (Component 3) ----------
    Filled translucent firing-arc per weapon, centred on its heading, reusing the
@@ -1009,7 +1108,8 @@ function drawObj(o){
       (TEX[st]||TEX.box)(aw,ad);                       // FALLBACK: procedural glyph at ART span
     }
     ctx.globalAlpha=1;
-    if(isSel){ lw(2); ctx.strokeStyle='#D9763C'; ctx.strokeRect(-w/2-0.2,-d/2-0.2,w+0.4,d+0.4); } });  // selection rect = COLLISION size
+    if(isSel && !PREVIEW){ lw(2); ctx.strokeStyle='#D9763C'; ctx.strokeRect(-w/2-0.2,-d/2-0.2,w+0.4,d+0.4); } });  // selection rect = COLLISION size
+  if(PREVIEW) return;                                   // clean render: no facing ticks / rotate handles
   // facing tick + rotate handle in screen space (offset from collision depth)
   const [fx,fy]=localToWorld(0,d/2+0.8,H), c=w2s(o.x,o.y), f=w2s(o.x+fx,o.y+fy);
   ctx.strokeStyle=isSel?'#F2EFE8':'rgba(231,227,214,.5)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(c[0],c[1]);ctx.lineTo(f[0],f[1]);ctx.stroke();
@@ -1106,10 +1206,24 @@ $('snap').addEventListener('change',e=>snap=e.target.checked);
 $('useSprites').addEventListener('change',e=>{USE_SPRITES=e.target.checked;draw();});
 $('fofToggle').addEventListener('change',e=>{SHOW_FOF=e.target.checked;draw();});
 $('resetView').onclick=()=>{view.scale=14;view.panX=0;view.panY=0;draw();};
+$('previewBtn').onclick=()=>{ PREVIEW=!PREVIEW; $('previewBtn').classList.toggle('primary',PREVIEW);
+  if(PREVIEW) objs.forEach(o=>delete o._handle);             // no invisible rotate handles
+  draw(); };
+$('snapBtn').onclick=()=>{                                   // PNG snapshot of the current view
+  const ex=document.createElement('canvas'); ex.width=cv.width; ex.height=cv.height;
+  const c2=ex.getContext('2d');
+  c2.fillStyle = PREVIEW ? '#31371f' : '#11151a';            // canvas itself is transparent → add a backdrop
+  c2.fillRect(0,0,ex.width,ex.height); c2.drawImage(cv,0,0);
+  ex.toBlob(b=>{ const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download=(($('tplName').value.trim()||'wddm_layout')+'.png');
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  },'image/png');
+};
 $('tplName').addEventListener('input',buildOut);
 $('missionTarget').addEventListener('change',()=>{ const names=targetNames();
   if(names.length===1 && $('missionTarget').value!=='custom') $('tplName').value=names[0];
-  const map={hq:'hq',factory_all:'barracks',factory_barracks:'barracks',factory_light:'light',factory_heavy:'heavy',factory_aircraft:'aircraft',commandcenter:'commandcenter',servicepoint:'servicepoint'};
+  const map={hq:'hq',factory_all:'barracks',factory_barracks:'barracks',factory_light:'light',factory_heavy:'heavy',factory_aircraft:'aircraft',commandcenter:'commandcenter',servicepoint:'servicepoint',radar:'radar',reserve:'reserve',uav:'uav'};
   if(map[$('missionTarget').value]) setStructure(map[$('missionTarget').value], true);
   buildOut();
 });
@@ -1123,7 +1237,10 @@ const MISSION_TARGETS = {
   factory_heavy:['WFBE_NEURODEF_HEAVY_WALLS'],
   factory_aircraft:['WFBE_NEURODEF_AIRCRAFT_WALLS'],
   commandcenter:['WFBE_NEURODEF_COMMANDCENTER_WALLS'],
-  servicepoint:['WFBE_NEURODEF_SERVICEPOINT_WALLS']
+  servicepoint:['WFBE_NEURODEF_SERVICEPOINT_WALLS'],
+  radar:['WFBE_NEURODEF_ARTILLERYRADAR_WALLS'],
+  reserve:['WFBE_NEURODEF_RESERVE_WALLS'],
+  uav:['WFBE_NEURODEF_UAVTERMINAL_WALLS']
 };
 const TARGET_BY_TEMPLATE = {
   WFBE_NEURODEF_HEADQUARTERS_WALLS:'hq',
@@ -1132,7 +1249,10 @@ const TARGET_BY_TEMPLATE = {
   WFBE_NEURODEF_HEAVY_WALLS:'factory_heavy',
   WFBE_NEURODEF_AIRCRAFT_WALLS:'factory_aircraft',
   WFBE_NEURODEF_COMMANDCENTER_WALLS:'commandcenter',
-  WFBE_NEURODEF_SERVICEPOINT_WALLS:'servicepoint'
+  WFBE_NEURODEF_SERVICEPOINT_WALLS:'servicepoint',
+  WFBE_NEURODEF_ARTILLERYRADAR_WALLS:'radar',
+  WFBE_NEURODEF_RESERVE_WALLS:'reserve',
+  WFBE_NEURODEF_UAVTERMINAL_WALLS:'uav'
 };
 function targetNames(){ const target=$('missionTarget').value;
   if(target==='custom') return [($('tplName').value.trim()||'WFBE_NEURODEF_CUSTOM_WALLS')];

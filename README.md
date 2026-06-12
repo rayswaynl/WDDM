@@ -38,6 +38,10 @@ Cold War defensive doctrine (NATO dispersed & concealed · Warsaw Pact massed & 
 - **Import** an existing template to edit it, and **save/load** your work as JSON.
 - **18 built-in presets**, including the four faction-specific defense types in light & heavy variants.
 - **HQ / Factory wall mode** — click **Edit HQ / Factory walls** to load enclosed one-exit wall examples, including the concrete HQ shield, and filter the palette to fortifications-only assets for community submissions.
+- **More buildings** — besides the HQ and factories, design around the **Artillery Radar** (with a radar-dish footprint), **Reserve** and **UAV Terminal**, each with its own wall target and ready-made enclosed-wall + faction guard presets.
+- **Preview mode** — one click hides the grid, axes, handles and selection and drops the layout on a terrain-toned backdrop so you see it the way it will read in-game.
+- **PNG snapshot** — download the current view as an image, ready to drop straight into Discord.
+- **Checkpoint props** — boom gates, guard shed, fire barrel and manned **searchlights** (1 AI each), plus deer-stand towers, sandbag barricades, single HESCO cells and RU ammo boxes in the palette.
 
 > WDDM is engine-agnostic about *what* you build — any classname string works, so it's
 > equally useful for Arma 2 (OA), Arma 3, and forks of the various Warfare modes.
@@ -71,6 +75,7 @@ and it degrades gracefully to system fonts offline).
 | Nudge | Arrow keys (hold **Shift** for 1 m steps) |
 | Pan / zoom | Right-drag to pan · scroll to zoom |
 | Check rotation | Change **Facing** in the top toolbar to preview the placed heading |
+| See the end result | **Preview** in the toolbar — clean in-game-style render; **PNG ⬇** downloads it |
 | Export | Copy the **Generated SQF** on the right |
 | Import | Expand *Import an existing template*, paste the entries, **Load** |
 | Save / load project | Expand *Save / load project (JSON)* |
