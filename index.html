@@ -143,11 +143,12 @@
         <input id="fortOnly" type="checkbox"> Fortifications only
       </label>
       <div class="modebox" id="wallModeInfo">
-        <b>Wall-design assets</b>
+        <b>Wall-design assets</b> — everything that isn't a gun or an ammo crate
         <div class="asset-list">
           <span>HESCO walls</span><span>H-barriers</span><span>Sandbags</span><span>Concrete walls</span>
           <span>Ramparts</span><span>Empty nests</span><span>Watchtowers</span><span>Camo nets</span>
-          <span>Razor wire</span><span>Hedgehogs</span><span>Concrete blocks</span>
+          <span>Razor wire</span><span>Hedgehogs</span><span>Concrete blocks</span><span>Boom gates</span>
+          <span>Guard shed</span><span>Deer stands</span><span>Cones &amp; barrels</span>
         </div>
       </div>
       </div><!-- /defenseCtrlsA -->
@@ -493,10 +494,11 @@ const SIZE_OF= c => META(c).size  || [2,2];               // collision footprint
 const ART_OF = c => { const m=META(c); return m.art || m.size || [2,2]; }; // visual span (glyph/sprite draw)
 const STYLE  = c => META(c).style || 'box';
 const CAT_OF = c => META(c).cat   || null;       // weapon category or null
-const FORTIFICATION_GROUPS = ['Walls (H-barrier)','Sandbags','Fortifications','HESCO walls'];
-const OPTIONAL_FORTIFICATION_CLASSES = ['Fort_RazorWire','Hedgehog','Land_CncBlock_Stripes','Land_CncBlock'];
+/* Fortifications-only filter: every non-weapon, non-ammo game item/prop is allowed
+   (walls, sandbags, obstacles, gates, sheds, towers, camo, cones, barrels…).
+   Blocked: anything with a crew seat (cat) and the ammo/logistics crates. */
 function isFortificationAsset(o){
-  return !!o && !o.cat && (FORTIFICATION_GROUPS.includes(o.grp) || OPTIONAL_FORTIFICATION_CLASSES.includes(o.cls));
+  return !!o && !o.cat && o.grp!=='Ammo / logistics' && !isBaseStructure(o);
 }
 function classAllowedInFortMode(cls){
   const m = META(cls);
@@ -506,6 +508,9 @@ function classAllowedInFortMode(cls){
    so every weapon emplacement = 1 AI against the engineer's budget. */
 const CREW_OF= c => (IS_WPN(c) ? 1 : 0);
 const IS_WPN = c => CAT_OF(c)!==null;
+/* Buildings that take FORTIFICATIONS ONLY (no gun defenses): the radar + every factory. */
+const FORT_ONLY_TARGETS    = new Set(['radar','factory_all','factory_barracks','factory_light','factory_heavy','factory_aircraft']);
+const FORT_ONLY_STRUCTURES = new Set(['radar','barracks','light','heavy','aircraft']);
 
 /* ===================================================================
    Component 1 — SPRITE LAYER (top-down minis, real-kit anchored).
@@ -702,6 +707,90 @@ const PRESETS = {
     ['Base_WarfareBBarrier5x',[-7.5,-10,0],0],['Base_WarfareBBarrier5x',[7.5,-10,0],0],
     ['Base_WarfareBBarrier5x',[-13,5,0],90],['Base_WarfareBBarrier5x',[-13,-5,0],90],
     ['Base_WarfareBBarrier5x',[13,5,0],90],['Base_WarfareBBarrier5x',[13,-5,0],90]
+  ]},
+
+  // ---------- 📡 ARTILLERY RADAR — 5 fortification designs (0 AI, fort-only auto-on) ----------
+  radar_concrete_shield: { name:'📡 RADAR · Concrete shield, 1 walking exit (0 AI)', tpl:'WFBE_NEURODEF_ARTILLERYRADAR_WALLS', parent:'radar', objs:[
+    ['Concrete_Wall_EP1',[-7.2,11,0],0],['Concrete_Wall_EP1',[-3.6,11,0],0],['Concrete_Wall_EP1',[0,11,0],0],['Concrete_Wall_EP1',[3.6,11,0],0],['Concrete_Wall_EP1',[7.2,11,0],0],
+    ['Concrete_Wall_EP1',[-11,-7.2,0],90],['Concrete_Wall_EP1',[-11,-3.6,0],90],['Concrete_Wall_EP1',[-11,0,0],90],['Concrete_Wall_EP1',[-11,3.6,0],90],['Concrete_Wall_EP1',[-11,7.2,0],90],
+    ['Concrete_Wall_EP1',[11,-7.2,0],90],['Concrete_Wall_EP1',[11,-3.6,0],90],['Concrete_Wall_EP1',[11,0,0],90],['Concrete_Wall_EP1',[11,3.6,0],90],['Concrete_Wall_EP1',[11,7.2,0],90],
+    ['Concrete_Wall_EP1',[-7.2,-11,0],0],['Concrete_Wall_EP1',[-3.6,-11,0],0],['Concrete_Wall_EP1',[3.6,-11,0],0],['Concrete_Wall_EP1',[7.2,-11,0],0],
+    ['Land_CncBlock_Stripes',[-2.5,-11.5,0],0],['Land_CncBlock_Stripes',[2.5,-11.5,0],0]
+  ]},
+  radar_camo_hide: { name:'📡 RADAR · Camo concealment + wire (0 AI)', tpl:'WFBE_NEURODEF_ARTILLERYRADAR_WALLS', parent:'radar', objs:[
+    // doctrine: a radar you can't SEE is a radar you can't strike — nets over, low profile around
+    ['Land_CamoNetB_NATO',[0,0,0],0],
+    ['Land_CamoNet_NATO',[-7,5,0],0],['Land_CamoNet_NATO',[7,5,0],0],
+    ['Land_fort_bagfence_long',[-9,0,0],90],['Land_fort_bagfence_long',[9,0,0],90],
+    ['Land_fort_bagfence_long',[0,9,0],0],['Land_fort_bagfence_corner',[-8,8,0],270],['Land_fort_bagfence_corner',[8,8,0],180],
+    ['Fort_RazorWire',[-5,-9,0],0],['Fort_RazorWire',[5,-9,0],0],
+    ['Hedgehog',[0,11,0],0]
+  ]},
+  radar_obstacle_belt: { name:'📡 RADAR · Obstacle belt + chicane gate (0 AI)', tpl:'WFBE_NEURODEF_ARTILLERYRADAR_WALLS', parent:'radar', objs:[
+    ['Fort_RazorWire',[-8,11,0],0],['Fort_RazorWire',[0,11,0],0],['Fort_RazorWire',[8,11,0],0],
+    ['Fort_RazorWire',[-11,4,0],90],['Fort_RazorWire',[-11,-4,0],90],
+    ['Fort_RazorWire',[11,4,0],90],['Fort_RazorWire',[11,-4,0],90],
+    ['Hedgehog',[-8,-11,0],0],['Hedgehog',[-4,-11,0],0],['Hedgehog',[4,-11,0],0],['Hedgehog',[8,-11,0],0],
+    ['Land_CncBlock_Stripes',[-2,-11,0],0],['Land_CncBlock_Stripes',[2,-12.5,0],0]
+  ]},
+  radar_tower_overwatch: { name:'📡 RADAR · HESCO ring + watchtowers (0 AI)', tpl:'WFBE_NEURODEF_ARTILLERYRADAR_WALLS', parent:'radar', objs:[
+    ['Base_WarfareBBarrier5x',[-6,13,0],0],['Base_WarfareBBarrier5x',[6,13,0],0],
+    ['Base_WarfareBBarrier5x',[-13,6,0],90],['Base_WarfareBBarrier5x',[-13,-6,0],90],
+    ['Base_WarfareBBarrier5x',[13,6,0],90],['Base_WarfareBBarrier5x',[13,-6,0],90],
+    ['Base_WarfareBBarrier5x',[-7.5,-13,0],0],['Base_WarfareBBarrier5x',[7.5,-13,0],0],
+    ['Land_fort_watchtower_EP1',[-11,11,0],45],['Land_fort_watchtower_EP1',[11,11,0],315],
+    ['Land_Misc_deerstand',[0,-16,0],180]
+  ]},
+  radar_gate_checkpoint: { name:'📡 RADAR · Walled + boom-gate entrance (0 AI)', tpl:'WFBE_NEURODEF_ARTILLERYRADAR_WALLS', parent:'radar', objs:[
+    ['Base_WarfareBBarrier5x',[-6,13,0],0],['Base_WarfareBBarrier5x',[6,13,0],0],
+    ['Base_WarfareBBarrier5x',[-13,6,0],90],['Base_WarfareBBarrier5x',[-13,-6,0],90],
+    ['Base_WarfareBBarrier5x',[13,6,0],90],['Base_WarfareBBarrier5x',[13,-6,0],90],
+    ['Base_WarfareBBarrier5x',[-7.5,-13,0],0],['Base_WarfareBBarrier5x',[7.5,-13,0],0],
+    ['Land_BarGate2',[0,-13,0],0],
+    ['Land_GuardShed',[4,-15.5,0],180],['Land_Fire_barrel',[6.5,-15.5,0],0],
+    ['RoadCone_L_EP1',[-1.2,-16,0],0],['RoadCone_L_EP1',[1.2,-16,0],0]
+  ]},
+
+  // ---------- 🚛 RESERVE — 5 fortification designs (0 AI) ----------
+  reserve_concrete_yard: { name:'🚛 RESERVE · Concrete front + HESCO flanks (0 AI)', tpl:'WFBE_NEURODEF_RESERVE_WALLS', parent:'reserve', objs:[
+    ['Concrete_Wall_EP1',[-10.8,15,0],0],['Concrete_Wall_EP1',[-7.2,15,0],0],['Concrete_Wall_EP1',[-3.6,15,0],0],['Concrete_Wall_EP1',[0,15,0],0],
+    ['Concrete_Wall_EP1',[3.6,15,0],0],['Concrete_Wall_EP1',[7.2,15,0],0],['Concrete_Wall_EP1',[10.8,15,0],0],
+    ['Base_WarfareBBarrier10x',[-15,2,0],90],['Base_WarfareBBarrier10x',[15,2,0],90],
+    ['Concrete_Wall_EP1',[-10.8,-15,0],0],['Concrete_Wall_EP1',[-7.2,-15,0],0],['Concrete_Wall_EP1',[-3.6,-15,0],0],
+    ['Concrete_Wall_EP1',[3.6,-15,0],0],['Concrete_Wall_EP1',[7.2,-15,0],0],['Concrete_Wall_EP1',[10.8,-15,0],0],
+    ['Land_CncBlock_Stripes',[-2.5,-15.5,0],0],['Land_CncBlock_Stripes',[2.5,-15.5,0],0]
+  ]},
+  reserve_motorpool_gate: { name:'🚛 RESERVE · Motor-pool, double boom gate (0 AI)', tpl:'WFBE_NEURODEF_RESERVE_WALLS', parent:'reserve', objs:[
+    ['Base_WarfareBBarrier10x',[-12,16,0],0],['Base_WarfareBBarrier10x',[12,16,0],0],
+    ['Base_WarfareBBarrier10x',[-18,2,0],90],['Base_WarfareBBarrier10x',[18,2,0],90],
+    ['Base_WarfareBBarrier5x',[-12,-16,0],0],['Base_WarfareBBarrier5x',[12,-16,0],0],
+    ['Land_BarGate2',[-2.8,-16,0],0],['Land_BarGate2',[2.8,-16,0],0],
+    ['Land_GuardShed',[7.5,-19,0],180],['Land_Fire_barrel',[9.8,-19,0],0],
+    ['RoadCone_L_EP1',[0,-19,0],0],['Fort_RazorWire',[-14,-19,0],0],['Fort_RazorWire',[14,-19,0],0]
+  ]},
+  reserve_camo_compound: { name:'🚛 RESERVE · Camo over the bays + ramparts (0 AI)', tpl:'WFBE_NEURODEF_RESERVE_WALLS', parent:'reserve', objs:[
+    ['Land_CamoNetB_NATO',[-6,0,0],0],['Land_CamoNetB_NATO',[6,0,0],0],['Land_CamoNet_NATO',[0,-8,0],0],
+    ['Land_fort_rampart',[-12,11,0],0],['Land_fort_rampart',[0,12,0],0],['Land_fort_rampart',[12,11,0],0],
+    ['Land_fort_bagfence_long',[-15,2,0],90],['Land_fort_bagfence_long',[-15,-2,0],90],
+    ['Land_fort_bagfence_long',[15,2,0],90],['Land_fort_bagfence_long',[15,-2,0],90],
+    ['Fort_RazorWire',[-8,-13,0],0],['Fort_RazorWire',[8,-13,0],0],
+    ['Hedgehog',[0,15,0],0]
+  ]},
+  reserve_obstacle_perimeter: { name:'🚛 RESERVE · Hedgehog + wire perimeter (0 AI)', tpl:'WFBE_NEURODEF_RESERVE_WALLS', parent:'reserve', objs:[
+    ['Hedgehog',[-12,12,0],0],['Hedgehog',[-6,12,0],0],['Hedgehog',[0,12,0],0],['Hedgehog',[6,12,0],0],['Hedgehog',[12,12,0],0],
+    ['Fort_RazorWire',[-16,4,0],90],['Fort_RazorWire',[-16,-4,0],90],
+    ['Fort_RazorWire',[16,4,0],90],['Fort_RazorWire',[16,-4,0],90],
+    ['Fort_Barricade',[-12,-12,0],0],['Fort_Barricade',[12,-12,0],0],
+    ['Land_CncBlock_Stripes',[-3,-12,0],0],['Land_CncBlock_Stripes',[3,-12,0],0]
+  ]},
+  reserve_tower_yard: { name:'🚛 RESERVE · Walled yard, towers + floodlight (0 AI)', tpl:'WFBE_NEURODEF_RESERVE_WALLS', parent:'reserve', objs:[
+    ['Base_WarfareBBarrier10x',[-12,18,0],0],['Base_WarfareBBarrier10x',[12,18,0],0],
+    ['Base_WarfareBBarrier10x',[-13.5,-18,0],0],['Base_WarfareBBarrier10x',[13.5,-18,0],0],
+    ['Base_WarfareBBarrier10x',[-24,-7.5,0],90],['Base_WarfareBBarrier10x',[-24,7.5,0],90],
+    ['Base_WarfareBBarrier10x',[24,-7.5,0],90],['Base_WarfareBBarrier10x',[24,7.5,0],90],
+    ['Land_fort_watchtower_EP1',[-21,15,0],45],['Land_fort_watchtower_EP1',[21,15,0],315],
+    ['Land_Ind_IlluminantTower',[0,-9,0],0],
+    ['Land_Misc_deerstand',[0,-21,0],180]
   ]},
 
   // ---------- BUILDING GUARDS — defended Reserve compounds ----------
@@ -1005,6 +1094,8 @@ const PRESETS = {
 const PRESET_GROUPS = [
   ['🏗 Base layouts (whole base)', ['base_west_fob','base_east_regiment','base_compact_start','base_airbase_west','base_arty_firebase_east']],
   ['🧰 Mission walls — per building', ['hq_walk_exit','hq_concrete_walk_exit','factory_barracks_walk_exit','factory_light_walk_exit','factory_heavy_walk_exit','factory_aircraft_walk_exit','radar_walk_exit','reserve_walk_exit','uav_walk_exit']],
+  ['📡 Artillery Radar designs (fort-only)', ['radar_concrete_shield','radar_camo_hide','radar_obstacle_belt','radar_tower_overwatch','radar_gate_checkpoint']],
+  ['🚛 Reserve designs', ['reserve_concrete_yard','reserve_motorpool_gate','reserve_camo_compound','reserve_obstacle_perimeter','reserve_tower_yard']],
   ['🎯 Building guards', ['reserve_guard_west','reserve_guard_east']],
   ['🧱 Fortifications & modular walls (0 AI)', ['fort_sandbag_ring','fort_sandbag_horseshoe','fort_hbarrier_ubay','fort_obstacle_line','fort_wire_belt','fort_bunker_shell','wall_straight','wall_corner','wall_gate','wall_hesco_run']],
   ['🛡 WEST defenses', ['aa_west_v1','aa_west_v2','aapos_west','at_west_v1','at_west_v2','mg_west_v1','mg_west_v2','gl_west_v1','mortar_west_v1','arty_west_v1','artypos_west','mixed_west_v1','mixedpos_west','cp_west_v1','cp_west_v2']],
@@ -1410,7 +1501,7 @@ function loadPreset(key){ const p=PRESETS[key]; if(!p)return;
   $('tplName').value=p.tpl;
   $('preset').value=key;
   $('missionTarget').value=TARGET_BY_TEMPLATE[p.tpl]||'custom';
-  if(p.mode!=='base' && $('missionTarget').value==='radar') setFortOnly(true);   // radar = fortifications only
+  if(p.mode!=='base' && FORT_ONLY_TARGETS.has($('missionTarget').value)) setFortOnly(true);   // radar + factories = fortifications only
   if(p.mode!=='base') setStructure(p.parent||'pad', true);
   if(p.w){parentW=p.w;$('pW').value=p.w;} if(p.d){parentD=p.d;$('pD').value=p.d;} parentDir=0; $('parentDir').value=0;
   objs=[]; nextId=1; sel=null; p.objs.forEach(e=>objs.push({id:nextId++,cls:e[0],x:e[1][0],y:e[1][1],z:e[1][2],dir:e[2]}));
@@ -1450,7 +1541,7 @@ $('parentDir').addEventListener('input',e=>{parentDir=parseFloat(e.target.value)
 $('pW').addEventListener('input',e=>{parentW=parseFloat(e.target.value)||2;draw();});
 $('pD').addEventListener('input',e=>{parentD=parseFloat(e.target.value)||2;draw();});
 $('structureType').addEventListener('change',e=>{setStructure(e.target.value,true);
-  if(e.target.value==='radar') setFortOnly(true);            // radar takes fortifications only — no gun defenses
+  if(FORT_ONLY_STRUCTURES.has(e.target.value)) setFortOnly(true);   // radar + factories: fortifications only, no gun defenses
   draw();});
 $('fortOnly').addEventListener('change',e=>setFortOnly(e.target.checked));
 $('snap').addEventListener('change',e=>snap=e.target.checked);
@@ -1476,7 +1567,7 @@ $('missionTarget').addEventListener('change',()=>{ const names=targetNames();
   if(names.length===1 && $('missionTarget').value!=='custom') $('tplName').value=names[0];
   const map={hq:'hq',factory_all:'barracks',factory_barracks:'barracks',factory_light:'light',factory_heavy:'heavy',factory_aircraft:'aircraft',commandcenter:'commandcenter',servicepoint:'servicepoint',radar:'radar',reserve:'reserve',uav:'uav'};
   if(map[$('missionTarget').value]) setStructure(map[$('missionTarget').value], true);
-  if($('missionTarget').value==='radar') setFortOnly(true);  // radar takes fortifications only — no gun defenses
+  if(FORT_ONLY_TARGETS.has($('missionTarget').value)) setFortOnly(true);  // radar + factories: fortifications only
   buildOut();
 });
 
