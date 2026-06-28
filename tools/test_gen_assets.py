@@ -37,5 +37,18 @@ class TestParse(unittest.TestCase):
         self.assertIn('All', out)
         self.assertEqual(out['All'], 'Unknown')
 
+HTML = """
+const CATALOG=[
+  {grp:'Walls', cls:'Land_HBarrier_large', size:[2.5,0.6], style:'hbarrier'},
+  {grp:'MG / GL', cls:'M2StaticMG', size:[1,1.4], style:'mg', cat:'mg'},
+];
+const PRESETS={ demo:{ name:'x', tpl:'T', objs:[ ['Hedgehog',[0,0,0],0], ['Land_HBarrier_large',[2,0,0],0] ] } };
+"""
+
+class TestExtract(unittest.TestCase):
+    def test_extracts_catalog_and_preset_classnames(self):
+        out = gen_assets.extract_classnames(HTML)
+        self.assertEqual(out, {'Land_HBarrier_large', 'M2StaticMG', 'Hedgehog'})
+
 if __name__ == '__main__':
     unittest.main()

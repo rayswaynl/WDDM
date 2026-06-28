@@ -62,3 +62,12 @@ def parse_cfg_classes(text: str) -> dict:
             if dn and not classes.get(stack[-1]['name']):
                 classes[stack[-1]['name']] = dn.group(1)
     return classes
+
+_CATALOG_CLS = re.compile(r"\bcls\s*:\s*'([A-Za-z0-9_]+)'")
+_PRESET_CLS  = re.compile(r"\[\s*'([A-Za-z0-9_]+)'\s*,\s*\[")
+
+def extract_classnames(html: str) -> set:
+    """Union of every classname referenced in index.html: CATALOG `cls:'X'`
+    entries plus PRESET object arrays `['X',[...`. These are the classes whose
+    thumbnails the editor can render, so these are the images we copy."""
+    return set(_CATALOG_CLS.findall(html)) | set(_PRESET_CLS.findall(html))
