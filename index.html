@@ -623,7 +623,19 @@ function auditCatalog(){            // dev-facing: surface typo'd palette classn
   if(bad.length){ console.warn('[WDDM] CATALOG classnames not in base-game config:', bad); }
   const b=$('auditBadge'); if(b){ b.textContent = bad.length? `⚠ ${bad.length} unverified` : ''; b.title = bad.length ? bad.join(', ') : ''; }
 }
-function preloadPortraits(){}      // implemented in Task 7 (portrait layer)
+/* Portrait layer — reference thumbnails from assets/img/<cls>.jpg. Used as the
+   middle render layer (below real top-down sprites, above procedural glyphs) and
+   for picker/inspector thumbnails. Only PORTRAIT_FILES members are requested. */
+const PORTRAITS = {};                       // cls -> {img, ok}
+function loadPortrait(cls){
+  if(PORTRAITS[cls] || !PORTRAIT_FILES.has(cls)) return;
+  const img=new Image(); PORTRAITS[cls]={img,ok:false};
+  img.onload =()=>{ PORTRAITS[cls].ok=(img.naturalWidth>0); if(PORTRAITS[cls].ok) queueDraw(); };
+  img.onerror=()=>{ PORTRAITS[cls].ok=false; };
+  img.src=`assets/img/${cls}.jpg`;
+}
+function portraitFor(cls){ const p=PORTRAITS[cls]; return (p&&p.ok)?p:null; }
+function preloadPortraits(){ CATALOG.forEach(o=>loadPortrait(o.cls)); }
 function updateClassWarn(){
   const el=$('iClass'), w=$('iClassWarn'); if(!el||!w) return;
   const v=(el.value||'').trim();
@@ -1451,11 +1463,19 @@ function drawObj(o){
   const [w,d]=SIZE_OF(o.cls), [aw,ad]=ART_OF(o.cls), H=headingOf(o), isSel=o.id===sel, st=STYLE(o.cls);
   const sp = USE_SPRITES ? spriteFor(o.cls) : null;
   withLocal(o,H,()=>{ ctx.globalAlpha=isSel?1:0.96;
-    if(sp && sp.ok){                                   // SPRITE: fit-contain into ART span (no stretch)
+    if(sp && sp.ok){                                   // LAYER A — real top-down sprite, fit-contain
       const iw=sp.img.naturalWidth, ih=sp.img.naturalHeight, s=Math.min(aw/iw, ad/ih);
       ctx.drawImage(sp.img, -(iw*s)/2, -(ih*s)/2, iw*s, ih*s);
     } else {
-      (TEX[st]||TEX.box)(aw,ad);                       // FALLBACK: procedural glyph at ART span
+      const pt = USE_SPRITES ? portraitFor(o.cls) : null;
+      if(pt){                                          // LAYER B — portrait thumbnail (approximate; dimmed)
+        const iw=pt.img.naturalWidth, ih=pt.img.naturalHeight, s=Math.min(aw/iw, ad/ih);
+        const a0=ctx.globalAlpha; ctx.globalAlpha=a0*0.55;
+        ctx.drawImage(pt.img, -(iw*s)/2, -(ih*s)/2, iw*s, ih*s);
+        ctx.globalAlpha=a0;
+      } else {
+        (TEX[st]||TEX.box)(aw,ad);                     // LAYER C — procedural glyph at ART span
+      }
     }
     const ic=META(o.cls).icon; if(ic && ICONS[ic]) ICONS[ic](aw,ad);   // icon overlay (e.g. live radar antenna)
     ctx.globalAlpha=1;
