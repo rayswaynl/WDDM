@@ -60,7 +60,7 @@
   button.danger:hover{background:var(--danger);color:#fff}
   .row{display:flex;gap:8px}.row>*{flex:1}
   .btnbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-  .obj-list{list-style:none;margin:0;padding:0}
+  .obj-list{list-style:none;margin:0;padding:0;max-height:38vh;overflow:auto}
   .obj-list li{padding:7px 8px;border:1px solid var(--line);border-radius:5px;margin-bottom:6px;cursor:pointer;
     display:flex;justify-content:space-between;align-items:center;gap:6px;background:var(--gunmetal)}
   .obj-list li.sel{border-color:var(--orange);background:#1c1a14}
@@ -165,59 +165,61 @@
       <label>Load a demo / preset composition</label>
       <select id="preset"></select>
       <button class="primary" id="loadPreset" style="width:100%;margin-top:8px">Load preset →</button>
-      <div id="defenseCtrlsA">
-      <button class="primary" id="wallModeBtn" style="width:100%;margin-top:8px">Edit HQ / Factory walls</button>
-      <label class="inline-check" title="Filters the palette to empty fortification objects and blocks known guns/ammo while wall mode is active">
-        <input id="fortOnly" type="checkbox"> Fortifications only
-      </label>
-      <div class="modebox" id="wallModeInfo">
-        <b>Wall-design assets</b> — everything that isn't a gun or an ammo crate
-        <div class="asset-list">
-          <span>HESCO walls</span><span>H-barriers</span><span>Sandbags</span><span>Concrete walls</span>
-          <span>Ramparts</span><span>Empty nests</span><span>Watchtowers</span><span>Camo nets</span>
-          <span>Razor wire</span><span>Hedgehogs</span><span>Concrete blocks</span><span>Boom gates</span>
-          <span>Guard shed</span><span>Deer stands</span><span>Cones &amp; barrels</span>
+
+      <details id="tmplCfg" style="margin-top:8px">
+        <summary>Template &amp; wall target</summary>
+        <div id="defenseCtrlsA">
+        <button class="primary" id="wallModeBtn" style="width:100%;margin-top:8px">Edit HQ / Factory walls</button>
+        <label class="inline-check" title="Filters the palette to empty fortification objects and blocks known guns/ammo while wall mode is active">
+          <input id="fortOnly" type="checkbox"> Fortifications only
+        </label>
+        <div class="modebox" id="wallModeInfo">
+          <b>Wall-design assets</b> — everything that isn't a gun or an ammo crate
+          <div class="asset-list">
+            <span>HESCO walls</span><span>H-barriers</span><span>Sandbags</span><span>Concrete walls</span>
+            <span>Ramparts</span><span>Empty nests</span><span>Watchtowers</span><span>Camo nets</span>
+            <span>Razor wire</span><span>Hedgehogs</span><span>Concrete blocks</span><span>Boom gates</span>
+            <span>Guard shed</span><span>Deer stands</span><span>Cones &amp; barrels</span>
+          </div>
         </div>
-      </div>
-      </div><!-- /defenseCtrlsA -->
+        </div><!-- /defenseCtrlsA -->
 
-      <div class="divider"></div>
+        <label>Template variable name</label>
+        <input id="tplName" type="text" value="WFBE_NEURODEF_BARRACKS_WALLS">
 
-      <label>Template variable name</label>
-      <input id="tplName" type="text" value="WFBE_NEURODEF_BARRACKS_WALLS">
+        <div id="defenseCtrlsB">
+        <label style="margin-top:10px">Structure footprint</label>
+        <select id="structureType">
+          <option value="pad">Generic deploy pad</option>
+          <option value="hq">HQ / MHQ deployed</option>
+          <option value="barracks">Barracks</option>
+          <option value="light">Light Factory</option>
+          <option value="heavy">Heavy Factory</option>
+          <option value="aircraft">Aircraft Factory</option>
+          <option value="commandcenter">Command Center</option>
+          <option value="servicepoint">Service Point</option>
+          <option value="radar">Artillery Radar</option>
+          <option value="reserve">Reserve</option>
+          <option value="uav">UAV Terminal</option>
+        </select>
 
-      <div id="defenseCtrlsB">
-      <label style="margin-top:10px">Structure footprint</label>
-      <select id="structureType">
-        <option value="pad">Generic deploy pad</option>
-        <option value="hq">HQ / MHQ deployed</option>
-        <option value="barracks">Barracks</option>
-        <option value="light">Light Factory</option>
-        <option value="heavy">Heavy Factory</option>
-        <option value="aircraft">Aircraft Factory</option>
-        <option value="commandcenter">Command Center</option>
-        <option value="servicepoint">Service Point</option>
-        <option value="radar">Artillery Radar</option>
-        <option value="reserve">Reserve</option>
-        <option value="uav">UAV Terminal</option>
-      </select>
-
-      <label style="margin-top:10px">Mission wall target</label>
-      <select id="missionTarget">
-        <option value="custom">Custom / position template</option>
-        <option value="hq">HQ walls</option>
-        <option value="factory_all">All factory walls</option>
-        <option value="factory_barracks">Barracks walls</option>
-        <option value="factory_light">Light factory walls</option>
-        <option value="factory_heavy">Heavy factory walls</option>
-        <option value="factory_aircraft">Aircraft factory walls</option>
-        <option value="commandcenter">Command Center walls</option>
-        <option value="servicepoint">Service Point walls</option>
-        <option value="radar">Artillery Radar walls</option>
-        <option value="reserve">Reserve walls</option>
-        <option value="uav">UAV Terminal walls</option>
-      </select>
-      </div><!-- /defenseCtrlsB -->
+        <label style="margin-top:10px">Mission wall target</label>
+        <select id="missionTarget">
+          <option value="custom">Custom / position template</option>
+          <option value="hq">HQ walls</option>
+          <option value="factory_all">All factory walls</option>
+          <option value="factory_barracks">Barracks walls</option>
+          <option value="factory_light">Light factory walls</option>
+          <option value="factory_heavy">Heavy factory walls</option>
+          <option value="factory_aircraft">Aircraft factory walls</option>
+          <option value="commandcenter">Command Center walls</option>
+          <option value="servicepoint">Service Point walls</option>
+          <option value="radar">Artillery Radar walls</option>
+          <option value="reserve">Reserve walls</option>
+          <option value="uav">UAV Terminal walls</option>
+        </select>
+        </div><!-- /defenseCtrlsB -->
+      </details>
 
       <div class="divider"></div>
 
