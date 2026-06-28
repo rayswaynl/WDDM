@@ -1,26 +1,32 @@
-# Discord-formatted patch notes — WDDM items-repo update (2026-06-28)
+# Discord-formatted patch notes — WASP tooling update (2026-06-28)
 # (Discord: no tables, 2000-char limit per message. Post each block as its own
-#  message, in order. Link kept in <angle brackets> so it doesn't auto-embed twice.)
+#  message, in order. Links kept in <angle brackets> so they don't double-embed.)
 
 ================ MESSAGE 1 ================
-# 🛠️ WDDM Update — see your pieces, catch typos, build a lot more
+# 🛠️ WDDM Update — find pieces fast, build a lot more
 
-Quality-of-life pass on **WDDM** (the Warfare Dynamic Defense Manager — the browser tool for designing buildable defense layouts that export straight to mission code):
+Two big upgrades to **WDDM** (the defense-composition editor):
 
-🖼️ **Thumbnails everywhere** — every palette piece now shows its real in-game reference image, in the picker **and** the inspector. On the top-down canvas, pieces that don't have a dedicated top-down sprite now fall back to a dimmed reference image instead of a plain coloured box, so a layout reads at a glance.
+🔍 **New piece picker** — the old dropdown is gone. It's now a **searchable thumbnail grid**: type to filter (e.g. “trench”), click a tile to place it, or hit **Browse all** for the full set in a roomy popup. You can finally *see* every piece while you build.
 
-✅ **Classname validation** — the editor now knows every Arma 2 base-game classname. Type a custom class and it **warns you live if it isn't real** — no more silent typos (the classic `Land_Razorwire` vs `Fort_RazorWire` trap) — with **autocomplete** from the full class list. A badge flags any unverified piece in the palette.
+🧱 **Bigger palette — ~92 → 204 pieces.** Added walls, trenches, castle ramparts, compound gates, faction MG nests, desert camo nets — plus every faction's base buildings (USMC/CDF/RU/INS/GUE/TK-GUE) for base-layout mode.
+
+✅ **Classname validation** — type a custom class and it warns you live if it isn't real (no more silent typos), with autocomplete.
+
+🔒 Existing layouts untouched — the exported mission code is identical to before.
+
+▶ **<https://rayswaynl.github.io/WDDM/>**
 
 ================ MESSAGE 2 ================
-## 🧱 A much bigger palette — ~92 → 204 pieces
+# 🎒 New tool: Loadout Lab
 
-New defensive kit to build with:
-- **Trenches** (big / small) · **Castle ramparts** · **Compound gates**
-- **Faction MG nests** (M240 + PK variants) · **Desert camo nets** (NATO / East)
-- Extra **walls & barriers** — stone wall, dam barrier, tall HESCO, road barriers — plus **hedgehogs** and **barricades**
+A browser **loadout editor** for WASP — the infantry-kit sibling to WDDM. Build a unit's kit visually and export ready-to-paste SQF.
 
-And for **base-layout mode**, every faction's base buildings — **USMC, CDF, RU, INS, GUE, TK-GUE** (factories, radars, barracks, hospitals, construction sites, UAV terminals, vehicle service points).
+- Pick **faction · role · tier**, then fill slots — primary + mags, sidearm, launcher, throwables, gear — from a searchable thumbnail picker.
+- **Export** `WFBE_%1_DefaultGear` (player) and `WFBE_%1_AI_Loadout_<tier>` (AI) — paste straight into `Root_*.sqf`.
+- **Import** an existing loadout block to edit what's live.
+- Live kit preview, classname validation, and share links.
 
-🔒 **Your existing layouts are untouched** — this is all editor-side. The exported mission code is byte-for-byte identical to before, so nothing you've already built changes.
+Offline, single-file, free — same as WDDM.
 
-▶ Try it: **<https://rayswaynl.github.io/WDDM/>**
+▶ **<https://rayswaynl.github.io/loadout-lab/>**
