@@ -100,6 +100,34 @@
   ::-webkit-scrollbar{width:10px;height:10px}
   ::-webkit-scrollbar-thumb{background:var(--steel2);border-radius:6px}
   ::-webkit-scrollbar-track{background:transparent}
+  .pick-search{display:flex;align-items:center;gap:7px;margin-top:4px}
+  .pick-search input{flex:1}
+  .pick-cats{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+  .pick-cats .chip{cursor:pointer}
+  .pick-scroll{max-height:264px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:6px;background:#0e1115}
+  .pick-cat-h{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#9aa3ad;margin:6px 2px 4px}
+  .pick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .pick-tile{position:relative;padding:0;border:1px solid var(--line);border-radius:5px;background:var(--gunmetal);
+    cursor:pointer;overflow:hidden;display:flex;flex-direction:column}
+  .pick-tile:hover{border-color:var(--orange)}
+  .pick-tile img{width:100%;height:52px;object-fit:contain;background:#11141a;display:block}
+  .pick-lab{font-family:'JetBrains Mono',monospace;font-size:9px;color:#c8d0d8;padding:3px 4px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid var(--steel);text-align:left}
+  .pick-wpn{position:absolute;top:2px;right:2px;background:rgba(20,23,27,.85);color:var(--orange);
+    font-size:9px;border-radius:8px;padding:0 5px;line-height:15px}
+  .pick-empty{font-size:11px;color:#8b939c;padding:10px}
+  .modal-back{position:fixed;inset:0;background:rgba(8,10,13,.6);display:none;align-items:center;
+    justify-content:center;z-index:30;backdrop-filter:blur(3px)}
+  .modal-back.open{display:flex}
+  .modal{width:760px;max-width:94vw;max-height:86vh;background:var(--steel);border:1px solid var(--line);
+    border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
+  .modal-head{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--gunmetal)}
+  .modal-head h2{font-size:15px}.modal-head .x{cursor:pointer;color:#9aa3ad;font-size:20px;line-height:1;background:none;border:none}
+  .modal-body{display:flex;min-height:0;flex:1}
+  .modal-side{width:150px;border-right:1px solid var(--line);overflow:auto;padding:8px 6px;display:flex;flex-direction:column;gap:3px}
+  .modal-side .chip{cursor:pointer;text-align:left}
+  .modal-grid-wrap{flex:1;overflow:auto;padding:10px}
+  .modal .pick-grid{grid-template-columns:repeat(5,1fr)}
 </style>
 </head>
 <body>
@@ -193,13 +221,14 @@
 
       <div class="divider"></div>
 
-      <label>Add object — pick a class <span class="badge" id="auditBadge" style="background:#7a2d2d"></span></label>
-      <select id="palette"></select>
+      <label>Add object — click a piece <span class="badge" id="auditBadge" style="background:#7a2d2d"></span></label>
+      <div class="pick-search"><input id="pickSearch" type="text" placeholder="Search pieces…" autocomplete="off"></div>
+      <div class="pick-cats" id="pickCats"></div>
+      <div class="pick-scroll" id="pickGrid"></div>
       <div class="btnbar">
-        <button class="primary" id="addBtn">+ Add to centre</button>
+        <button id="browseAll">Browse all pieces…</button>
         <button id="addCustomBtn">+ Custom…</button>
       </div>
-      <img id="palThumb" alt="" style="display:none;max-width:100%;max-height:120px;margin-top:6px;border:1px solid #2a2f36;border-radius:4px;background:#11141a">
 
       <div class="divider"></div>
 
@@ -1306,26 +1335,72 @@ function setStructure(type, resizeFootprint=true){
   }
 }
 
-/* populate palette */
-function renderPalette(){
-  const s=$('palette'), previous=s.value;
-  s.innerHTML='';
-  let last='', group=null;
-  CATALOG.filter(o=> buildMode==='base' ? isBaseStructure(o)
-                                        : (!isBaseStructure(o) && (!fortOnly || isFortificationAsset(o))) ).forEach(o=>{
-    if(o.grp!==last){
-      group=document.createElement('optgroup');
-      group.label=o.grp; group.dataset.g=o.grp;
-      s.appendChild(group); last=o.grp;
-    }
-    const op=document.createElement('option');
-    op.value=o.cls; op.textContent=o.cls+(IS_WPN(o.cls)?'  ⚔':'');
-    group.appendChild(op);
-  });
-  if(previous && Array.from(s.options).some(o=>o.value===previous)) s.value=previous;
-  setThumb('palThumb', s.value);
-  if(!s._thumbWired){ s._thumbWired=true; s.addEventListener('change',()=>setThumb('palThumb', s.value)); }
+/* ===== Hybrid piece picker (replaces the native <select> palette) ===== */
+const _glyphCache = {};                              // cls -> dataURL of procedural glyph
+function glyphThumb(cls){
+  if(_glyphCache[cls]) return _glyphCache[cls];
+  const c=document.createElement('canvas'); c.width=c.height=64;
+  const g=c.getContext('2d');
+  // Temporarily redirect the global ctx so TEX functions draw onto our offscreen canvas
+  const _savedCtx=ctx, _savedScale=view.scale;
+  // eslint-disable-next-line no-global-assign
+  Object.defineProperty(window,'ctx',{configurable:true,get:()=>g,set:()=>{}});
+  view.scale=6;
+  try{
+    g.clearRect(0,0,64,64); g.save(); g.translate(32,32); g.scale(6,-6);
+    g.lineJoin='round'; g.lineCap='round';
+    const st=STYLE(cls); try{ (TEX[st]||TEX.box)(5,5); }catch(e){}
+    g.restore();
+  }finally{
+    Object.defineProperty(window,'ctx',{configurable:true,get:()=>_savedCtx,set:()=>{}});
+    view.scale=_savedScale;
+  }
+  return (_glyphCache[cls]=c.toDataURL());
 }
+function pickerItems(){
+  return CATALOG.filter(o=> buildMode==='base' ? isBaseStructure(o)
+      : (!isBaseStructure(o) && (!fortOnly || isFortificationAsset(o))))
+    .map(o=>({cls:o.cls, label:o.label||o.cls, grp:o.grp, isWpn:IS_WPN(o.cls), ai:CREW_OF(o.cls)}));
+}
+function pickerCategories(){ const s=[]; pickerItems().forEach(i=>{ if(!s.includes(i.grp)) s.push(i.grp); }); return s; }
+function tileEl(item){
+  const t=document.createElement('button'); t.type='button'; t.className='pick-tile'; t.title=item.cls;
+  const img=document.createElement('img'); img.alt=item.label; img.loading='lazy';
+  img.src = PORTRAIT_FILES.has(item.cls) ? `assets/img/${item.cls}.jpg` : glyphThumb(item.cls);
+  img.onerror=()=>{ img.onerror=null; img.src=glyphThumb(item.cls); };
+  const lab=document.createElement('span'); lab.className='pick-lab'; lab.textContent=item.label;
+  t.appendChild(img); t.appendChild(lab);
+  if(item.isWpn){ const b=document.createElement('span'); b.className='pick-wpn'; b.textContent=item.ai>0?('⚔'+item.ai):'⚔'; t.appendChild(b); }
+  t.onclick=()=>addObj(item.cls);
+  return t;
+}
+let _pickCat='All', _pickQ='';
+function _filtered(){
+  const q=_pickQ.toLowerCase();
+  return pickerItems().filter(i=> (_pickCat==='All'||i.grp===_pickCat) &&
+    (!q || i.cls.toLowerCase().includes(q) || i.label.toLowerCase().includes(q)));
+}
+function _renderGrid(host, items, grouped){
+  host.innerHTML='';
+  if(!items.length){ const e=document.createElement('div'); e.className='pick-empty'; e.textContent='No pieces match'; host.appendChild(e); return; }
+  if(grouped){
+    const cats=[]; items.forEach(i=>{ if(!cats.includes(i.grp)) cats.push(i.grp); });
+    cats.forEach(c=>{ const h=document.createElement('div'); h.className='pick-cat-h'; h.textContent=c; host.appendChild(h);
+      const g=document.createElement('div'); g.className='pick-grid'; items.filter(i=>i.grp===c).forEach(i=>g.appendChild(tileEl(i))); host.appendChild(g); });
+  } else { const g=document.createElement('div'); g.className='pick-grid'; items.forEach(i=>g.appendChild(tileEl(i))); host.appendChild(g); }
+}
+function renderPicker(){
+  const chipHost=$('pickCats');
+  if(chipHost){ chipHost.innerHTML='';
+    ['All',...pickerCategories()].forEach(c=>{ const ch=document.createElement('span');
+      ch.className='chip'+(c===_pickCat?' on':''); ch.textContent=c;
+      ch.onclick=()=>{ _pickCat=c; renderPicker(); }; chipHost.appendChild(ch); }); }
+  _renderGrid($('pickGrid'), _filtered(), _pickCat==='All' && !_pickQ);
+  if($('pickModalBack') && $('pickModalBack').classList.contains('open')) renderModal();
+}
+function renderModal(){}   // implemented in Task 2 (browse modal)
+
+/* populate palette */
 function setThumb(imgId, cls){            // show assets/img/<cls>.jpg if we have it, else hide
   const el=$(imgId); if(!el) return;
   if(cls && PORTRAIT_FILES.has(cls)){ loadPortrait(cls); el.src=`assets/img/${cls}.jpg`; el.style.display=''; }
@@ -1335,7 +1410,7 @@ function setFortOnly(on){
   fortOnly=!!on;
   $('fortOnly').checked=fortOnly;
   $('wallModeInfo').classList.toggle('active',fortOnly);
-  renderPalette();
+  renderPicker();
 }
 function setMode(m){
   buildMode = (m==='base') ? 'base' : 'defense';
@@ -1352,11 +1427,11 @@ function setMode(m){
   } else {
     setStructure(structureType, false);                    // restore the structure label
   }
-  renderPalette(); syncUI(); draw();
+  renderPicker(); syncUI(); draw();
 }
 $('modeDefense').onclick=()=>setMode('defense');
 $('modeBase').onclick=()=>setMode('base');
-renderPalette();
+renderPicker();
 /* populate presets — grouped dropdown */
 (function(){ const s=$('preset'), listed=new Set();
   const addGroup=(label,keys)=>{ const og=document.createElement('optgroup'); og.label=label; let any=false;
@@ -1664,7 +1739,6 @@ function addObj(cls,x=0,y=0,dir=0){
   const o={id:nextId++,cls,x,y,z:0,dir}; objs.push(o); sel=o.id; syncUI(); draw(); return o;
 }
 function delObj(){ objs=objs.filter(o=>o.id!==sel); sel=null; syncUI(); draw(); }
-$('addBtn').onclick=()=>addObj($('palette').value);
 $('addCustomBtn').onclick=()=>{ const c=prompt('Enter exact Arma classname:'); if(!c) return;
   const cls=c.trim();
   if(VALID_CLASSES.size && !VALID_CLASSES.has(cls) && !confirm(`"${cls}" is not in the Arma 2 base-game config.\nAdd it anyway?`)) return;
@@ -1733,6 +1807,7 @@ $('structureType').addEventListener('change',e=>{setStructure(e.target.value,tru
   if(FORT_ONLY_STRUCTURES.has(e.target.value)) setFortOnly(true);   // radar + factories: fortifications only, no gun defenses
   draw();});
 $('fortOnly').addEventListener('change',e=>setFortOnly(e.target.checked));
+$('pickSearch').addEventListener('input', ()=>{ _pickQ=$('pickSearch').value.trim(); renderPicker(); });
 $('snap').addEventListener('change',e=>snap=e.target.checked);
 $('useSprites').addEventListener('change',e=>{USE_SPRITES=e.target.checked;draw();});
 $('fofToggle').addEventListener('change',e=>{SHOW_FOF=e.target.checked;draw();});
