@@ -1722,7 +1722,6 @@ function syncUI(){
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('input',()=>{ const o=objs.find(x=>x.id===sel); if(!o)return;
   o.cls=$('iClass').value.trim(); o.x=parseFloat($('iX').value)||0; o.y=parseFloat($('iY').value)||0; o.z=parseFloat($('iZ').value)||0; o.dir=((parseFloat($('iDir').value)||0)%360+360)%360; draw(); }));
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('change',syncUI));
-// validation + autocomplete — separate from the model-mutation listener above
 // validation + autocomplete + live thumbnail — separate from the model-mutation listener above
 $('iClass').addEventListener('input',()=>{ updateClassWarn(); refreshClassList($('iClass').value); setThumb('iThumb', $('iClass').value.trim()); });
 
