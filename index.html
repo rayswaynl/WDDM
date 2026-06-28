@@ -1210,7 +1210,7 @@ function renderPalette(){
 }
 function setThumb(imgId, cls){            // show assets/img/<cls>.jpg if we have it, else hide
   const el=$(imgId); if(!el) return;
-  if(cls && PORTRAIT_FILES.has(cls)){ el.src=`assets/img/${cls}.jpg`; el.style.display=''; }
+  if(cls && PORTRAIT_FILES.has(cls)){ loadPortrait(cls); el.src=`assets/img/${cls}.jpg`; el.style.display=''; }
   else { el.removeAttribute('src'); el.style.display='none'; }
 }
 function setFortOnly(on){
@@ -1479,7 +1479,7 @@ function drawObj(o){
       const pt = USE_SPRITES ? portraitFor(o.cls) : null;
       if(pt){                                          // LAYER B — portrait thumbnail (approximate; dimmed)
         const iw=pt.img.naturalWidth, ih=pt.img.naturalHeight, s=Math.min(aw/iw, ad/ih);
-        const a0=ctx.globalAlpha; ctx.globalAlpha=a0*0.55;
+        const a0=ctx.globalAlpha; ctx.globalAlpha=a0*0.55; // dimmed — portrait is reference art, not an accurate top-down
         ctx.drawImage(pt.img, -(iw*s)/2, -(ih*s)/2, iw*s, ih*s);
         ctx.globalAlpha=a0;
       } else {
@@ -1605,7 +1605,8 @@ function syncUI(){
   o.cls=$('iClass').value.trim(); o.x=parseFloat($('iX').value)||0; o.y=parseFloat($('iY').value)||0; o.z=parseFloat($('iZ').value)||0; o.dir=((parseFloat($('iDir').value)||0)%360+360)%360; draw(); }));
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('change',syncUI));
 // validation + autocomplete — separate from the model-mutation listener above
-$('iClass').addEventListener('input',()=>{ updateClassWarn(); refreshClassList($('iClass').value); });
+// validation + autocomplete + live thumbnail — separate from the model-mutation listener above
+$('iClass').addEventListener('input',()=>{ updateClassWarn(); refreshClassList($('iClass').value); setThumb('iThumb', $('iClass').value.trim()); });
 
 /* ---------- Toolbar ---------- */
 $('parentDir').addEventListener('input',e=>{parentDir=parseFloat(e.target.value)||0;draw();});
