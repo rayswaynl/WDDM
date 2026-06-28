@@ -94,3 +94,58 @@ def copy_images(classnames, idx: dict, dest: Path):
         else:
             missing.append(cls)
     return copied, sorted(missing)
+
+_DEFENSE_KW = ('Warfare', 'HBarrier', 'Bagfence', 'Nest', 'Hedgehog',
+               'Razorwire', 'RazorWire', 'CncBlock', 'Barrier', 'Fort_',
+               'Sandbag', 'Bunker', 'Watchtower', 'Pillbox', 'Wall', 'Camo')
+
+def candidate_report(classes: dict, in_catalog: set, have_image: set) -> str:
+    """Markdown table of defense-ish classes present in the config + with art but
+    NOT yet in the CATALOG — the curation shortlist for palette expansion."""
+    rows = []
+    for cls in sorted(classes):
+        if cls in in_catalog or cls not in have_image:
+            continue
+        if any(kw in cls for kw in _DEFENSE_KW):
+            rows.append(f"| `{cls}` | {classes[cls] or ''} |")
+    head = ("# Palette expansion candidates\n\n"
+            "Defense/wall/fortification classes that exist in CfgVehicles, have a\n"
+            "thumbnail, and are not yet in the CATALOG. Curate from here (Phase 3).\n\n"
+            "| classname | displayName |\n| --- | --- |\n")
+    return head + "\n".join(rows) + "\n"
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--ref', default=r'..\arma2-co-config-reference',
+                    help='path to the arma2-co-config-reference repo')
+    ap.add_argument('--wddm', default='.', help='path to the WDDM repo root')
+    args = ap.parse_args(argv)
+    ref, wddm = Path(args.ref), Path(args.wddm)
+
+    cfg = (ref / 'Config' / 'CfgVehicles.txt').read_text(encoding='utf-8', errors='replace')
+    classes = parse_cfg_classes(cfg)
+
+    html = (wddm / 'index.html').read_text(encoding='utf-8', errors='replace')
+    wanted = extract_classnames(html)
+
+    idx = index_images(ref / 'Images')
+    copied, missing = copy_images(wanted, idx, wddm / 'assets' / 'img')
+
+    data = wddm / 'assets' / 'data'
+    data.mkdir(parents=True, exist_ok=True)
+    (data / 'classnames.json').write_text(
+        json.dumps(classes, ensure_ascii=False, sort_keys=True, separators=(',', ':')),
+        encoding='utf-8')
+    (data / 'portraits.json').write_text(
+        json.dumps(sorted(copied), separators=(',', ':')), encoding='utf-8')
+
+    (wddm / 'tools' / 'expansion-candidates.md').write_text(
+        candidate_report(classes, wanted, set(idx)), encoding='utf-8')
+
+    print(f"classes parsed : {len(classes)}")
+    print(f"thumbnails copied: {len(copied)}  (missing art: {len(missing)})")
+    if missing:
+        print("  no image for:", ", ".join(missing))
+
+if __name__ == '__main__':
+    main()
