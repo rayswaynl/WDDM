@@ -1348,6 +1348,7 @@ function setFortOnly(on){
   renderPicker();
 }
 function setMode(m){
+  _pickCat='All'; _pickQ=''; if($('pickSearch')) $('pickSearch').value='';
   buildMode = (m==='base') ? 'base' : 'defense';
   $('modeDefense').classList.toggle('on', buildMode==='defense');
   $('modeBase').classList.toggle('on', buildMode==='base');
