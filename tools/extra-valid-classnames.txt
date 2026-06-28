@@ -1,0 +1,13 @@
+# Author-verified placeable classnames that are valid in-game but absent from the
+# arma2-co-config-reference config export (export has category gaps for some OA
+# structures/props). Merged into classnames.json so the self-audit doesn't
+# false-positive on them.
+#
+# Add a name here ONLY after confirming it's real (e.g. WDDM ships a sprite for
+# it, or it's referenced in the live mission and spawns in-game without error).
+
+Land_fort_watchtower         # OA fortification — watchtower; WDDM ships sprite
+Land_fort_watchtower_EP1     # OA EP1 variant — watchtower; WDDM ships sprite
+Land_HBarrier_corner         # OA H-barrier corner piece; WDDM ships sprite
+M2HD_mini_TripodCamo_US      # OA camo M2 tripod emplaceable; WDDM ships sprite
+RoadCone_L_EP1               # OA road cone (large); WDDM ships sprite

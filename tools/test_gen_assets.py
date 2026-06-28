@@ -68,5 +68,30 @@ class TestImages(unittest.TestCase):
             self.assertEqual(missing, ['DoesNotExist'])
             self.assertTrue((dest / 'Land_HBarrier_large.jpg').exists())
 
+EXTRA_TXT = """\
+# Author-verified classnames absent from the config export.
+Land_fort_watchtower   # OA structure, export gap
+Land_fort_watchtower_EP1
+
+# blank lines and inline comments are ignored
+RoadCone_L_EP1        # orange road cone
+M2HD_mini_TripodCamo_US
+Land_HBarrier_corner
+"""
+
+class TestExtraClassnames(unittest.TestCase):
+    def test_parses_names_ignores_comments_and_blanks(self):
+        out = gen_assets.load_extra_classnames(EXTRA_TXT)
+        self.assertEqual(set(out.keys()), {
+            'Land_fort_watchtower',
+            'Land_fort_watchtower_EP1',
+            'RoadCone_L_EP1',
+            'M2HD_mini_TripodCamo_US',
+            'Land_HBarrier_corner',
+        })
+        # All values must be empty strings (no displayName from the allowlist)
+        for v in out.values():
+            self.assertEqual(v, '')
+
 if __name__ == '__main__':
     unittest.main()

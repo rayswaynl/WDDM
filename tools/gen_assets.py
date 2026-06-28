@@ -95,6 +95,17 @@ def copy_images(classnames, idx: dict, dest: Path):
             missing.append(cls)
     return copied, sorted(missing)
 
+def load_extra_classnames(text: str) -> dict:
+    """Parse the allowlist text (one classname per line; `#` starts a comment;
+    blank lines and comment-only lines are ignored). Returns {classname: ''}
+    for each valid name. Inline `# ...` comments are stripped before processing."""
+    result: dict[str, str] = {}
+    for raw in text.splitlines():
+        line = raw.split('#', 1)[0].strip()   # strip inline comments, then whitespace
+        if line:
+            result[line] = ''
+    return result
+
 _DEFENSE_KW = ('Warfare', 'HBarrier', 'Bagfence', 'Nest', 'Hedgehog',
                'Razorwire', 'RazorWire', 'CncBlock', 'Barrier', 'Fort_',
                'Sandbag', 'Bunker', 'Watchtower', 'Pillbox', 'Wall', 'Camo')
@@ -124,6 +135,13 @@ def main(argv=None):
 
     cfg = (ref / 'Config' / 'CfgVehicles.txt').read_text(encoding='utf-8', errors='replace')
     classes = parse_cfg_classes(cfg)
+
+    extra_path = wddm / 'tools' / 'extra-valid-classnames.txt'
+    if extra_path.exists():
+        extra = load_extra_classnames(extra_path.read_text(encoding='utf-8'))
+        for k, v in extra.items():
+            classes.setdefault(k, v)   # config wins if name already present
+        print(f"extra allowlist merged: {len(extra)}")
 
     html = (wddm / 'index.html').read_text(encoding='utf-8', errors='replace')
     wanted = extract_classnames(html)
