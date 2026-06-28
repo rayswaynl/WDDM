@@ -621,7 +621,7 @@ function auditCatalog(){            // dev-facing: surface typo'd palette classn
   if(!VALID_CLASSES.size) return;
   const bad = CATALOG.map(o=>o.cls).filter(c=>!VALID_CLASSES.has(c));
   if(bad.length){ console.warn('[WDDM] CATALOG classnames not in base-game config:', bad); }
-  const b=$('auditBadge'); if(b){ b.textContent = bad.length? `⚠ ${bad.length} unverified` : ''; b.title = bad.join(', '); }
+  const b=$('auditBadge'); if(b){ b.textContent = bad.length? `⚠ ${bad.length} unverified` : ''; b.title = bad.length ? bad.join(', ') : ''; }
 }
 function preloadPortraits(){}      // implemented in Task 7 (portrait layer)
 function updateClassWarn(){
@@ -1575,6 +1575,7 @@ function syncUI(){
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('input',()=>{ const o=objs.find(x=>x.id===sel); if(!o)return;
   o.cls=$('iClass').value.trim(); o.x=parseFloat($('iX').value)||0; o.y=parseFloat($('iY').value)||0; o.z=parseFloat($('iZ').value)||0; o.dir=((parseFloat($('iDir').value)||0)%360+360)%360; draw(); }));
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('change',syncUI));
+// validation + autocomplete — separate from the model-mutation listener above
 $('iClass').addEventListener('input',()=>{ updateClassWarn(); refreshClassList($('iClass').value); });
 
 /* ---------- Toolbar ---------- */
