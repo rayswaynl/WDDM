@@ -193,7 +193,7 @@
 
       <div class="divider"></div>
 
-      <label>Add object — pick a class</label>
+      <label>Add object — pick a class <span class="badge" id="auditBadge" style="background:#7a2d2d"></span></label>
       <select id="palette"></select>
       <div class="btnbar">
         <button class="primary" id="addBtn">+ Add to centre</button>
@@ -595,6 +595,35 @@ function preloadSprites(){
   const seen={};                                     // load each class's own file AND its alias target (existing files only)
   CATALOG.forEach(o=>{ [o.cls, SPRITE_ALIAS[o.cls]].forEach(b=>{ if(b && !seen[b]){ seen[b]=1; loadSprite(b); } }); });
 }
+
+/* ===================================================================
+   Component 1b — CLASSNAME GROUND-TRUTH (from arma2-co-config-reference
+   via tools/gen_assets.py). VALID_CLASSES powers validation + autocomplete;
+   PORTRAIT_FILES is the thumbnail manifest (mirrors SPRITE_FILES so we
+   never request a missing JPG). Both degrade to empty on fetch failure.
+   =================================================================== */
+let VALID_CLASSES = new Set();      // every base-game classname
+const CLASS_DN = {};                // classname -> displayName
+let PORTRAIT_FILES = new Set();     // classnames with a copied thumbnail
+function loadClassData(){
+  fetch('assets/data/classnames.json').then(r=>r.ok?r.json():{}).then(j=>{
+    VALID_CLASSES = new Set(Object.keys(j));
+    Object.assign(CLASS_DN, j);
+    auditCatalog();
+    updateClassWarn();
+  }).catch(()=>{});                 // validation simply stays off if absent
+  fetch('assets/data/portraits.json').then(r=>r.ok?r.json():[]).then(a=>{
+    PORTRAIT_FILES = new Set(a); preloadPortraits(); queueDraw();
+  }).catch(()=>{});
+}
+function auditCatalog(){            // dev-facing: surface typo'd palette classnames
+  if(!VALID_CLASSES.size) return;
+  const bad = CATALOG.map(o=>o.cls).filter(c=>!VALID_CLASSES.has(c));
+  if(bad.length){ console.warn('[WDDM] CATALOG classnames not in base-game config:', bad); }
+  const b=$('auditBadge'); if(b){ b.textContent = bad.length? `⚠ ${bad.length} unverified` : ''; b.title = bad.join(', '); }
+}
+function preloadPortraits(){}      // implemented in Task 7 (portrait layer)
+function updateClassWarn(){}       // implemented in Task 6 (inspector warning)
 
 /* ===================================================================
    Presets — incl. the demo "Larger defense" emplacements.
@@ -1659,7 +1688,7 @@ $('loadJson').onclick=()=>{ const inp=document.createElement('input'); inp.type=
     r.onload=()=>{ try{ loadProject(JSON.parse(r.result)); }catch(e){alert('Bad JSON');} }; r.readAsText(f); }; inp.click(); };
 
 /* ---------- Boot ---------- */
-resize(); loadPreset('hq_concrete_walk_exit'); preloadSprites(); loadFromHash();   // resize first so fitView sees real canvas dims; hash layout (if any) overrides the default preset
+resize(); loadPreset('hq_concrete_walk_exit'); preloadSprites(); loadClassData(); loadFromHash();   // resize first so fitView sees real canvas dims; hash layout (if any) overrides the default preset
 </script>
 </body>
 </html>
