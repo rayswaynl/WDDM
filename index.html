@@ -199,6 +199,7 @@
         <button class="primary" id="addBtn">+ Add to centre</button>
         <button id="addCustomBtn">+ Custom…</button>
       </div>
+      <img id="palThumb" alt="" style="display:none;max-width:100%;max-height:120px;margin-top:6px;border:1px solid #2a2f36;border-radius:4px;background:#11141a">
 
       <div class="divider"></div>
 
@@ -258,6 +259,7 @@
         <label>Classname <span id="iClassWarn" class="warn" style="display:none" title="Not found in the Arma 2 base-game config">⚠ unknown</span></label>
         <input id="iClass" type="text" list="classlist" autocomplete="off">
         <datalist id="classlist"></datalist>
+        <img id="iThumb" alt="" style="display:none;max-width:100%;max-height:110px;margin:4px 0;border:1px solid #2a2f36;border-radius:4px;background:#11141a">
         <div class="grid3">
           <div><label>X (right)</label><input id="iX" type="number" step="0.25"></div>
           <div><label>Y (front)</label><input id="iY" type="number" step="0.25"></div>
@@ -1203,6 +1205,13 @@ function renderPalette(){
     group.appendChild(op);
   });
   if(previous && Array.from(s.options).some(o=>o.value===previous)) s.value=previous;
+  setThumb('palThumb', s.value);
+  if(!s._thumbWired){ s._thumbWired=true; s.addEventListener('change',()=>setThumb('palThumb', s.value)); }
+}
+function setThumb(imgId, cls){            // show assets/img/<cls>.jpg if we have it, else hide
+  const el=$(imgId); if(!el) return;
+  if(cls && PORTRAIT_FILES.has(cls)){ el.src=`assets/img/${cls}.jpg`; el.style.display=''; }
+  else { el.removeAttribute('src'); el.style.display='none'; }
 }
 function setFortOnly(on){
   fortOnly=!!on;
@@ -1578,7 +1587,7 @@ function syncUI(){
   const o=objs.find(x=>x.id===sel);
   $('inspector').style.display=o?'block':'none'; $('noSel').style.display=o?'none':'block';
   $('selName').textContent=o?o.cls:'no selection';
-  if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; updateClassWarn(); }
+  if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; updateClassWarn(); setThumb('iThumb', o.cls); }
   // crew estimate — cheap, single soldier per gun: AI cost == weapon count (no garrison).
   if(buildMode==='base'){
     $('cWpnLabel').textContent='structures'; $('cWpn').textContent=objs.length;
