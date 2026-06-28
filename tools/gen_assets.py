@@ -2,7 +2,7 @@
 """Generate WDDM editor data from the arma2-co-config-reference items repo.
 Dependency-free (stdlib only). Idempotent. See docs/superpowers/plans/2026-06-27-wddm-items-repo-integration.md."""
 from __future__ import annotations
-import argparse, json, re
+import argparse, json, re, shutil
 from pathlib import Path
 
 _FWD   = re.compile(r'^class\s+([A-Za-z0-9_]+)\s*(?::\s*[A-Za-z0-9_]+)?\s*;\s*$')
@@ -72,8 +72,6 @@ def extract_classnames(html: str) -> set:
     thumbnails the editor can render, so these are the images we copy."""
     return set(_CATALOG_CLS.findall(html)) | set(_PRESET_CLS.findall(html))
 
-import shutil
-
 def index_images(images_root: Path) -> dict:
     """Map {classname: source_path} for every <classname>.jpg under the repo's
     Images/ tree (nested category folders). Built once; later lookups are O(1)."""
@@ -127,7 +125,7 @@ def candidate_report(classes: dict, in_catalog: set, have_image: set) -> str:
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument('--ref', default=r'..\arma2-co-config-reference',
+    ap.add_argument('--ref', default='../arma2-co-config-reference',
                     help='path to the arma2-co-config-reference repo')
     ap.add_argument('--wddm', default='.', help='path to the WDDM repo root')
     args = ap.parse_args(argv)

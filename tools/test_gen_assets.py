@@ -1,6 +1,20 @@
 import unittest
 import gen_assets
 
+CFG_CARGO = '''class CfgVehicles {
+    class Transport {
+        displayName = "Truck";
+        typicalCargo[] = {
+            "Soldier"
+        };
+    };
+};'''
+
+class TestArrayBraceIsolation(unittest.TestCase):
+    def test_array_brace_does_not_close_class_frame(self):
+        out = gen_assets.parse_cfg_classes(CFG_CARGO)
+        self.assertEqual(out['Transport'], 'Truck')   # displayName survives the cargo block
+
 CFG = '''class CfgVehicles
 {
 \tclass All
@@ -67,6 +81,7 @@ class TestImages(unittest.TestCase):
             self.assertEqual(set(copied), {'Land_HBarrier_large', 'Hedgehog'})
             self.assertEqual(missing, ['DoesNotExist'])
             self.assertTrue((dest / 'Land_HBarrier_large.jpg').exists())
+            self.assertEqual((dest / 'Land_HBarrier_large.jpg').read_bytes(), b'JPGDATA')
 
 EXTRA_TXT = """\
 # Author-verified classnames absent from the config export.
