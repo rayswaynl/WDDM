@@ -1335,71 +1335,6 @@ function setStructure(type, resizeFootprint=true){
   }
 }
 
-/* ===== Hybrid piece picker (replaces the native <select> palette) ===== */
-const _glyphCache = {};                              // cls -> dataURL of procedural glyph
-function glyphThumb(cls){
-  if(_glyphCache[cls]) return _glyphCache[cls];
-  const c=document.createElement('canvas'); c.width=c.height=64;
-  const g=c.getContext('2d');
-  // Temporarily redirect the global ctx so TEX functions draw onto our offscreen canvas
-  const _savedCtx=ctx, _savedScale=view.scale;
-  // eslint-disable-next-line no-global-assign
-  Object.defineProperty(window,'ctx',{configurable:true,get:()=>g,set:()=>{}});
-  view.scale=6;
-  try{
-    g.clearRect(0,0,64,64); g.save(); g.translate(32,32); g.scale(6,-6);
-    g.lineJoin='round'; g.lineCap='round';
-    const st=STYLE(cls); try{ (TEX[st]||TEX.box)(5,5); }catch(e){}
-    g.restore();
-  }finally{
-    Object.defineProperty(window,'ctx',{configurable:true,get:()=>_savedCtx,set:()=>{}});
-    view.scale=_savedScale;
-  }
-  return (_glyphCache[cls]=c.toDataURL());
-}
-function pickerItems(){
-  return CATALOG.filter(o=> buildMode==='base' ? isBaseStructure(o)
-      : (!isBaseStructure(o) && (!fortOnly || isFortificationAsset(o))))
-    .map(o=>({cls:o.cls, label:o.label||o.cls, grp:o.grp, isWpn:IS_WPN(o.cls), ai:CREW_OF(o.cls)}));
-}
-function pickerCategories(){ const s=[]; pickerItems().forEach(i=>{ if(!s.includes(i.grp)) s.push(i.grp); }); return s; }
-function tileEl(item){
-  const t=document.createElement('button'); t.type='button'; t.className='pick-tile'; t.title=item.cls;
-  const img=document.createElement('img'); img.alt=item.label; img.loading='lazy';
-  img.src = PORTRAIT_FILES.has(item.cls) ? `assets/img/${item.cls}.jpg` : glyphThumb(item.cls);
-  img.onerror=()=>{ img.onerror=null; img.src=glyphThumb(item.cls); };
-  const lab=document.createElement('span'); lab.className='pick-lab'; lab.textContent=item.label;
-  t.appendChild(img); t.appendChild(lab);
-  if(item.isWpn){ const b=document.createElement('span'); b.className='pick-wpn'; b.textContent=item.ai>0?('⚔'+item.ai):'⚔'; t.appendChild(b); }
-  t.onclick=()=>addObj(item.cls);
-  return t;
-}
-let _pickCat='All', _pickQ='';
-function _filtered(){
-  const q=_pickQ.toLowerCase();
-  return pickerItems().filter(i=> (_pickCat==='All'||i.grp===_pickCat) &&
-    (!q || i.cls.toLowerCase().includes(q) || i.label.toLowerCase().includes(q)));
-}
-function _renderGrid(host, items, grouped){
-  host.innerHTML='';
-  if(!items.length){ const e=document.createElement('div'); e.className='pick-empty'; e.textContent='No pieces match'; host.appendChild(e); return; }
-  if(grouped){
-    const cats=[]; items.forEach(i=>{ if(!cats.includes(i.grp)) cats.push(i.grp); });
-    cats.forEach(c=>{ const h=document.createElement('div'); h.className='pick-cat-h'; h.textContent=c; host.appendChild(h);
-      const g=document.createElement('div'); g.className='pick-grid'; items.filter(i=>i.grp===c).forEach(i=>g.appendChild(tileEl(i))); host.appendChild(g); });
-  } else { const g=document.createElement('div'); g.className='pick-grid'; items.forEach(i=>g.appendChild(tileEl(i))); host.appendChild(g); }
-}
-function renderPicker(){
-  const chipHost=$('pickCats');
-  if(chipHost){ chipHost.innerHTML='';
-    ['All',...pickerCategories()].forEach(c=>{ const ch=document.createElement('span');
-      ch.className='chip'+(c===_pickCat?' on':''); ch.textContent=c;
-      ch.onclick=()=>{ _pickCat=c; renderPicker(); }; chipHost.appendChild(ch); }); }
-  _renderGrid($('pickGrid'), _filtered(), _pickCat==='All' && !_pickQ);
-  if($('pickModalBack') && $('pickModalBack').classList.contains('open')) renderModal();
-}
-function renderModal(){}   // implemented in Task 2 (browse modal)
-
 /* populate palette */
 function setThumb(imgId, cls){            // show assets/img/<cls>.jpg if we have it, else hide
   const el=$(imgId); if(!el) return;
@@ -1431,7 +1366,7 @@ function setMode(m){
 }
 $('modeDefense').onclick=()=>setMode('defense');
 $('modeBase').onclick=()=>setMode('base');
-renderPicker();
+/* renderPicker() boot call deferred to after PAL/styleColors are defined (picker module inserted below TEX/ICONS) */
 /* populate presets — grouped dropdown */
 (function(){ const s=$('preset'), listed=new Set();
   const addGroup=(label,keys)=>{ const og=document.createElement('optgroup'); og.label=label; let any=false;
@@ -1617,6 +1552,107 @@ const ICONS = {
     const b=a-0.66; ctx.fillStyle='rgba(217,118,60,.85)';
     ctx.beginPath(); ctx.arc(Math.sin(b)*r*0.72,Math.cos(b)*r*0.72,Math.max(0.1,r*0.09),0,7); ctx.fill(); }
 };
+/* ===== Hybrid piece picker (replaces the native <select> palette) ===== */
+const _glyphCache = {};                              // cls -> dataURL of procedural glyph
+function glyphThumb(cls){
+  if(_glyphCache[cls]) return _glyphCache[cls];
+  const c=document.createElement('canvas'); c.width=c.height=64;
+  const g=c.getContext('2d');
+  // Draw directly onto the offscreen canvas — TEX uses the global ctx so we inline a
+  // simplified glyph here instead, keyed on the same styleColors palette.
+  const sc=styleColors(STYLE(cls));
+  const SZ=44, ox=(64-SZ)/2, oy=(64-SZ)/2;
+  g.clearRect(0,0,64,64);
+  g.save();
+  g.lineJoin='round'; g.lineCap='round';
+  const st=STYLE(cls);
+  if(['mg','gl','at','aa','mortar'].includes(st)){
+    // weapon: filled circle + barrel line
+    g.fillStyle=sc.f; g.beginPath(); g.arc(32,32,18,0,Math.PI*2); g.fill();
+    g.strokeStyle=sc.s; g.lineWidth=2.5; g.beginPath(); g.arc(32,32,18,0,Math.PI*2); g.stroke();
+    g.lineWidth=3.5; g.beginPath(); g.moveTo(32,32); g.lineTo(32,8); g.stroke();
+  } else if(st==='arty'){
+    g.fillStyle=sc.f; g.beginPath(); g.arc(32,32,17,0,Math.PI*2); g.fill();
+    g.strokeStyle=sc.s; g.lineWidth=2; g.beginPath(); g.arc(32,32,17,0,Math.PI*2); g.stroke();
+    g.lineWidth=4; g.beginPath(); g.moveTo(32,30); g.lineTo(32,6); g.stroke();
+    g.lineWidth=2; g.beginPath(); g.moveTo(32,32); g.lineTo(16,48); g.moveTo(32,32); g.lineTo(48,48); g.stroke();
+  } else if(st==='wire'){
+    g.strokeStyle=sc.s; g.lineWidth=2;
+    g.beginPath(); for(let i=0;i<5;i++){const x=6+i*14;g.moveTo(x,22);g.lineTo(x+7,42);}
+    g.stroke();
+    g.lineWidth=1.5; for(let i=0;i<5;i++){const x=9+i*13; g.beginPath();g.arc(x,32,5,0,Math.PI*2);g.stroke();}
+  } else if(st==='hedgehog'){
+    g.strokeStyle=sc.s; g.lineWidth=3;
+    g.beginPath(); g.moveTo(10,10);g.lineTo(54,54); g.moveTo(54,10);g.lineTo(10,54); g.moveTo(32,8);g.lineTo(32,56); g.stroke();
+  } else if(st==='camo'){
+    g.globalAlpha=.55; g.fillStyle=sc.f; g.fillRect(ox,oy,SZ,SZ); g.globalAlpha=1;
+    g.strokeStyle=sc.s; g.lineWidth=1.2;
+    for(let i=-3;i<=3;i++){g.beginPath();g.moveTo(ox,oy+i*SZ/3);g.lineTo(64,oy+i*SZ/3+SZ);g.stroke();}
+  } else if(st==='cone'){
+    g.fillStyle=sc.f; g.beginPath();g.arc(32,32,18,0,Math.PI*2);g.fill();
+    g.strokeStyle=sc.s; g.lineWidth=2;
+    g.beginPath();g.arc(32,32,18,0,Math.PI*2);g.stroke();
+    g.beginPath();g.arc(32,32,8,0,Math.PI*2);g.stroke();
+  } else if(['structw','structe','structn'].includes(st)){
+    g.fillStyle=sc.f; g.fillRect(ox,oy,SZ,SZ);
+    g.strokeStyle=sc.s; g.lineWidth=2; g.strokeRect(ox,oy,SZ,SZ);
+    g.lineWidth=1; g.strokeRect(ox+5,oy+5,SZ-10,SZ-10);
+    g.lineWidth=3; g.beginPath(); g.moveTo(32-8,oy+SZ); g.lineTo(32+8,oy+SZ); g.stroke();
+  } else {
+    // default box / walls / sandbags / nests / towers
+    g.fillStyle=sc.f; g.fillRect(ox,oy,SZ,SZ);
+    g.strokeStyle=sc.s; g.lineWidth=2.5; g.strokeRect(ox,oy,SZ,SZ);
+    if(st==='tower'||st==='nest'){
+      g.lineWidth=1.5; g.beginPath();g.moveTo(ox,oy);g.lineTo(ox+SZ,oy+SZ);g.moveTo(ox+SZ,oy);g.lineTo(ox,oy+SZ);g.stroke();
+    }
+  }
+  g.restore();
+  return (_glyphCache[cls]=c.toDataURL());
+}
+function pickerItems(){
+  return CATALOG.filter(o=> buildMode==='base' ? isBaseStructure(o)
+      : (!isBaseStructure(o) && (!fortOnly || isFortificationAsset(o))))
+    .map(o=>({cls:o.cls, label:o.label||o.cls, grp:o.grp, isWpn:IS_WPN(o.cls), ai:CREW_OF(o.cls)}));
+}
+function pickerCategories(){ const s=[]; pickerItems().forEach(i=>{ if(!s.includes(i.grp)) s.push(i.grp); }); return s; }
+function tileEl(item){
+  const t=document.createElement('button'); t.type='button'; t.className='pick-tile'; t.title=item.cls;
+  const img=document.createElement('img'); img.alt=item.label; img.loading='lazy';
+  img.src = PORTRAIT_FILES.has(item.cls) ? `assets/img/${item.cls}.jpg` : glyphThumb(item.cls);
+  img.onerror=()=>{ img.onerror=null; img.src=glyphThumb(item.cls); };
+  const lab=document.createElement('span'); lab.className='pick-lab'; lab.textContent=item.label;
+  t.appendChild(img); t.appendChild(lab);
+  if(item.isWpn){ const b=document.createElement('span'); b.className='pick-wpn'; b.textContent=item.ai>0?('⚔'+item.ai):'⚔'; t.appendChild(b); }
+  t.onclick=()=>addObj(item.cls);
+  return t;
+}
+let _pickCat='All', _pickQ='';
+function _filtered(){
+  const q=_pickQ.toLowerCase();
+  return pickerItems().filter(i=> (_pickCat==='All'||i.grp===_pickCat) &&
+    (!q || i.cls.toLowerCase().includes(q) || i.label.toLowerCase().includes(q)));
+}
+function _renderGrid(host, items, grouped){
+  host.innerHTML='';
+  if(!items.length){ const e=document.createElement('div'); e.className='pick-empty'; e.textContent='No pieces match'; host.appendChild(e); return; }
+  if(grouped){
+    const cats=[]; items.forEach(i=>{ if(!cats.includes(i.grp)) cats.push(i.grp); });
+    cats.forEach(c=>{ const h=document.createElement('div'); h.className='pick-cat-h'; h.textContent=c; host.appendChild(h);
+      const g=document.createElement('div'); g.className='pick-grid'; items.filter(i=>i.grp===c).forEach(i=>g.appendChild(tileEl(i))); host.appendChild(g); });
+  } else { const g=document.createElement('div'); g.className='pick-grid'; items.forEach(i=>g.appendChild(tileEl(i))); host.appendChild(g); }
+}
+function renderPicker(){
+  const chipHost=$('pickCats');
+  if(chipHost){ chipHost.innerHTML='';
+    ['All',...pickerCategories()].forEach(c=>{ const ch=document.createElement('span');
+      ch.className='chip'+(c===_pickCat?' on':''); ch.textContent=c;
+      ch.onclick=()=>{ _pickCat=c; renderPicker(); }; chipHost.appendChild(ch); }); }
+  _renderGrid($('pickGrid'), _filtered(), _pickCat==='All' && !_pickQ);
+  if($('pickModalBack') && $('pickModalBack').classList.contains('open')) renderModal();
+}
+function renderModal(){}   // implemented in Task 2 (browse modal)
+renderPicker();            // boot — PAL/styleColors are now defined above
+
 /* Animation loop — repaints (~25 fps) only while a live radar sweep is on screen. */
 (function animLoop(){ requestAnimationFrame(animLoop);
   const need = structureType==='radar' || objs.some(o=>META(o.cls).icon==='radar');
