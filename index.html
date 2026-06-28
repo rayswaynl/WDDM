@@ -384,6 +384,20 @@ _created</textarea>
       </div>
     </div>
   </div>
+
+  <div class="modal-back" id="pickModalBack">
+    <div class="modal" role="dialog" aria-label="Browse pieces">
+      <div class="modal-head">
+        <h2>Browse pieces</h2>
+        <div class="pick-search" style="flex:1"><input id="pickModalSearch" type="text" placeholder="Search pieces…" autocomplete="off"></div>
+        <button class="x" id="pickModalClose" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-side" id="pickModalCats"></div>
+        <div class="modal-grid-wrap"><div id="pickModalGrid"></div></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1651,7 +1665,22 @@ function renderPicker(){
   _renderGrid($('pickGrid'), _filtered(), _pickCat==='All' && !_pickQ);
   if($('pickModalBack') && $('pickModalBack').classList.contains('open')) renderModal();
 }
-function renderModal(){}   // implemented in Task 2 (browse modal)
+function renderModal(){
+  const side=$('pickModalCats');
+  if(side){ side.innerHTML='';
+    ['All',...pickerCategories()].forEach(c=>{ const ch=document.createElement('span');
+      ch.className='chip'+(c===_pickCat?' on':''); ch.textContent=c;
+      ch.onclick=()=>{ _pickCat=c; renderPicker(); }; side.appendChild(ch); }); }
+  _renderGrid($('pickModalGrid'), _filtered(), _pickCat==='All' && !_pickQ);
+}
+function openBrowse(){ $('pickModalBack').classList.add('open'); renderModal(); $('pickModalSearch').focus(); }
+function closeBrowse(){ $('pickModalBack').classList.remove('open'); }
+$('browseAll').onclick=openBrowse;
+$('pickModalClose').onclick=closeBrowse;
+$('pickModalBack').addEventListener('click', e=>{ if(e.target===$('pickModalBack')) closeBrowse(); });
+$('pickModalSearch').addEventListener('input', ()=>{ _pickQ=$('pickModalSearch').value.trim();
+  const s=$('pickSearch'); if(s) s.value=_pickQ; renderPicker(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('pickModalBack').classList.contains('open')) closeBrowse(); });
 renderPicker();            // boot — PAL/styleColors are now defined above
 
 /* Animation loop — repaints (~25 fps) only while a live radar sweep is on screen. */
