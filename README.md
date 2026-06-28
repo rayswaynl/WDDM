@@ -96,7 +96,7 @@ and it degrades gracefully to system fonts offline).
 | Action | How |
 |---|---|
 | Load a starting layout | Pick from **Load a demo / preset** → *Load preset* |
-| Add an object | Pick a class from the palette → **+ Add to centre**, or **+ Custom…** to type any classname |
+| Add an object | Search/filter the **thumbnail picker** and click a piece, **Browse all** for the full grid, or **+ Custom…** to type any classname |
 | Move | Drag the object body |
 | Rotate | Drag the white handle, or edit *Relative direction* in the inspector |
 | Nudge | Arrow keys (hold **Shift** for 1 m steps) |
@@ -256,7 +256,7 @@ python tools/gen_assets.py --ref ../arma2-co-config-reference --wddm .
 ### Editor features
 
 - **Classname validation** — on page load the editor fetches `classnames.json` and builds a ground-truth set. A dev-facing **audit badge** on the palette label flags any CATALOG entry whose classname is not in the base-game config. The custom-add field and inspector classname field each show a live **⚠ unknown classname** warning and an autocomplete `<datalist>` while you type.
-- **Palette & inspector thumbnails** — if a matching portrait exists in `assets/img/`, it appears as a small preview in the palette card and in the inspector panel.
+- **Thumbnail piece picker** — the palette is a searchable, category-filterable **grid of thumbnails** (inline in the left panel, plus a **Browse all** modal for the full set); click a tile to place it. Pieces without a portrait fall back to a procedural glyph. The inspector also shows the selected object's thumbnail.
 - **3-layer canvas render** — each object tries (1) a real top-down sprite from the sprite sheet, falls back to (2) a dimmed portrait thumbnail, then to (3) a procedural text glyph. Toggling the *sprites* checkbox switches between layer 1 and layers 2/3 without affecting the SQF export.
 - **Expanded palette** — the CATALOG grew from ~92 to ~204 items, adding defense/fortification sets and faction base-building structures (full detail in `tools/expansion-candidates.md`).
 
