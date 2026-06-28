@@ -255,8 +255,9 @@
     </header>
     <div class="scroll">
       <div id="inspector" style="display:none">
-        <label>Classname</label>
-        <input id="iClass" type="text">
+        <label>Classname <span id="iClassWarn" class="warn" style="display:none" title="Not found in the Arma 2 base-game config">⚠ unknown</span></label>
+        <input id="iClass" type="text" list="classlist" autocomplete="off">
+        <datalist id="classlist"></datalist>
         <div class="grid3">
           <div><label>X (right)</label><input id="iX" type="number" step="0.25"></div>
           <div><label>Y (front)</label><input id="iY" type="number" step="0.25"></div>
@@ -623,7 +624,24 @@ function auditCatalog(){            // dev-facing: surface typo'd palette classn
   const b=$('auditBadge'); if(b){ b.textContent = bad.length? `⚠ ${bad.length} unverified` : ''; b.title = bad.join(', '); }
 }
 function preloadPortraits(){}      // implemented in Task 7 (portrait layer)
-function updateClassWarn(){}       // implemented in Task 6 (inspector warning)
+function updateClassWarn(){
+  const el=$('iClass'), w=$('iClassWarn'); if(!el||!w) return;
+  const v=(el.value||'').trim();
+  w.style.display = (v && VALID_CLASSES.size && !VALID_CLASSES.has(v)) ? '' : 'none';
+}
+function refreshClassList(prefix){          // capped dynamic datalist (<=30 matches)
+  const dl=$('classlist'); if(!dl) return;
+  const p=(prefix||'').toLowerCase(); dl.innerHTML='';
+  if(p.length<2) return;
+  let n=0;
+  for(const c of VALID_CLASSES){
+    if(c.toLowerCase().includes(p)){
+      const op=document.createElement('option');
+      op.value=c; op.label=CLASS_DN[c]||''; dl.appendChild(op);
+      if(++n>=30) break;
+    }
+  }
+}
 
 /* ===================================================================
    Presets — incl. the demo "Larger defense" emplacements.
@@ -1500,7 +1518,10 @@ function addObj(cls,x=0,y=0,dir=0){
 }
 function delObj(){ objs=objs.filter(o=>o.id!==sel); sel=null; syncUI(); draw(); }
 $('addBtn').onclick=()=>addObj($('palette').value);
-$('addCustomBtn').onclick=()=>{ const c=prompt('Enter exact Arma classname:'); if(c)addObj(c.trim()); };
+$('addCustomBtn').onclick=()=>{ const c=prompt('Enter exact Arma classname:'); if(!c) return;
+  const cls=c.trim();
+  if(VALID_CLASSES.size && !VALID_CLASSES.has(cls) && !confirm(`"${cls}" is not in the Arma 2 base-game config.\nAdd it anyway?`)) return;
+  addObj(cls); };
 $('delBtn').onclick=delObj;
 $('dupBtn').onclick=()=>{ const o=objs.find(x=>x.id===sel); if(o)addObj(o.cls,o.x+2,o.y,o.dir); };
 $('mirrorBtn').onclick=()=>{ const o=objs.find(x=>x.id===sel); if(o)addObj(o.cls,-o.x,o.y,(360-o.dir)%360); };
@@ -1537,7 +1558,7 @@ function syncUI(){
   const o=objs.find(x=>x.id===sel);
   $('inspector').style.display=o?'block':'none'; $('noSel').style.display=o?'none':'block';
   $('selName').textContent=o?o.cls:'no selection';
-  if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; }
+  if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; updateClassWarn(); }
   // crew estimate — cheap, single soldier per gun: AI cost == weapon count (no garrison).
   if(buildMode==='base'){
     $('cWpnLabel').textContent='structures'; $('cWpn').textContent=objs.length;
@@ -1554,6 +1575,7 @@ function syncUI(){
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('input',()=>{ const o=objs.find(x=>x.id===sel); if(!o)return;
   o.cls=$('iClass').value.trim(); o.x=parseFloat($('iX').value)||0; o.y=parseFloat($('iY').value)||0; o.z=parseFloat($('iZ').value)||0; o.dir=((parseFloat($('iDir').value)||0)%360+360)%360; draw(); }));
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('change',syncUI));
+$('iClass').addEventListener('input',()=>{ updateClassWarn(); refreshClassList($('iClass').value); });
 
 /* ---------- Toolbar ---------- */
 $('parentDir').addEventListener('input',e=>{parentDir=parseFloat(e.target.value)||0;draw();});
