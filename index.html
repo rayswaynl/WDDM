@@ -219,6 +219,9 @@
           <option value="uav">UAV Terminal walls</option>
         </select>
         </div><!-- /defenseCtrlsB -->
+        <div class="hint">
+          <b>Factory wall submissions:</b> keep <code>Fortifications only</code> on, then submit the copied SQF or share link with the target name shown above.
+        </div>
       </details>
 
       <div class="divider"></div>
@@ -238,10 +241,7 @@
       <ul class="obj-list" id="objList"></ul>
 
       <div class="hint">
-        Click an object on the canvas or list to select. Drag the body to move,
-        drag the handle to rotate. Arrow keys nudge (Shift = 1&nbsp;m).
-        <br><b>🛡 Base defense</b> designs walls &amp; emplacements around one structure;
-        <b>🏗 Base layout</b> plans the whole base — barracks, factories, radars — around the HQ.
+        Click an object on the canvas or list to select. Drag the body to move, drag the handle to rotate. Arrow keys nudge (Shift = 1&nbsp;m).
       </div>
     </div>
   </div>
@@ -314,11 +314,9 @@
 
       <label>Generated SQF — drop into <code>Server/Init/Init_Defenses.sqf</code></label>
       <textarea id="out" rows="13" readonly></textarea>
-      <button class="primary copybtn" id="copyBtn" style="width:100%">Copy SQF</button>
-      <button class="copybtn" id="shareBtn" style="width:100%;margin-top:6px" title="Copy a link that opens this exact layout — great for Discord">Copy share link</button>
-      <div class="hint modebox">
-        <b>Factory wall submissions:</b> use <code>Edit HQ / Factory walls</code>, keep <code>Fortifications only</code> on,
-        then submit the copied SQF or share link with the target name shown above.
+      <div class="btnbar">
+        <button class="primary copybtn" id="copyBtn" style="flex:2">Copy SQF</button>
+        <button class="copybtn" id="shareBtn" style="flex:1" title="Copy a link that opens this exact layout — great for Discord">Share link</button>
       </div>
 
       <details>
