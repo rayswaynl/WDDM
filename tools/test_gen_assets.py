@@ -50,5 +50,23 @@ class TestExtract(unittest.TestCase):
         out = gen_assets.extract_classnames(HTML)
         self.assertEqual(out, {'Land_HBarrier_large', 'M2StaticMG', 'Hedgehog'})
 
+import tempfile, os
+from pathlib import Path as _P
+
+class TestImages(unittest.TestCase):
+    def test_index_and_copy(self):
+        with tempfile.TemporaryDirectory() as d:
+            ref = _P(d) / 'Images' / 'A2' / 'Objects' / 'Fortifications'
+            ref.mkdir(parents=True)
+            (ref / 'Land_HBarrier_large.jpg').write_bytes(b'JPGDATA')
+            (ref / 'Hedgehog.jpg').write_bytes(b'JPGDATA')
+            dest = _P(d) / 'out'
+            idx = gen_assets.index_images(_P(d) / 'Images')
+            copied, missing = gen_assets.copy_images(
+                {'Land_HBarrier_large', 'Hedgehog', 'DoesNotExist'}, idx, dest)
+            self.assertEqual(set(copied), {'Land_HBarrier_large', 'Hedgehog'})
+            self.assertEqual(missing, ['DoesNotExist'])
+            self.assertTrue((dest / 'Land_HBarrier_large.jpg').exists())
+
 if __name__ == '__main__':
     unittest.main()

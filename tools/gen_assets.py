@@ -71,3 +71,26 @@ def extract_classnames(html: str) -> set:
     entries plus PRESET object arrays `['X',[...`. These are the classes whose
     thumbnails the editor can render, so these are the images we copy."""
     return set(_CATALOG_CLS.findall(html)) | set(_PRESET_CLS.findall(html))
+
+import shutil
+
+def index_images(images_root: Path) -> dict:
+    """Map {classname: source_path} for every <classname>.jpg under the repo's
+    Images/ tree (nested category folders). Built once; later lookups are O(1)."""
+    idx: dict[str, Path] = {}
+    for p in images_root.rglob('*.jpg'):
+        idx.setdefault(p.stem, p)
+    return idx
+
+def copy_images(classnames, idx: dict, dest: Path):
+    """Copy <cls>.jpg for each classname that has art. Returns (copied, missing)."""
+    dest.mkdir(parents=True, exist_ok=True)
+    copied, missing = [], []
+    for cls in sorted(classnames):
+        src = idx.get(cls)
+        if src:
+            shutil.copyfile(src, dest / f'{cls}.jpg')
+            copied.append(cls)
+        else:
+            missing.append(cls)
+    return copied, sorted(missing)
