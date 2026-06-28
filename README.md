@@ -232,6 +232,38 @@ python -m http.server 8000
 
 ---
 
+## Asset generator & editor features
+
+### `tools/gen_assets.py`
+
+The generator reads the sibling repo [`arma2-co-config-reference`](https://github.com/rayswaynl/arma2-co-config-reference) (specifically `Config/CfgVehicles.txt`, 16 000+ class declarations) and produces:
+
+| Output | Description |
+|---|---|
+| `assets/data/classnames.json` | `{ classname: displayName }` map — the validation ground-truth |
+| `assets/data/portraits.json` | Manifest of copied thumbnail files |
+| `assets/img/<cls>.jpg` | Reference top-down thumbnails copied from the config repo |
+| `tools/expansion-candidates.md` | Classes present in the config but not yet in the CATALOG |
+
+**Re-run after editing the CATALOG** (e.g. adding new palette entries) to validate new classnames and pull in any matching thumbnails:
+
+```bash
+python tools/gen_assets.py --ref ../arma2-co-config-reference --wddm .
+```
+
+`tools/extra-valid-classnames.txt` is a curated allowlist for classnames that are valid in-game but happen to be absent from the config export (forward-declared engine classes, mod objects, etc.). The generator includes these in `classnames.json` so the editor does not flag them as unknown.
+
+### Editor features
+
+- **Classname validation** — on page load the editor fetches `classnames.json` and builds a ground-truth set. A dev-facing **audit badge** on the palette label flags any CATALOG entry whose classname is not in the base-game config. The custom-add field and inspector classname field each show a live **⚠ unknown classname** warning and an autocomplete `<datalist>` while you type.
+- **Palette & inspector thumbnails** — if a matching portrait exists in `assets/img/`, it appears as a small preview in the palette card and in the inspector panel.
+- **3-layer canvas render** — each object tries (1) a real top-down sprite from the sprite sheet, falls back to (2) a dimmed portrait thumbnail, then to (3) a procedural text glyph. Toggling the *sprites* checkbox switches between layer 1 and layers 2/3 without affecting the SQF export.
+- **Expanded palette** — the CATALOG grew from ~92 to ~204 items, adding defense/fortification sets and faction base-building structures (full detail in `tools/expansion-candidates.md`).
+
+The **SQF export is unchanged** — all additions above are editor-only and do not affect the `missionNamespace setVariable` output.
+
+---
+
 ## Credits & license
 
 - Built for the **Arma Warfare** community.

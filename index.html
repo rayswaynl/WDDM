@@ -193,12 +193,13 @@
 
       <div class="divider"></div>
 
-      <label>Add object — pick a class</label>
+      <label>Add object — pick a class <span class="badge" id="auditBadge" style="background:#7a2d2d"></span></label>
       <select id="palette"></select>
       <div class="btnbar">
         <button class="primary" id="addBtn">+ Add to centre</button>
         <button id="addCustomBtn">+ Custom…</button>
       </div>
+      <img id="palThumb" alt="" style="display:none;max-width:100%;max-height:120px;margin-top:6px;border:1px solid #2a2f36;border-radius:4px;background:#11141a">
 
       <div class="divider"></div>
 
@@ -255,8 +256,10 @@
     </header>
     <div class="scroll">
       <div id="inspector" style="display:none">
-        <label>Classname</label>
-        <input id="iClass" type="text">
+        <label>Classname <span id="iClassWarn" class="warn" style="display:none" title="Not found in the Arma 2 base-game config">⚠ unknown</span></label>
+        <input id="iClass" type="text" list="classlist" autocomplete="off">
+        <datalist id="classlist"></datalist>
+        <img id="iThumb" alt="" style="display:none;max-width:100%;max-height:110px;margin:4px 0;border:1px solid #2a2f36;border-radius:4px;background:#11141a">
         <div class="grid3">
           <div><label>X (right)</label><input id="iX" type="number" step="0.25"></div>
           <div><label>Y (front)</label><input id="iY" type="number" step="0.25"></div>
@@ -463,6 +466,56 @@ const CATALOG = [
   {grp:'Walls (H-barrier)', cls:'Land_HBarrier1',             size:[1.2,1.2],style:'hbarrier'}, // single HESCO cell
   {grp:'Ammo / logistics',  cls:'RUBasicAmmunitionBox',       size:[1.0,0.6],style:'ammo'},
   {grp:'Ammo / logistics',  cls:'RUVehicleBox',               size:[1.0,0.6],style:'ammo'},
+  // ===== Items-repo expansion: defense/fortification additions =====
+  // ---------- Walls (extra) ----------
+  {grp:'Walls (extra)',  cls:'Fort_StoneWall_EP1',           size:[5,0.5],  style:'cnc'},
+  {grp:'Walls (extra)',  cls:'Land_CncBlock_D',              size:[1,1],    style:'cnc'},
+  {grp:'Walls (extra)',  cls:'Land_Dam_Barrier_40',          size:[20,1.2], style:'hbarrier'},
+  {grp:'Walls (extra)',  cls:'Base_WarfareBBarrier10xTall',  size:[10,1.2], style:'hbarrier'},
+  // ---------- Obstacles (OA) ----------
+  {grp:'Obstacles (OA)', cls:'Hedgehog_EP1',        size:[2,2],   style:'hedgehog'},
+  {grp:'Obstacles (OA)', cls:'Fort_Barricade_EP1',  size:[3,0.6], style:'wire'},
+  {grp:'Obstacles (OA)', cls:'Land_RedWhiteBarrier',size:[2,0.4], style:'cone'},
+  {grp:'Obstacles (OA)', cls:'RoadBarrier_light',   size:[2,0.3], style:'cone'},
+  {grp:'Obstacles (OA)', cls:'RoadBarrier_long',    size:[4,0.3], style:'cone'},
+  // ---------- Trenches ----------
+  {grp:'Trenches', cls:'Fort_EnvelopeBig',       size:[8,3], style:'sandbag'},
+  {grp:'Trenches', cls:'Fort_EnvelopeBig_EP1',   size:[8,3], style:'sandbag'},
+  {grp:'Trenches', cls:'Fort_EnvelopeSmall',     size:[5,2], style:'sandbag'},
+  {grp:'Trenches', cls:'Fort_EnvelopeSmall_EP1', size:[5,2], style:'sandbag'},
+  // ---------- MG nests (factions) ----------
+  {grp:'MG nests (factions)', cls:'Fort_Nest_M240',               size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'USMC_WarfareBMGNest_M240',     size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'CDF_WarfareBMGNest_PK',        size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'GUE_WarfareBMGNest_PK',        size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'Ins_WarfareBMGNest_PK',        size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'WarfareBMGNest_PK_TK_EP1',     size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'WarfareBMGNest_PK_TK_GUE_EP1', size:[3,3], style:'nest', cat:'mg'},
+  // ---------- Camo nets ----------
+  {grp:'Camo nets', cls:'Land_CamoNet_NATO_EP1',    size:[8,8],   style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNetB_NATO_EP1',   size:[8,8],   style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNetVar_NATO_EP1', size:[10,10], style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNet_EAST_EP1',    size:[8,8],   style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNetB_EAST_EP1',   size:[8,8],   style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNetVar_EAST_EP1', size:[10,10], style:'camo'},
+  // ---------- Castle ramparts ----------
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall1_20',      size:[20,1.5], style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall1_20_Turn', size:[14,14],  style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall1_Corner',  size:[3,3],    style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall1_End',     size:[3,1.5],  style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall2_30',      size:[30,1.5], style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall2_Corner',  size:[3,3],    style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall2_End',     size:[3,1.5],  style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_WallS_10',      size:[10,1.5], style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_WallS_End',     size:[3,1.5],  style:'cnc'},
+  // ---------- Compound gates ----------
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Ind1_L',  size:[3,0.6], style:'cnc'},
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Ind1_R',  size:[3,0.6], style:'cnc'},
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Wood1',   size:[4,0.6], style:'cnc'},
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Village', size:[4,0.6], style:'cnc'},
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Kolchoz', size:[4,0.6], style:'cnc'},
+  // ---------- Logistics (extra) ----------
+  {grp:'Logistics (extra)', cls:'Fort_Crate_wood', size:[1,1], style:'box'},
   // === BASE-LAYOUT STRUCTURES (🏗 mode) — Warfare buildable base structures.  ===
   // Faction pattern <FACTION>_WarfareB<Building> from the BIS Warfare config; OA US_/TK_
   // variants carry _EP1 like the WarfareBBarrier classes above. "FieldhHospital" double-h
@@ -487,6 +540,74 @@ const CATALOG = [
   {grp:'Base structures (EAST)', cls:'TK_WarfareBFieldhHospital_EP1',      size:[12,10], style:'structe', label:'Hospital'},
   {grp:'Base structures (Neutral)', cls:'WarfareBDepot',                   size:[12,12], style:'structn', label:'Depot'},
   {grp:'Base structures (Neutral)', cls:'WarfareBCamp',                    size:[8,8],   style:'structn', label:'Camp'},
+  // ---------- Faction base-building structures (Task 10 – second half) ----------
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBAircraftFactory',      size:[30,18], style:'structw', label:'Aircraft Fct'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBHeavyFactory',         size:[28,16], style:'structw', label:'Heavy Fct'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBLightFactory',         size:[22,14], style:'structw', label:'Light Fct'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBBarracks',             size:[18,12], style:'structw', label:'Barracks'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBFieldhHospital',       size:[12,10], style:'structw', label:'Hospital'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBArtilleryRadar',       size:[10,10], style:'structw', label:'Arty Radar', icon:'radar'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBAntiAirRadar',         size:[10,10], style:'structw', label:'AA Radar',   icon:'radar'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBContructionSite',      size:[14,14], style:'structw', label:'Constr Site'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBContructionSite1',     size:[14,14], style:'structw', label:'Constr Site 2'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBUAVterminal',          size:[10,8],  style:'structw', label:'UAV Term'},
+  {grp:'Base structures (USMC)', cls:'USMC_WarfareBVehicleServicePoint',  size:[16,8],  style:'structw', label:'Service Pt'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBAircraftFactory',       size:[30,18], style:'structw', label:'Aircraft Fct'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBHeavyFactory',          size:[28,16], style:'structw', label:'Heavy Fct'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBLightFactory',          size:[22,14], style:'structw', label:'Light Fct'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBBarracks',              size:[18,12], style:'structw', label:'Barracks'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBFieldhHospital',        size:[12,10], style:'structw', label:'Hospital'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBArtilleryRadar',        size:[10,10], style:'structw', label:'Arty Radar', icon:'radar'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBAntiAirRadar',          size:[10,10], style:'structw', label:'AA Radar',   icon:'radar'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBContructionSite',       size:[14,14], style:'structw', label:'Constr Site'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBContructionSite1',      size:[14,14], style:'structw', label:'Constr Site 2'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBUAVterminal',           size:[10,8],  style:'structw', label:'UAV Term'},
+  {grp:'Base structures (CDF)',  cls:'CDF_WarfareBVehicleServicePoint',   size:[16,8],  style:'structw', label:'Service Pt'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBAircraftFactory',        size:[30,18], style:'structe', label:'Aircraft Fct'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBHeavyFactory',           size:[28,16], style:'structe', label:'Heavy Fct'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBLightFactory',           size:[22,14], style:'structe', label:'Light Fct'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBBarracks',               size:[18,12], style:'structe', label:'Barracks'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBFieldhHospital',         size:[12,10], style:'structe', label:'Hospital'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBArtilleryRadar',         size:[10,10], style:'structe', label:'Arty Radar', icon:'radar'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBAntiAirRadar',           size:[10,10], style:'structe', label:'AA Radar',   icon:'radar'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBContructionSite',        size:[14,14], style:'structe', label:'Constr Site'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBContructionSite1',       size:[14,14], style:'structe', label:'Constr Site 2'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBUAVterminal',            size:[10,8],  style:'structe', label:'UAV Term'},
+  {grp:'Base structures (RU)',   cls:'RU_WarfareBVehicleServicePoint',    size:[16,8],  style:'structe', label:'Service Pt'},
+  {grp:'Base structures (INS)',  cls:'INS_WarfareBAircraftFactory',       size:[30,18], style:'structe', label:'Aircraft Fct'},
+  {grp:'Base structures (INS)',  cls:'Ins_WarfareBHeavyFactory',          size:[28,16], style:'structe', label:'Heavy Fct'},
+  {grp:'Base structures (INS)',  cls:'Ins_WarfareBLightFactory',          size:[22,14], style:'structe', label:'Light Fct'},
+  {grp:'Base structures (INS)',  cls:'Ins_WarfareBBarracks',              size:[18,12], style:'structe', label:'Barracks'},
+  {grp:'Base structures (INS)',  cls:'INS_WarfareBFieldhHospital',        size:[12,10], style:'structe', label:'Hospital'},
+  {grp:'Base structures (INS)',  cls:'Ins_WarfareBArtilleryRadar',        size:[10,10], style:'structe', label:'Arty Radar', icon:'radar'},
+  {grp:'Base structures (INS)',  cls:'INS_WarfareBAntiAirRadar',          size:[10,10], style:'structe', label:'AA Radar',   icon:'radar'},
+  {grp:'Base structures (INS)',  cls:'Ins_WarfareBContructionSite',       size:[14,14], style:'structe', label:'Constr Site'},
+  {grp:'Base structures (INS)',  cls:'Ins_WarfareBContructionSite1',      size:[14,14], style:'structe', label:'Constr Site 2'},
+  {grp:'Base structures (INS)',  cls:'INS_WarfareBUAVterminal',           size:[10,8],  style:'structe', label:'UAV Term'},
+  {grp:'Base structures (INS)',  cls:'INS_WarfareBVehicleServicePoint',   size:[16,8],  style:'structe', label:'Service Pt'},
+  {grp:'Base structures (GUE)',  cls:'GUE_WarfareBAircraftFactory',       size:[30,18], style:'structn', label:'Aircraft Fct'},
+  {grp:'Base structures (GUE)',  cls:'Gue_WarfareBHeavyFactory',          size:[28,16], style:'structn', label:'Heavy Fct'},
+  {grp:'Base structures (GUE)',  cls:'Gue_WarfareBLightFactory',          size:[22,14], style:'structn', label:'Light Fct'},
+  {grp:'Base structures (GUE)',  cls:'Gue_WarfareBBarracks',              size:[18,12], style:'structn', label:'Barracks'},
+  {grp:'Base structures (GUE)',  cls:'GUE_WarfareBFieldhHospital',        size:[12,10], style:'structn', label:'Hospital'},
+  {grp:'Base structures (GUE)',  cls:'Gue_WarfareBArtilleryRadar',        size:[10,10], style:'structn', label:'Arty Radar', icon:'radar'},
+  {grp:'Base structures (GUE)',  cls:'GUE_WarfareBAntiAirRadar',          size:[10,10], style:'structn', label:'AA Radar',   icon:'radar'},
+  {grp:'Base structures (GUE)',  cls:'Gue_WarfareBContructionSite',       size:[14,14], style:'structn', label:'Constr Site'},
+  {grp:'Base structures (GUE)',  cls:'Gue_WarfareBContructionSite1',      size:[14,14], style:'structn', label:'Constr Site 2'},
+  {grp:'Base structures (GUE)',  cls:'GUE_WarfareBUAVterminal',           size:[10,8],  style:'structn', label:'UAV Term'},
+  {grp:'Base structures (GUE)',  cls:'GUE_WarfareBVehicleServicePoint',   size:[16,8],  style:'structn', label:'Service Pt'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBAircraftFactory_EP1',      size:[30,18], style:'structn', label:'Aircraft Fct'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBHeavyFactory_EP1',         size:[28,16], style:'structn', label:'Heavy Fct'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBLightFactory_EP1',         size:[22,14], style:'structn', label:'Light Fct'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBBarracks_EP1',             size:[18,12], style:'structn', label:'Barracks'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBFieldhHospital_EP1',       size:[12,10], style:'structn', label:'Hospital'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBArtilleryRadar_EP1',       size:[10,10], style:'structn', label:'Arty Radar', icon:'radar'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBAntiAirRadar_EP1',         size:[10,10], style:'structn', label:'AA Radar',   icon:'radar'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBContructionSite_EP1',      size:[14,14], style:'structn', label:'Constr Site'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBContructionSite1_EP1',     size:[14,14], style:'structn', label:'Constr Site 2'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBUAVterminal_EP1',          size:[10,8],  style:'structn', label:'UAV Term'},
+  {grp:'Base structures (TK GUE)', cls:'TK_GUE_WarfareBVehicleServicePoint_EP1',  size:[16,8],  style:'structn', label:'Service Pt'},
+  {grp:'Base structures (misc)',   cls:'WarfareBAirport',                          size:[40,40], style:'structn', label:'Airport'},
 ];
 const isBaseStructure = o => !!o && typeof o.grp==='string' && o.grp.startsWith('Base structures');
 const META   = c => CATALOG.find(o=>o.cls===c) || {};
@@ -594,6 +715,64 @@ function loadSprite(b){ if(SPRITES[b] || !SPRITE_FILES.has(b)) return;   // only
 function preloadSprites(){
   const seen={};                                     // load each class's own file AND its alias target (existing files only)
   CATALOG.forEach(o=>{ [o.cls, SPRITE_ALIAS[o.cls]].forEach(b=>{ if(b && !seen[b]){ seen[b]=1; loadSprite(b); } }); });
+}
+
+/* ===================================================================
+   Component 1b — CLASSNAME GROUND-TRUTH (from arma2-co-config-reference
+   via tools/gen_assets.py). VALID_CLASSES powers validation + autocomplete;
+   PORTRAIT_FILES is the thumbnail manifest (mirrors SPRITE_FILES so we
+   never request a missing JPG). Both degrade to empty on fetch failure.
+   =================================================================== */
+let VALID_CLASSES = new Set();      // every base-game classname
+const CLASS_DN = {};                // classname -> displayName
+let PORTRAIT_FILES = new Set();     // classnames with a copied thumbnail
+function loadClassData(){
+  fetch('assets/data/classnames.json').then(r=>r.ok?r.json():{}).then(j=>{
+    VALID_CLASSES = new Set(Object.keys(j));
+    Object.assign(CLASS_DN, j);
+    auditCatalog();
+    updateClassWarn();
+  }).catch(()=>{});                 // validation simply stays off if absent
+  fetch('assets/data/portraits.json').then(r=>r.ok?r.json():[]).then(a=>{
+    PORTRAIT_FILES = new Set(a); preloadPortraits(); queueDraw();
+  }).catch(()=>{});
+}
+function auditCatalog(){            // dev-facing: surface typo'd palette classnames
+  if(!VALID_CLASSES.size) return;
+  const bad = CATALOG.map(o=>o.cls).filter(c=>!VALID_CLASSES.has(c));
+  if(bad.length){ console.warn('[WDDM] CATALOG classnames not in base-game config:', bad); }
+  const b=$('auditBadge'); if(b){ b.textContent = bad.length? `⚠ ${bad.length} unverified` : ''; b.title = bad.length ? bad.join(', ') : ''; }
+}
+/* Portrait layer — reference thumbnails from assets/img/<cls>.jpg. Used as the
+   middle render layer (below real top-down sprites, above procedural glyphs) and
+   for picker/inspector thumbnails. Only PORTRAIT_FILES members are requested. */
+const PORTRAITS = {};                       // cls -> {img, ok}
+function loadPortrait(cls){
+  if(PORTRAITS[cls] || !PORTRAIT_FILES.has(cls)) return;
+  const img=new Image(); PORTRAITS[cls]={img,ok:false};
+  img.onload =()=>{ PORTRAITS[cls].ok=(img.naturalWidth>0); if(PORTRAITS[cls].ok) queueDraw(); };
+  img.onerror=()=>{ PORTRAITS[cls].ok=false; };
+  img.src=`assets/img/${cls}.jpg`;
+}
+function portraitFor(cls){ const p=PORTRAITS[cls]; return (p&&p.ok)?p:null; }
+function preloadPortraits(){ CATALOG.forEach(o=>loadPortrait(o.cls)); }
+function updateClassWarn(){
+  const el=$('iClass'), w=$('iClassWarn'); if(!el||!w) return;
+  const v=(el.value||'').trim();
+  w.style.display = (v && VALID_CLASSES.size && !VALID_CLASSES.has(v)) ? '' : 'none';
+}
+function refreshClassList(prefix){          // capped dynamic datalist (<=30 matches)
+  const dl=$('classlist'); if(!dl) return;
+  const p=(prefix||'').toLowerCase(); dl.innerHTML='';
+  if(p.length<2) return;
+  let n=0;
+  for(const c of VALID_CLASSES){
+    if(c.toLowerCase().includes(p)){
+      const op=document.createElement('option');
+      op.value=c; op.label=CLASS_DN[c]||''; dl.appendChild(op);
+      if(++n>=30) break;
+    }
+  }
 }
 
 /* ===================================================================
@@ -1144,6 +1323,13 @@ function renderPalette(){
     group.appendChild(op);
   });
   if(previous && Array.from(s.options).some(o=>o.value===previous)) s.value=previous;
+  setThumb('palThumb', s.value);
+  if(!s._thumbWired){ s._thumbWired=true; s.addEventListener('change',()=>setThumb('palThumb', s.value)); }
+}
+function setThumb(imgId, cls){            // show assets/img/<cls>.jpg if we have it, else hide
+  const el=$(imgId); if(!el) return;
+  if(cls && PORTRAIT_FILES.has(cls)){ loadPortrait(cls); el.src=`assets/img/${cls}.jpg`; el.style.display=''; }
+  else { el.removeAttribute('src'); el.style.display='none'; }
 }
 function setFortOnly(on){
   fortOnly=!!on;
@@ -1404,11 +1590,19 @@ function drawObj(o){
   const [w,d]=SIZE_OF(o.cls), [aw,ad]=ART_OF(o.cls), H=headingOf(o), isSel=o.id===sel, st=STYLE(o.cls);
   const sp = USE_SPRITES ? spriteFor(o.cls) : null;
   withLocal(o,H,()=>{ ctx.globalAlpha=isSel?1:0.96;
-    if(sp && sp.ok){                                   // SPRITE: fit-contain into ART span (no stretch)
+    if(sp && sp.ok){                                   // LAYER A — real top-down sprite, fit-contain
       const iw=sp.img.naturalWidth, ih=sp.img.naturalHeight, s=Math.min(aw/iw, ad/ih);
       ctx.drawImage(sp.img, -(iw*s)/2, -(ih*s)/2, iw*s, ih*s);
     } else {
-      (TEX[st]||TEX.box)(aw,ad);                       // FALLBACK: procedural glyph at ART span
+      const pt = USE_SPRITES ? portraitFor(o.cls) : null;
+      if(pt){                                          // LAYER B — portrait thumbnail (approximate; dimmed)
+        const iw=pt.img.naturalWidth, ih=pt.img.naturalHeight, s=Math.min(aw/iw, ad/ih);
+        const a0=ctx.globalAlpha; ctx.globalAlpha=a0*0.55; // dimmed — portrait is reference art, not an accurate top-down
+        ctx.drawImage(pt.img, -(iw*s)/2, -(ih*s)/2, iw*s, ih*s);
+        ctx.globalAlpha=a0;
+      } else {
+        (TEX[st]||TEX.box)(aw,ad);                     // LAYER C — procedural glyph at ART span
+      }
     }
     const ic=META(o.cls).icon; if(ic && ICONS[ic]) ICONS[ic](aw,ad);   // icon overlay (e.g. live radar antenna)
     ctx.globalAlpha=1;
@@ -1471,7 +1665,10 @@ function addObj(cls,x=0,y=0,dir=0){
 }
 function delObj(){ objs=objs.filter(o=>o.id!==sel); sel=null; syncUI(); draw(); }
 $('addBtn').onclick=()=>addObj($('palette').value);
-$('addCustomBtn').onclick=()=>{ const c=prompt('Enter exact Arma classname:'); if(c)addObj(c.trim()); };
+$('addCustomBtn').onclick=()=>{ const c=prompt('Enter exact Arma classname:'); if(!c) return;
+  const cls=c.trim();
+  if(VALID_CLASSES.size && !VALID_CLASSES.has(cls) && !confirm(`"${cls}" is not in the Arma 2 base-game config.\nAdd it anyway?`)) return;
+  addObj(cls); };
 $('delBtn').onclick=delObj;
 $('dupBtn').onclick=()=>{ const o=objs.find(x=>x.id===sel); if(o)addObj(o.cls,o.x+2,o.y,o.dir); };
 $('mirrorBtn').onclick=()=>{ const o=objs.find(x=>x.id===sel); if(o)addObj(o.cls,-o.x,o.y,(360-o.dir)%360); };
@@ -1508,7 +1705,7 @@ function syncUI(){
   const o=objs.find(x=>x.id===sel);
   $('inspector').style.display=o?'block':'none'; $('noSel').style.display=o?'none':'block';
   $('selName').textContent=o?o.cls:'no selection';
-  if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; }
+  if(o){ $('iClass').value=o.cls; $('iX').value=o.x; $('iY').value=o.y; $('iZ').value=o.z; $('iDir').value=o.dir; updateClassWarn(); setThumb('iThumb', o.cls); }
   // crew estimate — cheap, single soldier per gun: AI cost == weapon count (no garrison).
   if(buildMode==='base'){
     $('cWpnLabel').textContent='structures'; $('cWpn').textContent=objs.length;
@@ -1525,6 +1722,8 @@ function syncUI(){
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('input',()=>{ const o=objs.find(x=>x.id===sel); if(!o)return;
   o.cls=$('iClass').value.trim(); o.x=parseFloat($('iX').value)||0; o.y=parseFloat($('iY').value)||0; o.z=parseFloat($('iZ').value)||0; o.dir=((parseFloat($('iDir').value)||0)%360+360)%360; draw(); }));
 ['iX','iY','iZ','iDir','iClass'].forEach(id=>$(id).addEventListener('change',syncUI));
+// validation + autocomplete + live thumbnail — separate from the model-mutation listener above
+$('iClass').addEventListener('input',()=>{ updateClassWarn(); refreshClassList($('iClass').value); setThumb('iThumb', $('iClass').value.trim()); });
 
 /* ---------- Toolbar ---------- */
 $('parentDir').addEventListener('input',e=>{parentDir=parseFloat(e.target.value)||0;draw();});
@@ -1659,7 +1858,7 @@ $('loadJson').onclick=()=>{ const inp=document.createElement('input'); inp.type=
     r.onload=()=>{ try{ loadProject(JSON.parse(r.result)); }catch(e){alert('Bad JSON');} }; r.readAsText(f); }; inp.click(); };
 
 /* ---------- Boot ---------- */
-resize(); loadPreset('hq_concrete_walk_exit'); preloadSprites(); loadFromHash();   // resize first so fitView sees real canvas dims; hash layout (if any) overrides the default preset
+resize(); loadPreset('hq_concrete_walk_exit'); preloadSprites(); loadClassData(); loadFromHash();   // resize first so fitView sees real canvas dims; hash layout (if any) overrides the default preset
 </script>
 </body>
 </html>

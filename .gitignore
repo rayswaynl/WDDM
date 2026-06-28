@@ -9,3 +9,7 @@ nul
 .vscode/
 .idea/
 node_modules/
+
+# Python (tools/gen_assets.py)
+__pycache__/
+*.pyc
