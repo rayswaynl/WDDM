@@ -466,6 +466,56 @@ const CATALOG = [
   {grp:'Walls (H-barrier)', cls:'Land_HBarrier1',             size:[1.2,1.2],style:'hbarrier'}, // single HESCO cell
   {grp:'Ammo / logistics',  cls:'RUBasicAmmunitionBox',       size:[1.0,0.6],style:'ammo'},
   {grp:'Ammo / logistics',  cls:'RUVehicleBox',               size:[1.0,0.6],style:'ammo'},
+  // ===== Items-repo expansion: defense/fortification additions =====
+  // ---------- Walls (extra) ----------
+  {grp:'Walls (extra)',  cls:'Fort_StoneWall_EP1',           size:[5,0.5],  style:'cnc'},
+  {grp:'Walls (extra)',  cls:'Land_CncBlock_D',              size:[1,1],    style:'cnc'},
+  {grp:'Walls (extra)',  cls:'Land_Dam_Barrier_40',          size:[20,1.2], style:'hbarrier'},
+  {grp:'Walls (extra)',  cls:'Base_WarfareBBarrier10xTall',  size:[10,1.2], style:'hbarrier'},
+  // ---------- Obstacles (OA) ----------
+  {grp:'Obstacles (OA)', cls:'Hedgehog_EP1',        size:[2,2],   style:'hedgehog'},
+  {grp:'Obstacles (OA)', cls:'Fort_Barricade_EP1',  size:[3,0.6], style:'wire'},
+  {grp:'Obstacles (OA)', cls:'Land_RedWhiteBarrier',size:[2,0.4], style:'cone'},
+  {grp:'Obstacles (OA)', cls:'RoadBarrier_light',   size:[2,0.3], style:'cone'},
+  {grp:'Obstacles (OA)', cls:'RoadBarrier_long',    size:[4,0.3], style:'cone'},
+  // ---------- Trenches ----------
+  {grp:'Trenches', cls:'Fort_EnvelopeBig',       size:[8,3], style:'sandbag'},
+  {grp:'Trenches', cls:'Fort_EnvelopeBig_EP1',   size:[8,3], style:'sandbag'},
+  {grp:'Trenches', cls:'Fort_EnvelopeSmall',     size:[5,2], style:'sandbag'},
+  {grp:'Trenches', cls:'Fort_EnvelopeSmall_EP1', size:[5,2], style:'sandbag'},
+  // ---------- MG nests (factions) ----------
+  {grp:'MG nests (factions)', cls:'Fort_Nest_M240',               size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'USMC_WarfareBMGNest_M240',     size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'CDF_WarfareBMGNest_PK',        size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'GUE_WarfareBMGNest_PK',        size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'Ins_WarfareBMGNest_PK',        size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'WarfareBMGNest_PK_TK_EP1',     size:[3,3], style:'nest', cat:'mg'},
+  {grp:'MG nests (factions)', cls:'WarfareBMGNest_PK_TK_GUE_EP1', size:[3,3], style:'nest', cat:'mg'},
+  // ---------- Camo nets ----------
+  {grp:'Camo nets', cls:'Land_CamoNet_NATO_EP1',    size:[8,8],   style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNetB_NATO_EP1',   size:[8,8],   style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNetVar_NATO_EP1', size:[10,10], style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNet_EAST_EP1',    size:[8,8],   style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNetB_EAST_EP1',   size:[8,8],   style:'camo'},
+  {grp:'Camo nets', cls:'Land_CamoNetVar_EAST_EP1', size:[10,10], style:'camo'},
+  // ---------- Castle ramparts ----------
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall1_20',      size:[20,1.5], style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall1_20_Turn', size:[14,14],  style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall1_Corner',  size:[3,3],    style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall1_End',     size:[3,1.5],  style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall2_30',      size:[30,1.5], style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall2_Corner',  size:[3,3],    style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_Wall2_End',     size:[3,1.5],  style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_WallS_10',      size:[10,1.5], style:'cnc'},
+  {grp:'Castle ramparts', cls:'Land_A_Castle_WallS_End',     size:[3,1.5],  style:'cnc'},
+  // ---------- Compound gates ----------
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Ind1_L',  size:[3,0.6], style:'cnc'},
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Ind1_R',  size:[3,0.6], style:'cnc'},
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Wood1',   size:[4,0.6], style:'cnc'},
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Village', size:[4,0.6], style:'cnc'},
+  {grp:'Compound gates', cls:'Land_Wall_Gate_Kolchoz', size:[4,0.6], style:'cnc'},
+  // ---------- Logistics (extra) ----------
+  {grp:'Logistics (extra)', cls:'Fort_Crate_wood', size:[1,1], style:'box'},
   // === BASE-LAYOUT STRUCTURES (🏗 mode) — Warfare buildable base structures.  ===
   // Faction pattern <FACTION>_WarfareB<Building> from the BIS Warfare config; OA US_/TK_
   // variants carry _EP1 like the WarfareBBarrier classes above. "FieldhHospital" double-h
